@@ -76,6 +76,54 @@ export interface Job {
   created_at: string
 }
 
+export type ActivityType =
+  | 'note'
+  | 'call'
+  | 'email'
+  | 'quote_sent'
+  | 'quote_accepted'
+  | 'quote_declined'
+  | 'job_scheduled'
+  | 'job_completed'
+  | 'job_cancelled'
+  | 'follow_up'
+  | 'review_requested'
+  | 'complaint'
+  | 'other'
+
+export type FollowUpPriority = 'low' | 'normal' | 'high' | 'urgent'
+export type FollowUpStatus = 'open' | 'done' | 'dismissed'
+
+export interface Activity {
+  id: string
+  organisation_id: string
+  client_id: string
+  job_id?: string
+  created_by?: string
+  type: ActivityType
+  title?: string
+  body?: string
+  metadata: Record<string, any>
+  pinned: boolean
+  created_at: string
+  profiles?: { full_name?: string; email?: string }
+}
+
+export interface FollowUp {
+  id: string
+  organisation_id: string
+  client_id: string
+  activity_id?: string
+  created_by?: string
+  assigned_to?: string
+  title: string
+  notes?: string
+  due_date?: string
+  priority: FollowUpPriority
+  status: FollowUpStatus
+  created_at: string
+}
+
 // Joined types
 export interface JobWithRelations extends Job {
   clients?: Pick<Client, 'first_name' | 'last_name'>

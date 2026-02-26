@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Nav from '@/components/dashboard/Nav'
 
+import { getAllOpenFollowUps } from '@/lib/queries/activities'
+
 export default async function DashboardPage() {
   const supabase = await createClient()
 
@@ -55,6 +57,8 @@ export default async function DashboardPage() {
     post_event: 'Post Event',
     other: 'Other'
   }
+
+  const allFollowUps = await getAllOpenFollowUps()
 
   return (
     <div className="min-h-screen bg-[#f9f8f5]">
@@ -188,6 +192,61 @@ export default async function DashboardPage() {
                     </span>
                   </a>
                 ))
+              )}
+            </div>
+          </div>
+
+          {/* Open Follow-ups */}
+          <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
+            <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
+              <h2 className="text-sm font-medium text-zinc-900 tracking-tight">Open Follow-ups</h2>
+              <span className="text-xs text-zinc-400">{allFollowUps.length} open</span>
+            </div>
+            <div className="divide-y divide-zinc-50">
+              {!allFollowUps || allFollowUps.length === 0 ? (
+                <div className="px-6 py-8 text-center">
+                  <p className="text-xs text-zinc-300 tracking-wide">All clear</p>
+                </div>
+              ) : (
+                allFollowUps.slice(0, 5).map((fu: any) => {
+                  const due = fu.due_date ? new Date(fu.due_date) : null
+                  const now = new Date()
+                  now.setHours(0,0,0,0)
+                  const isOverdue = due && due < now
+                  const priorityColour: Record<string, string> = {
+                    low: 'bg-zinc-100 text-zinc-400',
+                    normal: 'bg-blue-50 text-blue-500',
+                    high: 'bg-amber-50 text-amber-600',
+                    urgent: 'bg-red-50 text-red-500',
+                  }
+                  return (
+                    <a
+                      key={fu.id}
+                      href={`/dashboard/clients/${fu.client_id}`}
+                      className="px-6 py-3.5 flex items-start justify-between gap-3 hover:bg-zinc-50 transition-colors block"
+                    >
+                      <div className="flex items-start gap-2 flex-1 min-w-0">
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 mt-0.5 ${priorityColour[fu.priority]}`}>
+                          {fu.priority}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-sm text-zinc-900 font-medium truncate">{fu.title}</p>
+                          <p className="text-xs text-zinc-400 mt-0.5">
+                            {fu.clients?.first_name} {fu.clients?.last_name}
+                          </p>
+                        </div>
+                      </div>
+                      {due && (
+                        <span className={`text-xs flex-shrink-0 font-medium ${isOverdue ? 'text-red-500' : 'text-zinc-400'}`}>
+                          {isOverdue
+                            ? `${Math.floor((now.getTime() - due.getTime()) / 86400000)}d overdue`
+                            : due.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                          }
+                        </span>
+                      )}
+                    </a>
+                  )
+                })
               )}
             </div>
           </div>

@@ -3,6 +3,10 @@ import { getClientWithProperties } from '@/lib/queries/clients'
 import { redirect, notFound } from 'next/navigation'
 import Nav from '@/components/dashboard/Nav'
 
+import ActivityTimeline from '@/components/dashboard/ActivityTimeline'
+import { getClientActivities, getOpenFollowUps } from '@/lib/queries/activities'
+
+
 const serviceLabels: Record<string, string> = {
   regular: 'Regular Clean',
   deep_clean: 'Deep Clean',
@@ -44,6 +48,9 @@ export default async function ClientProfilePage({
 
   const client = await getClientWithProperties(id)
   if (!client) notFound()
+
+  const activities = await getClientActivities(id)
+  const followUps = await getOpenFollowUps(id)
 
   const properties = client.properties ?? []
   const jobs = client.jobs ?? []
@@ -221,6 +228,19 @@ export default async function ClientProfilePage({
                 </div>
               )}
             </div>
+
+            {/* Activity Timeline */}
+<div className="mt-6">
+  <div className="mb-4 flex items-center justify-between">
+    <h2 className="text-sm font-medium text-zinc-900 tracking-tight">Activity Timeline</h2>
+    <span className="text-xs text-zinc-400">{activities.length} events</span>
+  </div>
+  <ActivityTimeline
+    clientId={id}
+    initialActivities={activities}
+    initialFollowUps={followUps}
+  />
+</div>
 
             {/* Job history */}
             <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
