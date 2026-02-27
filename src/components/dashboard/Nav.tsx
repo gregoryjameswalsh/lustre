@@ -2,7 +2,11 @@
 
 import { usePathname } from 'next/navigation'
 
-export default function Nav() {
+interface NavProps {
+  orgName: string
+}
+
+export default function Nav({ orgName }: NavProps) {
   const path = usePathname()
 
   const links = [
@@ -15,8 +19,13 @@ export default function Nav() {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[rgba(249,248,245,0.9)] backdrop-blur-md border-b border-zinc-200">
       <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
         <div className="flex items-center gap-6">
-          <a href="/dashboard" className="text-xs font-medium tracking-[0.22em] uppercase text-zinc-900">
-            The Walsh Standard
+          <a href="/dashboard" className="flex flex-col leading-tight">
+            <span className="text-xs font-medium tracking-[0.22em] uppercase text-zinc-900">
+              {orgName}
+            </span>
+            <span className="text-[9px] tracking-widest uppercase text-zinc-400">
+              Powered by Lustre
+            </span>
           </a>
           <span className="text-zinc-200">|</span>
           {links.map(link => (
