@@ -185,3 +185,19 @@ export interface OnboardingBusinessProfileData {
 export interface OnboardingServiceData {
   service_types: ServiceType[]
 }
+
+// -----------------------------------------------------------------------------
+// Joined / relational types
+// -----------------------------------------------------------------------------
+
+export interface JobWithRelations extends Job {
+  clients?: {
+    first_name: string | null
+    last_name: string | null
+  } | null
+  properties?: {
+    address_line1: string | null
+    town: string | null
+    postcode: string | null
+  } | null
+}
