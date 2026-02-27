@@ -13,6 +13,7 @@ export default function Nav({ orgName }: NavProps) {
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/dashboard/clients', label: 'Clients' },
     { href: '/dashboard/jobs', label: 'Jobs' },
+    { href: '/dashboard/quotes', label: 'Quotes' },
   ]
 
   return (
@@ -42,6 +43,16 @@ export default function Nav({ orgName }: NavProps) {
             </a>
           ))}
         </div>
+
+           <a href="/dashboard/settings"
+    className={`text-xs tracking-wide transition-colors ${
+      path === '/dashboard/settings'
+        ? 'text-zinc-900 font-medium'
+        : 'text-zinc-400 hover:text-zinc-900'
+    }`}
+  >
+    Settings
+  </a>
         <form action="/auth/signout" method="post">
           <button className="text-xs tracking-wide text-zinc-400 hover:text-zinc-900 transition-colors">
             Sign out
