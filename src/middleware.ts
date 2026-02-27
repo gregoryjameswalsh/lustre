@@ -11,7 +11,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 // Routes that don't require authentication
-const PUBLIC_ROUTES = ['/login', '/signup', '/auth', '/terms', '/privacy']
+const PUBLIC_ROUTES = ['/login', '/signup', '/auth', '/terms', '/privacy', '/q']
 
 // Routes that authenticated users can access even mid-onboarding
 const ONBOARDING_ALLOWED = ['/onboarding', '/auth/signout']
