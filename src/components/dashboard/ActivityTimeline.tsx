@@ -459,24 +459,34 @@ export default function ActivityTimeline({ clientId, initialActivities, initialF
                       )}
 
                       {/* Job metadata */}
-                      {isJobEvent && activity.metadata && (
-                        <div className="flex items-center gap-3 mt-2 flex-wrap">
-                          {activity.metadata.service_type && (
-                            <span className="text-xs text-zinc-400 capitalize">
-                              {activity.metadata.service_type.replace('_', ' ')}
-                            </span>
-                          )}
-                          {activity.metadata.property && (
-                            <span className="text-xs text-zinc-400">{activity.metadata.property}</span>
-                          )}
-                          {activity.metadata.scheduled_date && (
-                            <span className="text-xs text-zinc-400">
-                              {new Date(activity.metadata.scheduled_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                            </span>
-                          )}
-                          {activity.metadata.price && (
-                            <span className="text-xs font-medium text-zinc-700">£{Number(activity.metadata.price).toFixed(2)}</span>
-                          )}
+{isJobEvent && activity.metadata && (() => {
+  const meta = activity.metadata as {
+    service_type?: string
+    property?: string
+    scheduled_date?: string
+    price?: number
+  }
+  return (
+    <div className="flex items-center gap-3 mt-2 flex-wrap">
+      {meta.service_type && (
+        <span className="text-xs text-zinc-400 capitalize">
+          {meta.service_type.replace('_', ' ')}
+        </span>
+      )}
+      {meta.property && (
+        <span className="text-xs text-zinc-400">{meta.property}</span>
+      )}
+      {meta.scheduled_date && (
+        <span className="text-xs text-zinc-400">
+          {new Date(meta.scheduled_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+        </span>
+      )}
+      {meta.price && (
+        <span className="text-xs font-medium text-zinc-700">£{Number(meta.price).toFixed(2)}</span>
+      )}
+    </div>
+  )
+})()}
                         </div>
                       )}
                     </div>
