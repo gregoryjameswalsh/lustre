@@ -137,10 +137,10 @@ export interface Activity {
   type: ActivityType
   title: string | null
   body: string | null
-  metadata: unknown
+  metadata: Record<string, unknown> | null  // ← changed from unknown
   pinned: boolean
   created_at: string
-  profiles?: {          // ← add this
+  profiles?: {
     full_name: string | null
     email: string | null
   } | null

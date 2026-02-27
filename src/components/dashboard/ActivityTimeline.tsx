@@ -97,7 +97,6 @@ export default function ActivityTimeline({ clientId, initialActivities, initialF
     if (activity) {
       setActivities(prev => [activity, ...prev])
 
-      // If follow-up requested, create it
       if (formData.get('add_follow_up') === 'on') {
         const { data: fu } = await supabase.from('follow_ups').insert({
           organisation_id: profile?.organisation_id,
@@ -174,7 +173,6 @@ export default function ActivityTimeline({ clientId, initialActivities, initialF
   const inputClass = "w-full border border-zinc-200 rounded-md px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:border-zinc-400 bg-zinc-50 transition-colors"
   const labelClass = "block text-xs font-medium tracking-wider uppercase text-zinc-500 mb-1.5"
 
-  // Sort: pinned first, then by date
   const sorted = [...activities].sort((a, b) => {
     if (a.pinned && !b.pinned) return -1
     if (!a.pinned && b.pinned) return 1
@@ -252,8 +250,6 @@ export default function ActivityTimeline({ clientId, initialActivities, initialF
             <h3 className="text-sm font-medium text-zinc-900">Log Activity</h3>
           </div>
           <form onSubmit={handleLogActivity} className="px-5 py-5 space-y-4">
-
-            {/* Type selector */}
             <div>
               <label className={labelClass}>Type</label>
               <div className="flex flex-wrap gap-2">
@@ -301,7 +297,6 @@ export default function ActivityTimeline({ clientId, initialActivities, initialF
               </label>
             </div>
 
-            {/* Inline follow-up */}
             <div className="border-t border-zinc-100 pt-4">
               <div className="flex items-center gap-2 mb-3">
                 <input type="checkbox" name="add_follow_up" id="add_follow_up"
@@ -415,7 +410,7 @@ export default function ActivityTimeline({ clientId, initialActivities, initialF
           </div>
         ) : (
           <div className="space-y-1">
-            {sorted.map((activity, i) => {
+            {sorted.map((activity) => {
               const config = typeConfig[activity.type]
               const isExpanded = expandedId === activity.id
               const isJobEvent = ['job_scheduled', 'job_completed', 'job_cancelled'].includes(activity.type)
@@ -459,35 +454,26 @@ export default function ActivityTimeline({ clientId, initialActivities, initialF
                       )}
 
                       {/* Job metadata */}
-{isJobEvent && (() => {
-  if (!activity.metadata) return null
-  const meta = activity.metadata as {
-    service_type?: string
-    property?: string
-    scheduled_date?: string
-    price?: number
-  }
-  return (
-    <div className="flex items-center gap-3 mt-2 flex-wrap">
-      {meta.service_type && (
-        <span className="text-xs text-zinc-400 capitalize">
-          {meta.service_type.replace('_', ' ')}
-        </span>
-      )}
-      {meta.property && (
-        <span className="text-xs text-zinc-400">{meta.property}</span>
-      )}
-      {meta.scheduled_date && (
-        <span className="text-xs text-zinc-400">
-          {new Date(meta.scheduled_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-        </span>
-      )}
-      {meta.price && (
-        <span className="text-xs font-medium text-zinc-700">£{Number(meta.price).toFixed(2)}</span>
-      )}
-    </div>
-  )
-})()}
+                      {isJobEvent && activity.metadata && (
+                        <div className="flex items-center gap-3 mt-2 flex-wrap">
+                          {activity.metadata.service_type ? (
+                            <span className="text-xs text-zinc-400 capitalize">
+                              {String(activity.metadata.service_type).replace('_', ' ')}
+                            </span>
+                          ) : null}
+                          {activity.metadata.property ? (
+                            <span className="text-xs text-zinc-400">{String(activity.metadata.property)}</span>
+                          ) : null}
+                          {activity.metadata.scheduled_date ? (
+                            <span className="text-xs text-zinc-400">
+                              {new Date(String(activity.metadata.scheduled_date)).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </span>
+                          ) : null}
+                          {activity.metadata.price ? (
+                            <span className="text-xs font-medium text-zinc-700">£{Number(activity.metadata.price).toFixed(2)}</span>
+                          ) : null}
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-3 flex-shrink-0 text-right">
