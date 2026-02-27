@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import Nav from '@/components/dashboard/Nav'
 
 import { getAllOpenFollowUps } from '@/lib/queries/activities'
 
@@ -49,6 +48,14 @@ export default async function DashboardPage() {
     })
   }
 
+  // Add this function alongside your other helpers like formatDate
+function getGreeting() {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good morning'
+  if (hour < 17) return 'Good afternoon'
+  return 'Good evening'
+}
+
   const serviceLabels: Record<string, string> = {
     regular: 'Regular Clean',
     deep_clean: 'Deep Clean',
@@ -62,10 +69,6 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#f9f8f5]">
-
-      {/* Nav */}
-      <Nav />
-
       <main className="max-w-7xl mx-auto px-6 pt-24 pb-16">
 
         {/* Header */}
@@ -74,7 +77,7 @@ export default async function DashboardPage() {
             Overview
           </p>
           <h1 className="text-3xl font-light tracking-tight text-zinc-900">
-            Good morning
+            {getGreeting()}
           </h1>
         </div>
 
