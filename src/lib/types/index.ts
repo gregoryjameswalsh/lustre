@@ -135,11 +135,15 @@ export interface Activity {
   job_id: string | null
   created_by: string
   type: ActivityType
-  title: string
+  title: string | null
   body: string | null
-  metadata: Record<string, unknown> | null
+  metadata: unknown
   pinned: boolean
   created_at: string
+  profiles?: {          // ← add this
+    full_name: string | null
+    email: string | null
+  } | null
 }
 
 // -----------------------------------------------------------------------------
