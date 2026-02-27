@@ -8,6 +8,7 @@
 // =============================================================================
 
 import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { respondToQuote, markQuoteViewed } from '@/lib/actions/quotes'
 
@@ -41,7 +42,9 @@ type QuoteData = {
   organisations: { name: string; phone: string | null; email: string | null; logo_url: string | null; address_line1: string | null; town: string | null; postcode: string | null }
 }
 
-export default function PublicQuotePage({ params }: { params: { token: string } }) {
+export default function PublicQuotePage() {
+  const params = useParams()
+  const token = params.token as string
   const [quote, setQuote]       = useState<QuoteData | null>(null)
   const [loading, setLoading]   = useState(true)
   const [notFound, setNotFound] = useState(false)
