@@ -65,7 +65,7 @@ export default function PublicQuotePage() {
         quote_line_items ( id, description, quantity, unit_price, amount, is_addon, sort_order ),
         organisations ( name, phone, email, logo_url, address_line1, town, postcode )
       `)
-      .eq('accept_token', params.token)
+      .eq('accept_token', token)
       .single()
       .then(({ data, error }) => {
           console.log('quote fetch error:', error)
@@ -76,15 +76,15 @@ export default function PublicQuotePage() {
 
         // Mark as viewed if still in sent state
         if (data.status === 'sent') {
-          markQuoteViewed(params.token)
+          markQuoteViewed(token)
         }
       })
-  }, [params.token])
+  }, [token])
 
   async function handleRespond(decision: 'accepted' | 'declined') {
     setActing(true)
     setError(null)
-    const result = await respondToQuote(params.token, decision)
+    const result = await respondToQuote(token, decision)
     if (result.error) {
       setError(result.error)
       setActing(false)
