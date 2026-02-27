@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation'
 
 interface NavProps {
-  orgName: string
+  orgName?: string
 }
 
 export default function Nav({ orgName }: NavProps) {
@@ -21,7 +21,7 @@ export default function Nav({ orgName }: NavProps) {
         <div className="flex items-center gap-6">
           <a href="/dashboard" className="flex flex-col leading-tight">
             <span className="text-xs font-medium tracking-[0.22em] uppercase text-zinc-900">
-              {orgName}
+              {orgName ?? 'Lustre'}
             </span>
             <span className="text-[9px] tracking-widest uppercase text-zinc-400">
               Powered by Lustre
