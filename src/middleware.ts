@@ -68,61 +68,49 @@ export async function middleware(request: NextRequest) {
     return response
   }
 
-  // Fetch their org's onboarding status
-  // We join through profiles to get org data in one query
+  // Two explicit queries — more reliable than nested join syntax
   const { data: profile } = await supabase
     .from('profiles')
-    .select(`
-      organisation_id,
-      organisations (
-        onboarding_completed_at,
-        subscription_status,
-        trial_ends_at,
-        plan
-      )
-    `)
+    .select('organisation_id')
     .eq('id', user.id)
     .single()
 
-  // Something is wrong with their account — log them out rather than loop
+  // No profile means broken account — sign them out
   if (!profile) {
     const signoutUrl = request.nextUrl.clone()
     signoutUrl.pathname = '/auth/signout'
     return NextResponse.redirect(signoutUrl)
   }
 
-  const org = profile.organisations as {
-    onboarding_completed_at: string | null
-    subscription_status: string
-    trial_ends_at: string | null
-    plan: string
-  } | null
+  const { data: org } = await supabase
+    .from('organisations')
+    .select('onboarding_completed_at, subscription_status, trial_ends_at, plan')
+    .eq('id', profile.organisation_id)
+    .single()
 
-  // Onboarding not complete — redirect to wizard
-  if (org && !org.onboarding_completed_at) {
+  // No org or onboarding not complete — send to wizard
+  if (!org || !org.onboarding_completed_at) {
     const onboardingUrl = request.nextUrl.clone()
     onboardingUrl.pathname = '/onboarding'
     return NextResponse.redirect(onboardingUrl)
   }
 
   // ─── 3. Subscription gate ──────────────────────────────────────────────────
-  // Only block on /dashboard routes — allow /billing and /settings through
+  // Only block on /dashboard routes — /billing and /settings pass through
 
-  if (pathname.startsWith('/dashboard') && org) {
+  if (pathname.startsWith('/dashboard')) {
     const trialExpired =
       org.trial_ends_at && new Date(org.trial_ends_at) < new Date()
     const subscriptionLapsed =
       org.subscription_status === 'cancelled' ||
       org.subscription_status === 'past_due'
 
-    // Free plan + trial expired = redirect to billing
     if (org.plan === 'free' && trialExpired) {
       const billingUrl = request.nextUrl.clone()
       billingUrl.pathname = '/billing'
       return NextResponse.redirect(billingUrl)
     }
 
-    // Active subscription that has lapsed
     if (subscriptionLapsed) {
       const billingUrl = request.nextUrl.clone()
       billingUrl.pathname = '/billing'
@@ -135,13 +123,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimisation)
-     * - favicon.ico
-     * - Public assets
-     */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

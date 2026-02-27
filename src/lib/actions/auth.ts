@@ -81,7 +81,6 @@ export async function advanceOnboardingStep(step: number): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // Get their org
   const { data: profile } = await supabase
     .from('profiles')
     .select('organisation_id')
@@ -90,7 +89,7 @@ export async function advanceOnboardingStep(step: number): Promise<void> {
 
   if (!profile) redirect('/login')
 
-  const isComplete = step >= 4 // Step 4 is the last required step
+  const isComplete = step >= 4
 
   await supabase
     .from('organisations')
@@ -102,6 +101,8 @@ export async function advanceOnboardingStep(step: number): Promise<void> {
 
   if (isComplete) {
     redirect('/dashboard')
+  } else {
+    redirect(`/onboarding?step=${step + 1}`)
   }
 }
 

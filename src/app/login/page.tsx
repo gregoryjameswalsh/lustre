@@ -38,10 +38,10 @@ export default function LoginPage() {
                 {/* Logo */}
                 <div className="text-center mb-10">
                     <span className="text-xs font-medium tracking-[0.25em] uppercase text-zinc-800">
-                    The Walsh Standard
+                    Lustre
                     </span>
                     <p className="text-xs tracking-widest uppercase text-zinc-400 mt-1">
-                        Client Portal
+                        Operator Portal
                     </p>
                 </div>
 
@@ -98,7 +98,7 @@ export default function LoginPage() {
                 </div>
 
                 <p className="text-center text-xs text-zinc-300 mt-8 tracking-wider">
-                    (c) 2026 The Walsh Standard
+                    (c) 2026 Altrera Industries
                 </p>
             </div>
         </div>
