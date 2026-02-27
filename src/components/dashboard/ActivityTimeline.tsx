@@ -488,7 +488,7 @@ export default function ActivityTimeline({ clientId, initialActivities, initialF
   )
 })()}
                         </div>
-                      )}
+                      
                     </div>
 
                     <div className="flex items-center gap-3 flex-shrink-0 text-right">
