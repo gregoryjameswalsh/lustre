@@ -124,7 +124,7 @@ export interface Job {
 
 export type ActivityType =
   | 'note' | 'call' | 'email'
-  | 'quote_sent' | 'quote_accepted' | 'quote_declined'
+  | 'quote_sent' | 'quote_viewed' | 'quote_accepted' | 'quote_declined'
   | 'job_scheduled' | 'job_completed' | 'job_cancelled'
   | 'follow_up' | 'review_requested' | 'complaint' | 'other'
 

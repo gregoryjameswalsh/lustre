@@ -1,106 +1,100 @@
 'use client'
 
 // src/app/dashboard/quotes/[id]/_components/QuoteActions.tsx
-// =============================================================================
-// LUSTRE — Quote Actions (client component)
-// Handles all status-changing actions from the quote detail page.
-// =============================================================================
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { updateQuoteStatus, deleteQuote } from '@/lib/actions/quotes'
 
 interface QuoteActionsProps {
-  quote: {
-    id: string
-    status: string
-    accept_token: string
-  }
+  quoteId: string
+  quoteNumber: string
+  status: string
 }
 
-export default function QuoteActions({ quote }: QuoteActionsProps) {
+export default function QuoteActions({ quoteId, quoteNumber, status }: QuoteActionsProps) {
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError]     = useState<string | null>(null)
-  const router = useRouter()
 
-  async function handle(action: string) {
-    setLoading(action)
+  async function handleStatus(newStatus: 'sent' | 'accepted' | 'declined' | 'expired') {
+    setLoading(newStatus)
     setError(null)
-
-    let result: { error?: string } = {}
-
-    if (action === 'delete') {
-      result = await deleteQuote(quote.id)
-    } else {
-      result = await updateQuoteStatus(quote.id, action as 'sent' | 'accepted' | 'declined' | 'expired')
-    }
-
-    if (result?.error) {
-      setError(result.error)
-      setLoading(null)
-    } else {
-      router.refresh()
-      setLoading(null)
-    }
+    const result = await updateQuoteStatus(quoteId, newStatus)
+    if (result?.error) setError(result.error)
+    setLoading(null)
   }
 
-  function btn(label: string, action: string, style = 'primary') {
-    const styles = {
-      primary:   'bg-[#4a5c4e] text-white hover:opacity-90',
-      secondary: 'border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50',
-      danger:    'border border-red-100 bg-red-50 text-red-600 hover:bg-red-100',
-    }
-    return (
-      <button
-        key={action}
-        onClick={() => handle(action)}
-        disabled={loading !== null}
-        className={`rounded-full px-4 py-2 text-xs font-medium uppercase tracking-widest transition-all disabled:opacity-50 ${styles[style as keyof typeof styles]}`}
-      >
-        {loading === action ? '…' : label}
-      </button>
-    )
+  async function handleDelete() {
+    if (!confirm(`Delete ${quoteNumber}? This cannot be undone.`)) return
+    setLoading('delete')
+    setError(null)
+    await deleteQuote(quoteId)
   }
 
-  const { status } = quote
+  function handleDownloadPdf() {
+    window.open(`/api/quotes/${quoteId}/pdf`, '_blank')
+  }
 
   return (
-    <div className="flex flex-col items-end gap-2">
-      {error && <p className="text-xs text-red-600">{error}</p>}
+    <div className="flex items-center gap-2">
+      {error && (
+        <span className="text-xs text-red-500">{error}</span>
+      )}
 
-      <div className="flex flex-wrap justify-end gap-2">
-        {status === 'draft' && (
-          <>
-            {btn('Send to client', 'sent', 'primary')}
-            {btn('Delete', 'delete', 'danger')}
-          </>
-        )}
+      {/* PDF download — always available */}
+      <button
+        onClick={handleDownloadPdf}
+        className="rounded-full border border-zinc-200 bg-white px-4 py-2 text-xs font-medium uppercase tracking-widest text-zinc-600 transition-colors hover:border-zinc-300 hover:bg-zinc-50"
+      >
+        Download PDF
+      </button>
 
-        {(status === 'sent' || status === 'viewed') && (
-          <>
-            {btn('Mark accepted', 'accepted', 'primary')}
-            {btn('Mark declined', 'declined', 'secondary')}
-          </>
-        )}
+      {status === 'draft' && (
+        <>
+          <button
+            onClick={() => handleStatus('sent')}
+            disabled={loading === 'sent'}
+            className="rounded-full bg-[#4a5c4e] px-4 py-2 text-xs font-medium uppercase tracking-widest text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          >
+            {loading === 'sent' ? 'Sending…' : 'Send to client'}
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={loading === 'delete'}
+            className="rounded-full border border-red-100 bg-white px-4 py-2 text-xs font-medium uppercase tracking-widest text-red-400 transition-colors hover:border-red-200 hover:bg-red-50 disabled:opacity-50"
+          >
+            {loading === 'delete' ? 'Deleting…' : 'Delete'}
+          </button>
+        </>
+      )}
 
-        {status === 'accepted' && (
-          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-medium uppercase tracking-widest text-emerald-700">
-            Accepted
-          </span>
-        )}
+      {(status === 'sent' || status === 'viewed') && (
+        <>
+          <button
+            onClick={() => handleStatus('accepted')}
+            disabled={loading === 'accepted'}
+            className="rounded-full bg-[#4a5c4e] px-4 py-2 text-xs font-medium uppercase tracking-widest text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          >
+            {loading === 'accepted' ? 'Saving…' : 'Mark accepted'}
+          </button>
+          <button
+            onClick={() => handleStatus('declined')}
+            disabled={loading === 'declined'}
+            className="rounded-full border border-zinc-200 bg-white px-4 py-2 text-xs font-medium uppercase tracking-widest text-zinc-600 transition-colors hover:bg-zinc-50 disabled:opacity-50"
+          >
+            {loading === 'declined' ? 'Saving…' : 'Mark declined'}
+          </button>
+        </>
+      )}
 
-        {status === 'declined' && (
-          <span className="rounded-full border border-red-100 bg-red-50 px-4 py-2 text-xs font-medium uppercase tracking-widest text-red-600">
-            Declined
-          </span>
-        )}
-
-        {status === 'expired' && (
-          <span className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-medium uppercase tracking-widest text-amber-700">
-            Expired
-          </span>
-        )}
-      </div>
+      {status === 'accepted' && (
+        <span className="rounded-full bg-emerald-50 px-4 py-2 text-xs font-medium uppercase tracking-widest text-emerald-700">Accepted</span>
+      )}
+      {status === 'declined' && (
+        <span className="rounded-full bg-red-50 px-4 py-2 text-xs font-medium uppercase tracking-widest text-red-500">Declined</span>
+      )}
+      {status === 'expired' && (
+        <span className="rounded-full bg-zinc-100 px-4 py-2 text-xs font-medium uppercase tracking-widest text-zinc-400">Expired</span>
+      )}
     </div>
   )
 }

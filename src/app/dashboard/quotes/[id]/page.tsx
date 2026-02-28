@@ -59,7 +59,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
             </div>
             <p className="mt-1 text-sm text-zinc-500">{quote.title}</p>
           </div>
-          <QuoteActions quote={quote} />
+          <QuoteActions quoteId={id} quoteNumber={quote.quote_number} status={quote.status} />
         </div>
 
         <div className="grid gap-4 lg:grid-cols-3">

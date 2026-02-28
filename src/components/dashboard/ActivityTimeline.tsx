@@ -18,6 +18,7 @@ const typeConfig: Record<ActivityType, { label: string; icon: string; colour: st
   review_requested: { label: 'Review Requested', icon: '⭐', colour: 'bg-amber-50 text-amber-600' },
   complaint:        { label: 'Complaint',        icon: '⚠️',  colour: 'bg-red-50 text-red-500' },
   other:            { label: 'Other',            icon: '💬', colour: 'bg-zinc-100 text-zinc-600' },
+  quote_viewed:     { label: 'Quote Viewed',     icon: '👁️',  colour: 'bg-blue-50 text-blue-500' },
 }
 
 const priorityColour: Record<string, string> = {
@@ -411,7 +412,12 @@ export default function ActivityTimeline({ clientId, initialActivities, initialF
         ) : (
           <div className="space-y-1">
             {sorted.map((activity) => {
-              const config = typeConfig[activity.type]
+
+                    if (!typeConfig[activity.type]) {
+  console.warn('Unknown activity type:', activity.type)
+}
+
+              const config = typeConfig[activity.type] ?? { label: 'Activity', icon: '💬', colour: 'bg-zinc-100 text-zinc-600' }
               const isExpanded = expandedId === activity.id
               const isJobEvent = ['job_scheduled', 'job_completed', 'job_cancelled'].includes(activity.type)
 
