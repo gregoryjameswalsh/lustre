@@ -104,7 +104,7 @@ export async function GET(
   }
 
   // Generate PDF buffer
-  const buffer = await renderToBuffer(createElement(QuotePDF, { data: pdfData }))
+  const buffer = await renderToBuffer(QuotePDF({ data: pdfData }))
 
   const filename = `${quote.quote_number}.pdf`
 
