@@ -108,7 +108,7 @@ export async function GET(
 
   const filename = `${quote.quote_number}.pdf`
 
-  return new NextResponse(buffer, {
+  return new NextResponse(new Uint8Array(buffer), {
     status: 200,
     headers: {
       'Content-Type':        'application/pdf',
