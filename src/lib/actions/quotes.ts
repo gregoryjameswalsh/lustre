@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 
@@ -382,7 +383,10 @@ async function sendQuoteToClient(quoteId: string, supabase: any): Promise<void> 
 // -----------------------------------------------------------------------------
 
 async function createJobFromQuote(quoteId: string): Promise<void> {
-  const { supabase, profileId } = await getOrgAndUser()
+  // Uses service client — this is called from the unauthenticated public quote
+  // flow so there is no session. The job is created unassigned; the org can
+  // assign it from the dashboard.
+  const supabase = createServiceClient()
 
   const { data: quote } = await supabase
     .from('quotes')
@@ -398,7 +402,6 @@ async function createJobFromQuote(quoteId: string): Promise<void> {
       organisation_id: quote.organisation_id,
       client_id:       quote.client_id,
       property_id:     quote.property_id,
-      assigned_to:     profileId,
       service_type:    'other',
       status:          'scheduled',
       price:           quote.total,
@@ -440,17 +443,19 @@ export async function respondToQuote(
   token: string,
   response: 'accepted' | 'declined'
 ): Promise<{ error?: string; success?: boolean }> {
-  const supabase = await createClient()
+  const supabase = createServiceClient()
 
   const { data: quote } = await supabase
     .from('quotes')
-    .select('id, status, created_by')
+    .select('id, status, valid_until, created_by')
     .eq('accept_token', token)
     .single()
 
   if (!quote) return { error: 'Quote not found.' }
   if (quote.status !== 'sent' && quote.status !== 'viewed')
     return { error: 'This quote is no longer open for responses.' }
+  if (quote.valid_until && new Date(quote.valid_until) < new Date())
+    return { error: 'This quote has expired. Please contact us for an updated quote.' }
 
   const { error } = await supabase
     .from('quotes')
@@ -469,7 +474,7 @@ export async function respondToQuote(
 // -----------------------------------------------------------------------------
 
 export async function markQuoteViewed(token: string): Promise<void> {
-  const supabase = await createClient()
+  const supabase = createServiceClient()
 
   await supabase
     .from('quotes')
