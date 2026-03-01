@@ -68,8 +68,6 @@ export default function PublicQuotePage() {
       .eq('accept_token', token)
       .single()
       .then(({ data, error }) => {
-          console.log('quote fetch error:', error)
-  console.log('quote fetch data:', data)
         if (error || !data) { setNotFound(true); setLoading(false); return }
         setQuote(data as unknown as QuoteData)
         setLoading(false)

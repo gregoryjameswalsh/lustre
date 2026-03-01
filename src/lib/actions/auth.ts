@@ -57,7 +57,7 @@ export async function signUp(
     if (error.message.includes('already registered')) {
       return { error: 'An account with this email already exists. Try logging in.' }
     }
-    return { error: error.message }
+    return { error: 'Sign up failed. Please check your details and try again.' }
   }
 
   // Supabase returns a session immediately if email confirmation is disabled.

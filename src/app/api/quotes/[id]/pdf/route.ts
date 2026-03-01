@@ -106,7 +106,8 @@ export async function GET(
   // Generate PDF buffer
   const buffer = await renderToBuffer(QuotePDF({ data: pdfData }))
 
-  const filename = `${quote.quote_number}.pdf`
+  const safeFilename = quote.quote_number.replace(/[^\w\-\.]/g, '_')
+  const filename = `${safeFilename}.pdf`
 
   return new NextResponse(new Uint8Array(buffer), {
     status: 200,
