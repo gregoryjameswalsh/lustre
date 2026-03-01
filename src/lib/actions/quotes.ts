@@ -6,6 +6,8 @@
 // =============================================================================
 
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
+import { checkRateLimit, quoteRateLimit } from '@/lib/ratelimit'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 
@@ -117,19 +119,32 @@ export async function createQuote(
   if (pricingType === 'itemised') {
     const lineItemsJson = formData.get('line_items') as string
     if (lineItemsJson) {
-      const items = JSON.parse(lineItemsJson)
+      let items: any[]
+      try {
+        items = JSON.parse(lineItemsJson)
+      } catch {
+        await supabase.from('quotes').delete().eq('id', quote.id)
+        return { error: 'Invalid line items data.' }
+      }
+
       const rows = items
         .filter((item: any) => item.description?.trim())
-        .map((item: any, i: number) => ({
-          quote_id:        quote.id,
-          organisation_id: orgId,
-          description:     item.description.trim(),
-          quantity:        item.quantity || 1,
-          unit_price:      item.unit_price || 0,
-          amount:          parseFloat(((item.quantity || 1) * (item.unit_price || 0)).toFixed(2)),
-          is_addon:        item.is_addon || false,
-          sort_order:      i,
-        }))
+        .map((item: any, i: number) => {
+          const qty   = Number(item.quantity)
+          const price = Number(item.unit_price)
+          const safeQty   = Number.isFinite(qty)   && qty   > 0 && qty   <= 9999   ? qty   : 1
+          const safePrice = Number.isFinite(price) && price >= 0 && price <= 999999 ? price : 0
+          return {
+            quote_id:        quote.id,
+            organisation_id: orgId,
+            description:     item.description.trim(),
+            quantity:        safeQty,
+            unit_price:      safePrice,
+            amount:          parseFloat((safeQty * safePrice).toFixed(2)),
+            is_addon:        item.is_addon || false,
+            sort_order:      i,
+          }
+        })
 
       if (rows.length > 0) {
         const { error: itemsError } = await supabase
@@ -137,7 +152,7 @@ export async function createQuote(
           .insert(rows)
         if (itemsError) {
           await supabase.from('quotes').delete().eq('id', quote.id)
-          return { error: `Failed to save line items: ${itemsError.message}` }
+          return { error: 'Failed to save line items. Please try again.' }
         }
       }
     }
@@ -204,25 +219,37 @@ export async function updateQuote(
   if (pricingType === 'itemised') {
     const lineItemsJson = formData.get('line_items') as string
     if (lineItemsJson) {
+      let items: any[]
+      try {
+        items = JSON.parse(lineItemsJson)
+      } catch {
+        return { error: 'Invalid line items data.' }
+      }
+
       await supabase.from('quote_line_items').delete().eq('quote_id', quoteId)
-      const items = JSON.parse(lineItemsJson)
       const rows = items
         .filter((item: any) => item.description?.trim())
-        .map((item: any, i: number) => ({
-          quote_id:        quoteId,
-          organisation_id: orgId,
-          description:     item.description.trim(),
-          quantity:        item.quantity || 1,
-          unit_price:      item.unit_price || 0,
-          amount:          parseFloat(((item.quantity || 1) * (item.unit_price || 0)).toFixed(2)),
-          is_addon:        item.is_addon || false,
-          sort_order:      i,
-        }))
+        .map((item: any, i: number) => {
+          const qty   = Number(item.quantity)
+          const price = Number(item.unit_price)
+          const safeQty   = Number.isFinite(qty)   && qty   > 0 && qty   <= 9999   ? qty   : 1
+          const safePrice = Number.isFinite(price) && price >= 0 && price <= 999999 ? price : 0
+          return {
+            quote_id:        quoteId,
+            organisation_id: orgId,
+            description:     item.description.trim(),
+            quantity:        safeQty,
+            unit_price:      safePrice,
+            amount:          parseFloat((safeQty * safePrice).toFixed(2)),
+            is_addon:        item.is_addon || false,
+            sort_order:      i,
+          }
+        })
       if (rows.length > 0) {
         const { error: itemsError } = await supabase
           .from('quote_line_items')
           .insert(rows)
-        if (itemsError) return { error: `Failed to save line items: ${itemsError.message}` }
+        if (itemsError) return { error: 'Failed to save line items. Please try again.' }
       }
     }
   }
@@ -239,6 +266,15 @@ export async function saveLineItems(
   items: { description: string; quantity: number; unit_price: number; is_addon: boolean; sort_order: number }[]
 ): Promise<{ error?: string }> {
   const { supabase, orgId } = await getOrgAndUser()
+
+  // Verify the quote belongs to this org before modifying its line items
+  const { data: owned } = await supabase
+    .from('quotes')
+    .select('id')
+    .eq('id', quoteId)
+    .eq('organisation_id', orgId)
+    .single()
+  if (!owned) return { error: 'Not found.' }
 
   await supabase.from('quote_line_items').delete().eq('quote_id', quoteId)
   if (items.length === 0) return {}
@@ -271,7 +307,7 @@ export async function updateQuoteStatus(
   quoteId: string,
   status: 'sent' | 'accepted' | 'declined' | 'expired'
 ): Promise<{ error?: string }> {
-  const { supabase } = await getOrgAndUser()
+  const { supabase, orgId } = await getOrgAndUser()
 
   const updates: Record<string, unknown> = { status }
   if (status === 'sent')
@@ -283,6 +319,7 @@ export async function updateQuoteStatus(
     .from('quotes')
     .update(updates)
     .eq('id', quoteId)
+    .eq('organisation_id', orgId)
 
   if (error) return { error: 'Failed to update quote status.' }
 
@@ -321,7 +358,11 @@ async function sendQuoteToClient(quoteId: string, supabase: any): Promise<void> 
     return
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.thewalshstandard.com'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  if (!appUrl) {
+    console.error('NEXT_PUBLIC_APP_URL is not set — cannot send quote email.')
+    return
+  }
 
   const { sendQuoteEmail } = await import('@/lib/email')
   await sendQuoteEmail({
@@ -343,7 +384,10 @@ async function sendQuoteToClient(quoteId: string, supabase: any): Promise<void> 
 // -----------------------------------------------------------------------------
 
 async function createJobFromQuote(quoteId: string): Promise<void> {
-  const { supabase, profileId } = await getOrgAndUser()
+  // Uses service client — this is called from the unauthenticated public quote
+  // flow so there is no session. The job is created unassigned; the org can
+  // assign it from the dashboard.
+  const supabase = createServiceClient()
 
   const { data: quote } = await supabase
     .from('quotes')
@@ -359,7 +403,6 @@ async function createJobFromQuote(quoteId: string): Promise<void> {
       organisation_id: quote.organisation_id,
       client_id:       quote.client_id,
       property_id:     quote.property_id,
-      assigned_to:     profileId,
       service_type:    'other',
       status:          'scheduled',
       price:           quote.total,
@@ -378,12 +421,13 @@ async function createJobFromQuote(quoteId: string): Promise<void> {
 // -----------------------------------------------------------------------------
 
 export async function deleteQuote(quoteId: string): Promise<{ error?: string }> {
-  const { supabase } = await getOrgAndUser()
+  const { supabase, orgId } = await getOrgAndUser()
 
   const { error } = await supabase
     .from('quotes')
     .delete()
     .eq('id', quoteId)
+    .eq('organisation_id', orgId)
     .eq('status', 'draft')
 
   if (error) return { error: 'Failed to delete quote. Only draft quotes can be deleted.' }
@@ -400,17 +444,22 @@ export async function respondToQuote(
   token: string,
   response: 'accepted' | 'declined'
 ): Promise<{ error?: string; success?: boolean }> {
-  const supabase = await createClient()
+  const { success: rateOk } = await checkRateLimit(quoteRateLimit, token)
+  if (!rateOk) return { error: 'Too many requests. Please try again later.' }
+
+  const supabase = createServiceClient()
 
   const { data: quote } = await supabase
     .from('quotes')
-    .select('id, status, created_by')
+    .select('id, status, valid_until, created_by')
     .eq('accept_token', token)
     .single()
 
   if (!quote) return { error: 'Quote not found.' }
   if (quote.status !== 'sent' && quote.status !== 'viewed')
     return { error: 'This quote is no longer open for responses.' }
+  if (quote.valid_until && new Date(quote.valid_until) < new Date())
+    return { error: 'This quote has expired. Please contact us for an updated quote.' }
 
   const { error } = await supabase
     .from('quotes')
@@ -429,7 +478,7 @@ export async function respondToQuote(
 // -----------------------------------------------------------------------------
 
 export async function markQuoteViewed(token: string): Promise<void> {
-  const supabase = await createClient()
+  const supabase = createServiceClient()
 
   await supabase
     .from('quotes')

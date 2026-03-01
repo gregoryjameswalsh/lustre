@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/server'
 import { renderToBuffer } from '@react-pdf/renderer'
 import { QuotePDF, QuotePDFData } from '@/lib/pdf/QuotePDF'
 import { createElement } from 'react'
+import { checkRateLimit, pdfRateLimit } from '@/lib/ratelimit'
 
 export async function GET(
   request: NextRequest,
@@ -22,6 +23,9 @@ export async function GET(
   // Auth check
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return new NextResponse('Unauthorised', { status: 401 })
+
+  const { success } = await checkRateLimit(pdfRateLimit, user.id)
+  if (!success) return new NextResponse('Too many requests', { status: 429 })
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -106,7 +110,8 @@ export async function GET(
   // Generate PDF buffer
   const buffer = await renderToBuffer(QuotePDF({ data: pdfData }))
 
-  const filename = `${quote.quote_number}.pdf`
+  const safeFilename = quote.quote_number.replace(/[^\w\-\.]/g, '_')
+  const filename = `${safeFilename}.pdf`
 
   return new NextResponse(new Uint8Array(buffer), {
     status: 200,
