@@ -7,6 +7,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
+import { checkRateLimit, quoteRateLimit } from '@/lib/ratelimit'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 
@@ -443,6 +444,9 @@ export async function respondToQuote(
   token: string,
   response: 'accepted' | 'declined'
 ): Promise<{ error?: string; success?: boolean }> {
+  const { success: rateOk } = await checkRateLimit(quoteRateLimit, token)
+  if (!rateOk) return { error: 'Too many requests. Please try again later.' }
+
   const supabase = createServiceClient()
 
   const { data: quote } = await supabase

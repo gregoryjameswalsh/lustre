@@ -7,6 +7,35 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
+import { checkRateLimit, loginRateLimit, signupRateLimit } from '@/lib/ratelimit'
+
+// -----------------------------------------------------------------------------
+// Sign In
+// -----------------------------------------------------------------------------
+
+export type SignInState = { error?: string }
+
+export async function signIn(
+  prevState: SignInState,
+  formData: FormData
+): Promise<SignInState> {
+  const email    = formData.get('email') as string
+  const password = formData.get('password') as string
+
+  if (!email?.trim()) return { error: 'Please enter your email.' }
+  if (!password)      return { error: 'Please enter your password.' }
+
+  const ip = ((await headers()).get('x-forwarded-for') ?? 'unknown').split(',')[0].trim()
+  const { success } = await checkRateLimit(loginRateLimit, ip)
+  if (!success) return { error: 'Too many login attempts. Please wait 15 minutes and try again.' }
+
+  const supabase = await createClient()
+  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error) return { error: 'Invalid email or password.' }
+
+  redirect('/dashboard')
+}
 
 // -----------------------------------------------------------------------------
 // Sign Up
@@ -35,6 +64,10 @@ export async function signUp(
   if (!email?.trim())              return { error: 'Please enter your email address.' }
   if (!password || password.length < 8)
     return { error: 'Password must be at least 8 characters.' }
+
+  const ip = ((await headers()).get('x-forwarded-for') ?? 'unknown').split(',')[0].trim()
+  const { success } = await checkRateLimit(signupRateLimit, ip)
+  if (!success) return { error: 'Too many sign up attempts. Please try again later.' }
 
   const supabase = await createClient()
 
