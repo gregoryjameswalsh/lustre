@@ -180,7 +180,9 @@ function quoteEmailText(params: SendQuoteEmailParams): string {
 // -----------------------------------------------------------------------------
 
 export async function sendQuoteEmail(params: SendQuoteEmailParams): Promise<{ error?: string }> {
-  const { clientEmail, clientName, quoteNumber, orgName, orgEmail } = params
+  const { clientEmail, clientName, quoteNumber, orgEmail } = params
+  // Strip newlines to prevent email header injection
+  const orgName = params.orgName.replace(/[\r\n]/g, ' ').trim()
 
   try {
     const { error } = await resend.emails.send({

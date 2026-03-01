@@ -50,7 +50,7 @@ export default function EditClientPage() {
     }).eq('id', clientId)
 
     if (error) {
-      setError(error.message)
+      setError("Something went wrong. Please try again.")
       setLoading(false)
     } else {
       router.push(`/dashboard/clients/${clientId}`)
