@@ -69,38 +69,38 @@ function getGreeting() {
 
   return (
     <div className="min-h-screen bg-[#f9f8f5]">
-      <main className="max-w-7xl mx-auto px-6 pt-24 pb-16">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-4 md:pt-24 md:pb-16">
 
         {/* Header */}
-        <div className="mb-10">
+        <div className="mb-6 md:mb-10">
           <p className="text-xs font-medium tracking-[0.3em] uppercase text-[#4a5c4e] mb-2">
             Overview
           </p>
-          <h1 className="text-3xl font-light tracking-tight text-zinc-900">
+          <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-zinc-900">
             {getGreeting()}
           </h1>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-px bg-zinc-200 border border-zinc-200 rounded-lg overflow-hidden mb-8">
-          <div className="bg-white px-8 py-6">
-            <span className="text-3xl font-light tracking-tight text-zinc-900 block mb-1">
+          <div className="bg-white px-4 py-5 sm:px-8 sm:py-6">
+            <span className="text-2xl sm:text-3xl font-light tracking-tight text-zinc-900 block mb-1">
               {clientCount ?? 0}
             </span>
             <span className="text-xs font-medium tracking-[0.2em] uppercase text-zinc-400">
               Active Clients
             </span>
           </div>
-          <div className="bg-white px-8 py-6">
-            <span className="text-3xl font-light tracking-tight text-zinc-900 block mb-1">
+          <div className="bg-white px-4 py-5 sm:px-8 sm:py-6">
+            <span className="text-2xl sm:text-3xl font-light tracking-tight text-zinc-900 block mb-1">
               {scheduledCount ?? 0}
             </span>
             <span className="text-xs font-medium tracking-[0.2em] uppercase text-zinc-400">
               Upcoming Jobs
             </span>
           </div>
-          <div className="bg-white px-8 py-6">
-            <span className="text-3xl font-light tracking-tight text-zinc-900 block mb-1">
+          <div className="bg-white px-4 py-5 sm:px-8 sm:py-6">
+            <span className="text-2xl sm:text-3xl font-light tracking-tight text-zinc-900 block mb-1">
               {jobCount ?? 0}
             </span>
             <span className="text-xs font-medium tracking-[0.2em] uppercase text-zinc-400">
@@ -109,7 +109,7 @@ function getGreeting() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
 
           {/* Upcoming Jobs */}
           <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
@@ -257,7 +257,7 @@ function getGreeting() {
         </div>
 
         {/* Quick actions */}
-        <div className="mt-6 flex gap-3">
+        <div className="mt-6 flex flex-wrap gap-3">
           <a
             href="/dashboard/clients/new"
             className="text-xs font-medium tracking-[0.15em] uppercase bg-zinc-900 text-[#f9f8f5] px-5 py-3 rounded-full hover:bg-[#4a5c4e] transition-colors"
