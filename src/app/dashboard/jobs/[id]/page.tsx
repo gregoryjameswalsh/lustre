@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useParams, useRouter } from 'next/navigation'
 import Nav from '@/components/dashboard/Nav'
+import { deleteJobAction } from '@/lib/actions/jobs'
 
 const serviceLabels: Record<string, string> = {
   regular: 'Regular Clean',
@@ -45,19 +46,31 @@ export default function JobDetailPage() {
   const [job, setJob] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     async function loadJob() {
-      const { data } = await supabase
-        .from('jobs')
-        .select(`
-          *,
-          clients (id, first_name, last_name, email, phone),
-          properties (id, address_line1, address_line2, town, postcode, access_instructions, alarm_instructions, parking_instructions, pets, specialist_surfaces, key_held)
-        `)
-        .eq('id', jobId)
-        .single()
+      const [{ data }, { data: { user } }] = await Promise.all([
+        supabase
+          .from('jobs')
+          .select(`
+            *,
+            clients (id, first_name, last_name, email, phone),
+            properties (id, address_line1, address_line2, town, postcode, access_instructions, alarm_instructions, parking_instructions, pets, specialist_surfaces, key_held)
+          `)
+          .eq('id', jobId)
+          .single(),
+        supabase.auth.getUser(),
+      ])
       setJob(data)
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+        setIsAdmin(profile?.role === 'admin')
+      }
       setLoading(false)
     }
     loadJob()
@@ -72,9 +85,7 @@ export default function JobDetailPage() {
 
   async function deleteJob() {
     if (!confirm('Delete this job? This cannot be undone.')) return
-    await supabase.from('jobs').delete().eq('id', jobId)
-    router.push('/dashboard/jobs')
-    router.refresh()
+    await deleteJobAction(jobId)
   }
 
   if (loading) {
@@ -161,12 +172,18 @@ export default function JobDetailPage() {
                 Cancel
               </button>
             )}
-            <button
-              onClick={deleteJob}
-              className="text-xs text-zinc-300 hover:text-red-400 transition-colors tracking-wide"
+            <span
+              title={!isAdmin ? 'Only admins can delete jobs' : undefined}
+              className={!isAdmin ? 'cursor-not-allowed' : ''}
             >
-              Delete
-            </button>
+              <button
+                onClick={deleteJob}
+                disabled={!isAdmin}
+                className={`text-xs tracking-wide transition-colors ${isAdmin ? 'text-zinc-300 hover:text-red-400' : 'text-zinc-200 pointer-events-none'}`}
+              >
+                Delete
+              </button>
+            </span>
           </div>
         </div>
 

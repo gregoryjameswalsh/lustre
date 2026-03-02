@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
 import Nav from '@/components/dashboard/Nav'
+import { deletePropertyAction } from '@/lib/actions/clients'
 
 export default function EditPropertyPage() {
   const router = useRouter()
@@ -16,17 +17,25 @@ export default function EditPropertyPage() {
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
   const [property, setProperty] = useState<any>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   const supabase = createClient()
 
   useEffect(() => {
     async function loadProperty() {
-      const { data } = await supabase
-        .from('properties')
-        .select('*')
-        .eq('id', propertyId)
-        .single()
+      const [{ data }, { data: { user } }] = await Promise.all([
+        supabase.from('properties').select('*').eq('id', propertyId).single(),
+        supabase.auth.getUser(),
+      ])
       setProperty(data)
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+        setIsAdmin(profile?.role === 'admin')
+      }
       setFetching(false)
     }
     loadProperty()
@@ -67,9 +76,7 @@ export default function EditPropertyPage() {
   async function handleDelete() {
     if (!confirm('Delete this property? This cannot be undone.')) return
     setDeleting(true)
-    await supabase.from('properties').delete().eq('id', propertyId)
-    router.push(`/dashboard/clients/${clientId}`)
-    router.refresh()
+    await deletePropertyAction(propertyId, clientId)
   }
 
   const inputClass = "w-full border border-zinc-200 rounded-md px-4 py-2.5 text-sm text-zinc-900 focus:outline-none focus:border-zinc-400 bg-zinc-50 transition-colors"
@@ -212,14 +219,19 @@ export default function EditPropertyPage() {
                 Cancel
               </a>
             </div>
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={deleting}
-              className="text-xs text-red-400 hover:text-red-600 transition-colors tracking-wide"
+            <span
+              title={!isAdmin ? 'Only admins can delete properties' : undefined}
+              className={!isAdmin ? 'cursor-not-allowed' : ''}
             >
-              {deleting ? 'Deleting…' : 'Delete property'}
-            </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={!isAdmin || deleting}
+                className={`text-xs tracking-wide transition-colors ${isAdmin ? 'text-red-400 hover:text-red-600' : 'text-zinc-300 pointer-events-none'}`}
+              >
+                {deleting ? 'Deleting…' : 'Delete property'}
+              </button>
+            </span>
           </div>
 
         </form>

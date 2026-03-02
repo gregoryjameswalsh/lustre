@@ -66,3 +66,28 @@ export async function deleteClientAction(id: string) {
   revalidatePath('/dashboard/clients')
   redirect('/dashboard/clients')
 }
+
+// Admin-only — verify org ownership via clients.organisation_id join
+export async function deletePropertyAction(propertyId: string, clientId: string): Promise<{ error?: string }> {
+  const { supabase, orgId } = await requireAdmin()
+
+  // Ensure the property belongs to a client in this org before deleting
+  const { data: prop } = await supabase
+    .from('properties')
+    .select('id, clients!inner(organisation_id)')
+    .eq('id', propertyId)
+    .eq('clients.organisation_id', orgId)
+    .single()
+
+  if (!prop) return { error: 'Property not found.' }
+
+  const { error } = await supabase
+    .from('properties')
+    .delete()
+    .eq('id', propertyId)
+
+  if (error) return { error: 'Failed to delete property. Please try again.' }
+
+  revalidatePath(`/dashboard/clients/${clientId}`)
+  redirect(`/dashboard/clients/${clientId}`)
+}
