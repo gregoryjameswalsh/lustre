@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
-import Nav from '@/components/dashboard/Nav'
 
 export default function EditJobPage() {
   const router = useRouter()
@@ -88,21 +87,20 @@ export default function EditJobPage() {
   const labelClass = "block text-xs font-medium tracking-wider uppercase text-zinc-500 mb-2"
 
   if (fetching) return (
-    <div className="min-h-screen bg-[#f9f8f5]"><Nav />
-      <div className="max-w-3xl mx-auto px-6 pt-24 text-sm text-zinc-300">Loading…</div>
+    <div className="min-h-screen bg-[#f9f8f5]">
+      <div className="max-w-3xl mx-auto px-4 pt-8 sm:px-6 md:pt-24 text-sm text-zinc-300">Loading…</div>
     </div>
   )
 
   return (
     <div className="min-h-screen bg-[#f9f8f5]">
-      <Nav />
-      <main className="max-w-3xl mx-auto px-6 pt-24 pb-16">
+      <main className="max-w-3xl mx-auto px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
 
         <div className="mb-8">
           <a href={`/dashboard/jobs/${jobId}`} className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors tracking-wide">
             ← Back to Job
           </a>
-          <h1 className="text-3xl font-light tracking-tight text-zinc-900 mt-4">Edit Job</h1>
+          <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-zinc-900 mt-4">Edit Job</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -112,7 +110,7 @@ export default function EditJobPage() {
             <div className="px-6 py-4 border-b border-zinc-100">
               <h2 className="text-sm font-medium text-zinc-900 tracking-tight">Client & Property</h2>
             </div>
-            <div className="px-6 py-6 grid grid-cols-2 gap-4">
+            <div className="px-6 py-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelClass}>Client <span className="text-red-400">*</span></label>
                 <select
@@ -153,7 +151,7 @@ export default function EditJobPage() {
             <div className="px-6 py-4 border-b border-zinc-100">
               <h2 className="text-sm font-medium text-zinc-900 tracking-tight">Service Details</h2>
             </div>
-            <div className="px-6 py-6 grid grid-cols-2 gap-4">
+            <div className="px-6 py-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelClass}>Service Type</label>
                 <select name="service_type" defaultValue={job?.service_type ?? ''} className={inputClass}>
@@ -213,8 +211,8 @@ export default function EditJobPage() {
 
           {error && <p className="text-xs text-red-500 tracking-wide">{error}</p>}
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-3">
               <button
                 type="submit"
                 disabled={loading}

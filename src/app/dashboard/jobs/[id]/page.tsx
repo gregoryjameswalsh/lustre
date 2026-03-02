@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useParams, useRouter } from 'next/navigation'
-import Nav from '@/components/dashboard/Nav'
 
 const serviceLabels: Record<string, string> = {
   regular: 'Regular Clean',
@@ -80,8 +79,7 @@ export default function JobDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f9f8f5]">
-        <Nav />
-        <div className="max-w-7xl mx-auto px-6 pt-24">
+        <div className="max-w-7xl mx-auto px-4 pt-8 sm:px-6 md:pt-24">
           <div className="text-sm text-zinc-300">Loading…</div>
         </div>
       </div>
@@ -91,8 +89,7 @@ export default function JobDetailPage() {
   if (!job) {
     return (
       <div className="min-h-screen bg-[#f9f8f5]">
-        <Nav />
-        <div className="max-w-7xl mx-auto px-6 pt-24">
+        <div className="max-w-7xl mx-auto px-4 pt-8 sm:px-6 md:pt-24">
           <div className="text-sm text-zinc-400">Job not found.</div>
         </div>
       </div>
@@ -115,18 +112,17 @@ export default function JobDetailPage() {
 
   return (
     <div className="min-h-screen bg-[#f9f8f5]">
-      <Nav />
 
-      <main className="max-w-7xl mx-auto px-6 pt-24 pb-16">
+      <main className="max-w-7xl mx-auto px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
 
         {/* Header */}
-        <div className="flex items-start justify-between mb-8">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between mb-6 md:mb-8">
           <div>
             <a href="/dashboard/jobs" className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors tracking-wide">
               ← Jobs
             </a>
-            <div className="flex items-center gap-4 mt-3">
-              <h1 className="text-3xl font-light tracking-tight text-zinc-900">
+            <div className="flex items-center gap-3 mt-3">
+              <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-zinc-900">
                 {serviceLabels[job.service_type] ?? 'Job'}
               </h1>
               <span className={`text-xs px-3 py-1.5 rounded-full font-medium tracking-wide border ${statusColour[job.status]}`}>
@@ -142,7 +138,7 @@ export default function JobDetailPage() {
           </div>
 
           {/* Status actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 md:gap-3">
             {nextStatus && nextStatus !== 'cancelled' && (
               <button
                 onClick={() => updateStatus(nextStatus)}
@@ -170,7 +166,7 @@ export default function JobDetailPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
 
           {/* Left — job details */}
           <div className="space-y-6">
