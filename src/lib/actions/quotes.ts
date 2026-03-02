@@ -5,30 +5,15 @@
 // LUSTRE — Quote Server Actions
 // =============================================================================
 
-import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { checkRateLimit, quoteRateLimit } from '@/lib/ratelimit'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { getOrgAndUser, requireAdmin } from './_auth'
 
 // -----------------------------------------------------------------------------
 // Helpers
 // -----------------------------------------------------------------------------
-
-async function getOrgAndUser() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('organisation_id, id')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile) redirect('/login')
-  return { supabase, userId: user.id, profileId: profile.id, orgId: profile.organisation_id }
-}
 
 async function getOrgVat(supabase: any, orgId: string) {
   const { data: org } = await supabase
@@ -420,8 +405,9 @@ async function createJobFromQuote(quoteId: string): Promise<void> {
 // Delete Quote (draft only)
 // -----------------------------------------------------------------------------
 
+// Admin-only — team members can create and send quotes but only admins can delete
 export async function deleteQuote(quoteId: string): Promise<{ error?: string }> {
-  const { supabase, orgId } = await getOrgAndUser()
+  const { supabase, orgId } = await requireAdmin()
 
   const { error } = await supabase
     .from('quotes')

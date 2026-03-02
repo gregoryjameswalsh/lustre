@@ -5,32 +5,17 @@
 // LUSTRE — Settings Server Actions
 // =============================================================================
 
-import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
-
-async function getOrgAndUser() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('organisation_id, id, role')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile) redirect('/login')
-  return { supabase, orgId: profile.organisation_id, role: profile.role }
-}
+import { requireAdmin } from './_auth'
 
 export type SettingsFormState = { error?: string; success?: boolean }
 
+// Admin-only — only org admins can change VAT settings
 export async function saveVatSettings(
   prevState: SettingsFormState,
   formData: FormData
 ): Promise<SettingsFormState> {
-  const { supabase, orgId } = await getOrgAndUser()
+  const { supabase, orgId } = await requireAdmin()
 
   const vatRegistered = formData.get('vat_registered') === 'true'
   const vatRate       = parseFloat(formData.get('vat_rate') as string || '20')
