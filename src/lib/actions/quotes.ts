@@ -10,6 +10,8 @@ import { checkRateLimit, quoteRateLimit } from '@/lib/ratelimit'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { getOrgAndUser, requireAdmin } from './_auth'
+import { str, requiredStr } from './_validate'
+import { logAuditEvent } from '@/lib/audit'
 
 // -----------------------------------------------------------------------------
 // Helpers
@@ -50,10 +52,10 @@ export async function createQuote(
 
   const pricingType   = formData.get('pricing_type') as string
   const clientId      = formData.get('client_id') as string
-  const propertyId    = formData.get('property_id') as string || null
-  const title         = formData.get('title') as string
-  const notes         = formData.get('notes') as string || null
-  const internalNotes = formData.get('internal_notes') as string || null
+  const propertyId    = str(formData, 'property_id', 36)
+  const title         = str(formData, 'title', 200)
+  const notes         = str(formData, 'notes', 10000)
+  const internalNotes = str(formData, 'internal_notes', 10000)
   const validUntil    = formData.get('valid_until') as string || null
   const fixedPrice    = pricingType === 'fixed'
     ? parseFloat(formData.get('fixed_price') as string || '0')
@@ -159,10 +161,10 @@ export async function updateQuote(
 
   const pricingType   = formData.get('pricing_type') as string
   const clientId      = formData.get('client_id') as string
-  const propertyId    = formData.get('property_id') as string || null
-  const title         = formData.get('title') as string
-  const notes         = formData.get('notes') as string || null
-  const internalNotes = formData.get('internal_notes') as string || null
+  const propertyId    = str(formData, 'property_id', 36)
+  const title         = str(formData, 'title', 200)
+  const notes         = str(formData, 'notes', 10000)
+  const internalNotes = str(formData, 'internal_notes', 10000)
   const validUntil    = formData.get('valid_until') as string || null
   const fixedPrice    = pricingType === 'fixed'
     ? parseFloat(formData.get('fixed_price') as string || '0')
@@ -407,7 +409,15 @@ async function createJobFromQuote(quoteId: string): Promise<void> {
 
 // Admin-only — team members can create and send quotes but only admins can delete
 export async function deleteQuote(quoteId: string): Promise<{ error?: string }> {
-  const { supabase, orgId } = await requireAdmin()
+  const { supabase, orgId, userId } = await requireAdmin()
+
+  // Snapshot quote number + title before deletion
+  const { data: quote } = await supabase
+    .from('quotes')
+    .select('quote_number, title')
+    .eq('id', quoteId)
+    .eq('organisation_id', orgId)
+    .single()
 
   const { error } = await supabase
     .from('quotes')
@@ -417,6 +427,14 @@ export async function deleteQuote(quoteId: string): Promise<{ error?: string }> 
     .eq('status', 'draft')
 
   if (error) return { error: 'Failed to delete quote. Only draft quotes can be deleted.' }
+
+  await logAuditEvent(supabase, {
+    orgId, actorId: userId,
+    action: 'delete_quote',
+    resourceType: 'quote',
+    resourceId: quoteId,
+    metadata: quote ? { quote_number: quote.quote_number, title: quote.title } : undefined,
+  })
 
   revalidatePath('/dashboard/quotes')
   redirect('/dashboard/quotes')

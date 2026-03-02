@@ -7,6 +7,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from './_auth'
+import { str } from './_validate'
+import { logAuditEvent } from '@/lib/audit'
 
 export type SettingsFormState = { error?: string; success?: boolean }
 
@@ -15,11 +17,11 @@ export async function saveVatSettings(
   prevState: SettingsFormState,
   formData: FormData
 ): Promise<SettingsFormState> {
-  const { supabase, orgId } = await requireAdmin()
+  const { supabase, orgId, userId } = await requireAdmin()
 
   const vatRegistered = formData.get('vat_registered') === 'true'
   const vatRate       = parseFloat(formData.get('vat_rate') as string || '20')
-  const vatNumber     = formData.get('vat_number') as string || null
+  const vatNumber     = str(formData, 'vat_number', 20)
 
   if (vatRegistered && vatNumber && !/^GB[0-9]{9}$/.test(vatNumber.replace(/\s/g, ''))) {
     return { error: 'VAT number should be in the format GB123456789.' }
@@ -35,6 +37,13 @@ export async function saveVatSettings(
     .eq('id', orgId)
 
   if (error) return { error: 'Failed to save settings.' }
+
+  await logAuditEvent(supabase, {
+    orgId, actorId: userId,
+    action: 'update_vat_settings',
+    resourceType: 'organisation',
+    metadata: { vat_registered: vatRegistered, vat_rate: vatRate, vat_number: vatNumber },
+  })
 
   revalidatePath('/dashboard/settings')
   return { success: true }
