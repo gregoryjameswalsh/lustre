@@ -67,7 +67,7 @@ export default async function JobsPage() {
             { label: 'Cancelled',   count: cancelled.length,  colour: 'text-zinc-400' },
           ].map(s => (
             <div key={s.label} className="bg-white px-4 py-4 sm:px-8 sm:py-5">
-              <span className={`text-2xl font-light tracking-tight block mb-1 ${s.colour}`}
+              <span className={`text-2xl font-light tracking-tight block mb-1 ${s.colour}`}>
                 {s.count}
               </span>
               <span className="text-xs font-medium tracking-[0.15em] uppercase text-zinc-400">
