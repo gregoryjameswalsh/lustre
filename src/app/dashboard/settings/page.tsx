@@ -7,14 +7,14 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import VatSettingsForm from './_components/VatSettingsForm'
 
-async function getOrg() {
+async function getOrgAndRole() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('organisation_id')
+    .select('organisation_id, role')
     .eq('id', user.id)
     .single()
 
@@ -26,11 +26,11 @@ async function getOrg() {
     .eq('id', profile.organisation_id)
     .single()
 
-  return org
+  return { org, isAdmin: profile.role === 'admin' }
 }
 
 export default async function SettingsPage() {
-  const org = await getOrg()
+  const { org, isAdmin } = await getOrgAndRole()
   if (!org) redirect('/login')
 
   return (
@@ -55,6 +55,7 @@ export default async function SettingsPage() {
               vatRegistered={org.vat_registered ?? false}
               vatRate={org.vat_rate ?? 20}
               vatNumber={org.vat_number ?? ''}
+              isAdmin={isAdmin}
             />
           </div>
         </div>
