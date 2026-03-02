@@ -1,67 +1,119 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
+import { redirect }       from 'next/navigation'
 import type { ClientStatus } from '@/lib/types'
+import { getOrgAndUser, requireAdmin } from './_auth'
+import { str, requiredStr } from './_validate'
+import { logAuditEvent } from '@/lib/audit'
 
 export async function createClientAction(formData: FormData) {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('organisation_id')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile?.organisation_id) throw new Error('No organisation found')
+  const { supabase, orgId } = await getOrgAndUser()
 
   const { error } = await supabase.from('clients').insert({
-    organisation_id: profile.organisation_id,
-    first_name: formData.get('first_name') as string,
-    last_name: formData.get('last_name') as string,
-    email: formData.get('email') as string || null,
-    phone: formData.get('phone') as string || null,
-    secondary_phone: formData.get('secondary_phone') as string || null,
-    notes: formData.get('notes') as string || null,
-    status: formData.get('status') as ClientStatus ?? 'active',
-    source: formData.get('source') as string || null,
+    organisation_id:  orgId,
+    first_name:       requiredStr(formData, 'first_name', 100),
+    last_name:        requiredStr(formData, 'last_name', 100),
+    email:            str(formData, 'email', 254),
+    phone:            str(formData, 'phone', 30),
+    secondary_phone:  str(formData, 'secondary_phone', 30),
+    notes:            str(formData, 'notes', 5000),
+    status:           formData.get('status') as ClientStatus ?? 'active',
+    source:           str(formData, 'source', 50),
   })
 
-  if (error) throw new Error(error.message)
+  if (error) throw new Error('Failed to create client. Please try again.')
 
   revalidatePath('/dashboard/clients')
   redirect('/dashboard/clients')
 }
 
 export async function updateClientAction(id: string, formData: FormData) {
-  const supabase = await createClient()
+  const { supabase, orgId } = await getOrgAndUser()
 
-  const { error } = await supabase.from('clients').update({
-    first_name: formData.get('first_name') as string,
-    last_name: formData.get('last_name') as string,
-    email: formData.get('email') as string || null,
-    phone: formData.get('phone') as string || null,
-    secondary_phone: formData.get('secondary_phone') as string || null,
-    notes: formData.get('notes') as string || null,
-    status: formData.get('status') as ClientStatus,
-    source: formData.get('source') as string || null,
-  }).eq('id', id)
+  const { error } = await supabase
+    .from('clients')
+    .update({
+      first_name:      requiredStr(formData, 'first_name', 100),
+      last_name:       requiredStr(formData, 'last_name', 100),
+      email:           str(formData, 'email', 254),
+      phone:           str(formData, 'phone', 30),
+      secondary_phone: str(formData, 'secondary_phone', 30),
+      notes:           str(formData, 'notes', 5000),
+      status:          formData.get('status') as ClientStatus,
+      source:          str(formData, 'source', 50),
+    })
+    .eq('id', id)
+    .eq('organisation_id', orgId)
 
-  if (error) throw new Error(error.message)
+  if (error) throw new Error('Failed to update client. Please try again.')
 
   revalidatePath('/dashboard/clients')
   revalidatePath(`/dashboard/clients/${id}`)
   redirect(`/dashboard/clients/${id}`)
 }
 
+// Admin-only — team members can manage client records but only admins can delete
 export async function deleteClientAction(id: string) {
-  const supabase = await createClient()
-  const { error } = await supabase.from('clients').delete().eq('id', id)
-  if (error) throw new Error(error.message)
+  const { supabase, orgId, userId } = await requireAdmin()
+
+  // Snapshot the client's name before deletion for the audit log
+  const { data: client } = await supabase
+    .from('clients')
+    .select('first_name, last_name')
+    .eq('id', id)
+    .eq('organisation_id', orgId)
+    .single()
+
+  const { error } = await supabase
+    .from('clients')
+    .delete()
+    .eq('id', id)
+    .eq('organisation_id', orgId)
+
+  if (error) throw new Error('Failed to delete client. Please try again.')
+
+  await logAuditEvent(supabase, {
+    orgId, actorId: userId,
+    action: 'delete_client',
+    resourceType: 'client',
+    resourceId: id,
+    metadata: client ? { name: `${client.first_name} ${client.last_name}` } : undefined,
+  })
+
   revalidatePath('/dashboard/clients')
   redirect('/dashboard/clients')
+}
+
+// Admin-only — verify org ownership via clients.organisation_id join
+export async function deletePropertyAction(propertyId: string, clientId: string): Promise<{ error?: string }> {
+  const { supabase, orgId, userId } = await requireAdmin()
+
+  // Snapshot address + verify org ownership before deleting
+  const { data: prop } = await supabase
+    .from('properties')
+    .select('id, address_line1, town, clients!inner(organisation_id)')
+    .eq('id', propertyId)
+    .eq('clients.organisation_id', orgId)
+    .single()
+
+  if (!prop) return { error: 'Property not found.' }
+
+  const { error } = await supabase
+    .from('properties')
+    .delete()
+    .eq('id', propertyId)
+
+  if (error) return { error: 'Failed to delete property. Please try again.' }
+
+  await logAuditEvent(supabase, {
+    orgId, actorId: userId,
+    action: 'delete_property',
+    resourceType: 'property',
+    resourceId: propertyId,
+    metadata: { address: [prop.address_line1, prop.town].filter(Boolean).join(', ') },
+  })
+
+  revalidatePath(`/dashboard/clients/${clientId}`)
+  redirect(`/dashboard/clients/${clientId}`)
 }

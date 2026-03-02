@@ -46,7 +46,7 @@ export default function NewClientPage() {
     })
 
     if (error) {
-      setError(error.message)
+      setError("Something went wrong. Please try again.")
       setLoading(false)
     } else {
       router.push('/dashboard/clients')

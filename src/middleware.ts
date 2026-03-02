@@ -57,7 +57,9 @@ export async function middleware(request: NextRequest) {
   if (!user) {
     const loginUrl = request.nextUrl.clone()
     loginUrl.pathname = '/login'
-    loginUrl.searchParams.set('redirect', pathname)
+    // Only redirect to internal paths — prevent open redirect via crafted URLs
+    const safeRedirect = pathname.startsWith('/') && !pathname.startsWith('//')
+    loginUrl.searchParams.set('redirect', safeRedirect ? pathname : '/dashboard')
     return NextResponse.redirect(loginUrl)
   }
 

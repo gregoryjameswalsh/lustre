@@ -88,7 +88,7 @@ function NewJobForm() {
     }).select().single()
 
     if (insertError) {
-      setError(insertError.message)
+      setError("Something went wrong. Please try again.")
       setLoading(false)
     } else {
       router.push(`/dashboard/jobs/${job.id}`)

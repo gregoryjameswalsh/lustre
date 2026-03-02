@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
 import Nav from '@/components/dashboard/Nav'
+import { deleteJobAction } from '@/lib/actions/jobs'
 
 export default function EditJobPage() {
   const router = useRouter()
@@ -18,18 +19,28 @@ export default function EditJobPage() {
   const [clients, setClients] = useState<any[]>([])
   const [properties, setProperties] = useState<any[]>([])
   const [selectedClientId, setSelectedClientId] = useState('')
+  const [isAdmin, setIsAdmin] = useState(false)
 
   const supabase = createClient()
 
   useEffect(() => {
     async function load() {
-      const [{ data: jobData }, { data: clientData }] = await Promise.all([
+      const [{ data: jobData }, { data: clientData }, { data: { user } }] = await Promise.all([
         supabase.from('jobs').select('*, clients(id, first_name, last_name), properties(id, address_line1, town)').eq('id', jobId).single(),
         supabase.from('clients').select('id, first_name, last_name').neq('status', 'inactive').order('last_name'),
+        supabase.auth.getUser(),
       ])
       setJob(jobData)
       setClients(clientData ?? [])
       setSelectedClientId(jobData?.client_id ?? '')
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+        setIsAdmin(profile?.role === 'admin')
+      }
       setFetching(false)
     }
     load()
@@ -68,7 +79,7 @@ export default function EditJobPage() {
     }).eq('id', jobId)
 
     if (error) {
-      setError(error.message)
+      setError("Something went wrong. Please try again.")
       setLoading(false)
     } else {
       router.push(`/dashboard/jobs/${jobId}`)
@@ -79,9 +90,7 @@ export default function EditJobPage() {
   async function handleDelete() {
     if (!confirm('Delete this job? This cannot be undone.')) return
     setDeleting(true)
-    await supabase.from('jobs').delete().eq('id', jobId)
-    router.push('/dashboard/jobs')
-    router.refresh()
+    await deleteJobAction(jobId)
   }
 
   const inputClass = "w-full border border-zinc-200 rounded-md px-4 py-2.5 text-sm text-zinc-900 focus:outline-none focus:border-zinc-400 bg-zinc-50 transition-colors"
@@ -229,14 +238,19 @@ export default function EditJobPage() {
                 Cancel
               </a>
             </div>
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={deleting}
-              className="text-xs text-red-400 hover:text-red-600 transition-colors tracking-wide"
+            <span
+              title={!isAdmin ? 'Only admins can delete jobs' : undefined}
+              className={!isAdmin ? 'cursor-not-allowed' : ''}
             >
-              {deleting ? 'Deleting…' : 'Delete job'}
-            </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={!isAdmin || deleting}
+                className={`text-xs tracking-wide transition-colors ${isAdmin ? 'text-red-400 hover:text-red-600' : 'text-zinc-300 pointer-events-none'}`}
+              >
+                {deleting ? 'Deleting…' : 'Delete job'}
+              </button>
+            </span>
           </div>
 
         </form>
