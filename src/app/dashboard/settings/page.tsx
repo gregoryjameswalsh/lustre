@@ -34,32 +34,52 @@ export default async function SettingsPage() {
   if (!org) redirect('/login')
 
   return (
-    <div className="min-h-screen bg-[#f9f8f5] p-6">
-      <div className="mx-auto max-w-2xl">
+    <div className="min-h-screen bg-[#f9f8f5]">
+      <main className="mx-auto max-w-2xl px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
 
         <div className="mb-8">
-          <h1 className="font-['Urbanist'] text-2xl font-light text-[#0c0c0b]">Settings</h1>
+          <h1 className="text-2xl font-light tracking-tight text-zinc-900 sm:text-3xl">Settings</h1>
           <p className="mt-1 text-sm text-zinc-400">{org.name}</p>
         </div>
 
-        {/* VAT */}
-        <div className="rounded-xl border border-zinc-200 bg-white">
-          <div className="border-b border-zinc-100 px-5 py-4">
-            <h2 className="text-sm font-medium text-[#0c0c0b]">VAT</h2>
-            <p className="mt-0.5 text-xs text-zinc-400">
-              These settings apply to all quotes. If you are VAT registered, your VAT number will appear on quotes and invoices.
-            </p>
-          </div>
-          <div className="p-5">
-            <VatSettingsForm
-              vatRegistered={org.vat_registered ?? false}
-              vatRate={org.vat_rate ?? 20}
-              vatNumber={org.vat_number ?? ''}
-            />
-          </div>
-        </div>
+        <div className="space-y-6">
 
-      </div>
+          {/* VAT */}
+          <div className="rounded-xl border border-zinc-200 bg-white">
+            <div className="border-b border-zinc-100 px-5 py-4">
+              <h2 className="text-sm font-medium text-zinc-900">VAT</h2>
+              <p className="mt-0.5 text-xs text-zinc-400">
+                These settings apply to all quotes. If you are VAT registered, your VAT number will appear on quotes and invoices.
+              </p>
+            </div>
+            <div className="p-5">
+              <VatSettingsForm
+                vatRegistered={org.vat_registered ?? false}
+                vatRate={org.vat_rate ?? 20}
+                vatNumber={org.vat_number ?? ''}
+              />
+            </div>
+          </div>
+
+          {/* Account — sign out (always visible; especially useful on mobile) */}
+          <div className="rounded-xl border border-zinc-200 bg-white">
+            <div className="border-b border-zinc-100 px-5 py-4">
+              <h2 className="text-sm font-medium text-zinc-900">Account</h2>
+            </div>
+            <div className="p-5">
+              <form action="/auth/signout" method="post">
+                <button
+                  type="submit"
+                  className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-5 py-2.5 rounded-full hover:border-zinc-400 hover:text-zinc-700 transition-colors"
+                >
+                  Sign out
+                </button>
+              </form>
+            </div>
+          </div>
+
+        </div>
+      </main>
     </div>
   )
 }
