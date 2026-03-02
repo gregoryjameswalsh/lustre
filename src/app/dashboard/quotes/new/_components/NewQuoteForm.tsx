@@ -91,8 +91,8 @@ export default function NewQuoteForm({ clients, vatRegistered, vatRate }: NewQuo
   const itemisedTotal    = itemisedSubtotal + itemisedTax
 
   return (
-    <div className="min-h-screen bg-[#f9f8f5] p-6">
-      <div className="mx-auto max-w-2xl">
+    <div className="min-h-screen bg-[#f9f8f5]">
+      <div className="mx-auto max-w-2xl px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
 
         <div className="mb-6">
           <a href="/dashboard/quotes" className="mb-3 inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-600">
@@ -101,7 +101,7 @@ export default function NewQuoteForm({ clients, vatRegistered, vatRate }: NewQuo
             </svg>
             Quotes
           </a>
-          <h1 className="font-['Urbanist'] text-2xl font-light text-[#0c0c0b]">New quote</h1>
+          <h1 className="text-2xl font-light tracking-tight text-zinc-900 sm:text-3xl">New quote</h1>
         </div>
 
         {state.error && (
@@ -360,9 +360,9 @@ export default function NewQuoteForm({ clients, vatRegistered, vatRate }: NewQuo
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <a href="/dashboard/quotes" className="text-sm text-zinc-400 hover:text-zinc-600">Cancel</a>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <SubmitButton />
+            <a href="/dashboard/quotes" className="text-sm text-zinc-400 hover:text-zinc-600">Cancel</a>
           </div>
         </form>
       </div>
