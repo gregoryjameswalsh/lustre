@@ -124,3 +124,11 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  /* Accounts for the fixed bottom tab bar height (4rem) plus
+     the iOS home-indicator safe area on notched devices. */
+  .pb-safe-tab {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+  }
+}
