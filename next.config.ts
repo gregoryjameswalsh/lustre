@@ -4,6 +4,11 @@ import { withSentryConfig } from "@sentry/nextjs";
 const isDev = process.env.NODE_ENV === 'development'
 
 const nextConfig: NextConfig = {
+  // Next.js 16 defaults to Turbopack. withSentryConfig adds a webpack config,
+  // which triggers an error unless we declare an explicit turbopack config too.
+  // An empty object is sufficient — we don't need custom Turbopack rules.
+  turbopack: {},
+
   async headers() {
     return [
       {
