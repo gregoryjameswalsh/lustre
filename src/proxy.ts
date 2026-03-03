@@ -1,6 +1,6 @@
-// src/middleware.ts
+// src/proxy.ts
 // =============================================================================
-// LUSTRE — Middleware
+// LUSTRE — Proxy (formerly middleware; renamed for Next.js 16)
 // Handles three concerns in order:
 //   1. Authentication — redirect unauthenticated users to /login
 //   2. Onboarding gate — redirect incomplete users to /onboarding
@@ -16,7 +16,7 @@ const PUBLIC_ROUTES = ['/login', '/signup', '/auth', '/terms', '/privacy', '/q']
 // Routes that authenticated users can access even mid-onboarding
 const ONBOARDING_ALLOWED = ['/onboarding', '/auth/signout']
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Allow public routes through without any checks
