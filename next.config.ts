@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const isDev = process.env.NODE_ENV === 'development'
 
@@ -23,7 +24,8 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https:",
               "font-src 'self' data:",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+              // Sentry ingest + Supabase realtime
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.sentry.io",
               "frame-ancestors 'none'",
             ].join('; '),
           },
@@ -33,4 +35,15 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  // Sentry organisation + project (set SENTRY_ORG and SENTRY_PROJECT env vars)
+  silent: !isDev,
+
+  // Automatically tree-shake Sentry logger statements
+  disableLogger: true,
+
+  // Upload source maps in CI/CD only to avoid slowing local builds
+  sourcemaps: {
+    disable: isDev,
+  },
+});

@@ -5,7 +5,7 @@
 // LUSTRE — Quote Server Actions
 // =============================================================================
 
-import { createServiceClient } from '@/lib/supabase/service'
+import { createAnonClient } from '@/lib/supabase/anon'
 import { checkRateLimit, quoteRateLimit } from '@/lib/ratelimit'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
@@ -310,7 +310,7 @@ export async function updateQuoteStatus(
 
   if (error) return { error: 'Failed to update quote status.' }
 
-  if (status === 'accepted') await createJobFromQuote(quoteId)
+  if (status === 'accepted') await createJobFromQuote(quoteId, supabase)
 
   // Send quote email to client when owner clicks "Send to client"
   if (status === 'sent') {
@@ -367,15 +367,15 @@ async function sendQuoteToClient(quoteId: string, supabase: any): Promise<void> 
 }
 
 // -----------------------------------------------------------------------------
-// Create Job from Accepted Quote
+// Create Job from Accepted Quote (authenticated dashboard path only)
 // -----------------------------------------------------------------------------
 
-async function createJobFromQuote(quoteId: string): Promise<void> {
-  // Uses service client — this is called from the unauthenticated public quote
-  // flow so there is no session. The job is created unassigned; the org can
-  // assign it from the dashboard.
-  const supabase = createServiceClient()
-
+// Called when an authenticated admin marks a quote as accepted from the
+// dashboard. Uses the session-bound client — RLS ensures the user can only
+// create jobs within their own org.
+// For the unauthenticated public quote flow, job creation is handled atomically
+// inside the public_respond_to_quote SECURITY DEFINER DB function.
+async function createJobFromQuote(quoteId: string, supabase: any): Promise<void> {
   const { data: quote } = await supabase
     .from('quotes')
     .select('organisation_id, client_id, property_id, total, quote_number, title')
@@ -451,28 +451,16 @@ export async function respondToQuote(
   const { success: rateOk } = await checkRateLimit(quoteRateLimit, token)
   if (!rateOk) return { error: 'Too many requests. Please try again later.' }
 
-  const supabase = createServiceClient()
-
-  const { data: quote } = await supabase
-    .from('quotes')
-    .select('id, status, valid_until, created_by')
-    .eq('accept_token', token)
-    .single()
-
-  if (!quote) return { error: 'Quote not found.' }
-  if (quote.status !== 'sent' && quote.status !== 'viewed')
-    return { error: 'This quote is no longer open for responses.' }
-  if (quote.valid_until && new Date(quote.valid_until) < new Date())
-    return { error: 'This quote has expired. Please contact us for an updated quote.' }
-
-  const { error } = await supabase
-    .from('quotes')
-    .update({ status: response, responded_at: new Date().toISOString() })
-    .eq('accept_token', token)
+  // Delegate to SECURITY DEFINER DB function — handles validation, status
+  // update, and job creation atomically without requiring the service role key.
+  const supabase = createAnonClient()
+  const { data, error } = await supabase
+    .rpc('public_respond_to_quote', { p_token: token, p_response: response })
 
   if (error) return { error: 'Failed to record your response. Please try again.' }
 
-  if (response === 'accepted') await createJobFromQuote(quote.id)
+  const result = data as { success?: boolean; error?: string }
+  if (result.error) return { error: result.error }
 
   return { success: true }
 }
@@ -482,11 +470,6 @@ export async function respondToQuote(
 // -----------------------------------------------------------------------------
 
 export async function markQuoteViewed(token: string): Promise<void> {
-  const supabase = createServiceClient()
-
-  await supabase
-    .from('quotes')
-    .update({ status: 'viewed', viewed_at: new Date().toISOString() })
-    .eq('accept_token', token)
-    .eq('status', 'sent')
+  const supabase = createAnonClient()
+  await supabase.rpc('public_mark_quote_viewed', { p_token: token })
 }

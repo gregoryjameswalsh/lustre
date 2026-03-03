@@ -3,7 +3,7 @@
 **Reference:** CTO-ENT-001
 **Author:** Chief Technology Officer
 **Date:** March 2026
-**Status:** Draft for Executive Review
+**Status:** Active — Week 1 implementation in progress (updated 3 March 2026)
 **Companion Documents:** CRM-ENT-001 (CCO), OPS-ENT-001 (COO), CFO-ENT-001 (CFO), CPO-ENT-001 (CPO)
 
 ---
@@ -44,14 +44,14 @@ This document is deliberately distinct from the operational, commercial, and pro
 
 The following are specific, identified technical debts in the current codebase. These are not theoretical concerns — they are concrete issues that will become blockers as we scale.
 
-**TD-001: No database migration tooling.**
-All schema changes are applied manually via the Supabase dashboard. There is no migration history, no rollback mechanism, and no way to reproduce the production schema in a new environment. The files `supabase/rls.sql` and `supabase/audit.sql` are snapshots, not migrations. This is the highest-severity technical debt we carry. A single wrong SQL statement applied in production with no rollback path is an existential risk.
+**~~TD-001: No database migration tooling.~~ ✅ RESOLVED (3 March 2026)**
+Supabase CLI configured; migrations directory created with versioned, sequential files; `npm run db:push` is now the standard deployment path for schema changes. All future schema changes must be applied via a migration file — manual dashboard SQL is prohibited.
 
 **TD-002: Server actions cannot be consumed by external clients.**
 The entire mutation layer is built on Next.js server actions, which are HTTP endpoints tied to React's form action protocol. They are not a public API. The CCO plan correctly calls for a REST API — but it will require a full rewrite of the mutation layer to expose it externally, not a simple wrapper. This will be significantly more work than it appears.
 
-**TD-003: The `SUPABASE_SERVICE_ROLE_KEY` is used in application code.**
-The service role key in `/src/lib/supabase/service.ts` bypasses all RLS policies. It is currently used only for the quote share token lookup (public quote page). This is the minimal blast radius version of a service role key usage, but the pattern is established and will be copied. Any future developer who needs to "just bypass RLS for a minute" has a convenient template to follow. The service role key must be restricted to a dedicated server-side function with no user-facing path.
+**~~TD-003: The `SUPABASE_SERVICE_ROLE_KEY` is used in application code.~~ ✅ RESOLVED (3 March 2026)**
+`service.ts` deleted. The service role key is no longer referenced in any application code. Public quote operations (`markQuoteViewed`, `respondToQuote`, quote data fetch) are now handled by SECURITY DEFINER PostgreSQL functions callable with the anon key. Job creation on quote acceptance is performed atomically inside `public_respond_to_quote`; the dashboard (authenticated) path uses the session-bound client. The `SUPABASE_SERVICE_ROLE_KEY` environment variable can be removed from Vercel and `.env.local`.
 
 **TD-004: No structured error handling across server actions.**
 Error handling in server actions is inconsistent. Some actions return typed error objects; others throw unhandled exceptions. There is no centralised error boundary strategy, no standardised error response shape, and no guarantee that an unhandled exception in a server action does not expose internal stack traces to the client. This is both a security issue (information disclosure) and a reliability issue (invisible failures).
@@ -571,12 +571,12 @@ Post-mortems are blameless — they identify system failures, not individual fai
 These are not features. They are technical prerequisites. No enterprise sales motion can proceed until this phase is complete.
 
 **Month 1 — Critical risks eliminated:**
-- [ ] **TD-001 resolved:** Supabase CLI migrations bootstrapped, full migration history established, staging environment created
-- [ ] **TD-003 resolved:** Service role key usage removed from application code path, public quote lookup refactored
+- [x] **DONE — TD-001 resolved:** Supabase CLI configured (`supabase/config.toml`); migrations directory established with `20260303000000_initial_schema.sql` (RLS + audit) and `20260303000001_public_quote_functions.sql`; `npm run db:push/pull/diff/reset` scripts added; `supabase` added as devDependency
+- [x] **DONE — TD-003 resolved:** `SUPABASE_SERVICE_ROLE_KEY` removed from application entirely; `src/lib/supabase/service.ts` deleted; three SECURITY DEFINER RPC functions created (`public_get_quote_by_token`, `public_mark_quote_viewed`, `public_respond_to_quote`) grantable to `anon` role; new `src/lib/supabase/anon.ts` client added; `q/[token]/page.tsx` and `quotes.ts` updated to use anon client + RPC
 - [ ] **TD-004 resolved:** Centralised error handling library implemented, consistent error response shapes across all server actions
 - [ ] **TD-006 resolved:** Cursor-based pagination implemented on all list queries
 - [ ] Local development documentation written — new engineer can be productive in under 30 minutes
-- [ ] Supabase type generation automated in CI pipeline
+- [x] **DONE (partial):** CI/CD pipeline live via GitHub Actions (`.github/workflows/ci.yml`) — lint → typecheck → build → `npm audit` on every PR; Supabase type generation to follow in Month 2
 - [ ] Pre-commit hooks installed (ESLint, TypeScript, unit tests)
 
 **Month 2 — Architecture improvements:**

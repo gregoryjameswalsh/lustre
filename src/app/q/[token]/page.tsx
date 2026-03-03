@@ -1,13 +1,13 @@
 // src/app/q/[token]/page.tsx
 // =============================================================================
 // LUSTRE — Public Quote Page (Server Component)
-// Data is fetched server-side with the service role client — the browser never
-// touches Supabase directly, so no anon DB access is required and RLS can be
-// locked down to authenticated users only.
+// Data is fetched server-side via the anon Supabase client using a
+// SECURITY DEFINER RPC function.  The service role key is not required here —
+// the DB function enforces its own access rules.
 // =============================================================================
 
 import { notFound } from 'next/navigation'
-import { createServiceClient } from '@/lib/supabase/service'
+import { createAnonClient } from '@/lib/supabase/anon'
 import { markQuoteViewed } from '@/lib/actions/quotes'
 import QuoteResponseButtons from './_components/QuoteResponseButtons'
 
@@ -22,21 +22,10 @@ function formatDate(date: string | null) {
 
 export default async function PublicQuotePage({ params }: { params: { token: string } }) {
   const { token } = params
-  const supabase  = createServiceClient()
+  const supabase  = createAnonClient()
 
   const { data: quote, error } = await supabase
-    .from('quotes')
-    .select(`
-      id, quote_number, title, status, pricing_type,
-      fixed_price, subtotal, tax_rate, tax_amount, total,
-      notes, valid_until, accept_token, responded_at,
-      clients ( first_name, last_name ),
-      properties ( address_line1, town, postcode ),
-      quote_line_items ( id, description, quantity, unit_price, amount, is_addon, sort_order ),
-      organisations ( name, phone, email, logo_url, address_line1, town, postcode )
-    `)
-    .eq('accept_token', token)
-    .single()
+    .rpc('public_get_quote_by_token', { p_token: token })
 
   if (error || !quote) notFound()
 

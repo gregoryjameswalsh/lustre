@@ -517,19 +517,19 @@ Synthesised from all seven plans, ranked by combined likelihood × impact:
 
 ## The CEO's First 30 Days
 
-**This week (Week 1):**
+**This week (Week 1):** *(Updated: 3 March 2026)*
 - [ ] Identify top 10 ICP-fit trial accounts — review every existing signup, score for ICP fit
-- [ ] Remove service role key from application request path (CTO — Day 1)
-- [ ] Configure Supabase CLI migration tooling (CTO — Day 1)
+- [x] **DONE** Remove service role key from application request path (CTO) — replaced with SECURITY DEFINER PostgreSQL RPC functions; `service.ts` deleted; `SUPABASE_SERVICE_ROLE_KEY` no longer required in the app
+- [x] **DONE** Configure Supabase CLI migration tooling (CTO) — `supabase/config.toml` created, migrations directory structured (`20260303000000_initial_schema.sql`, `20260303000001_public_quote_functions.sql`), `npm run db:push/pull/diff/reset` scripts added
 - [ ] Sign DPAs with Supabase, Vercel, Resend, Upstash (COO/CISO — paperwork)
 - [ ] Begin Stripe billing integration scope (CTO)
 - [ ] Set up HubSpot CRM — all prospects enter here from today
-- [ ] Deploy Sentry and Checkly (CTO/COO)
+- [x] **DONE** Deploy Sentry (CTO) — `@sentry/nextjs` configured; client/server/edge config files live; `global-error.tsx` captures to Sentry; CSP updated; Checkly setup pending (external service config)
 - [ ] Personal outreach to 10 design-partner candidates
 
 **Week 2:**
 - [ ] PostHog live and instrumented (CPO)
-- [ ] CI/CD pipeline live — no more unvalidated deploys (CTO)
+- [x] **DONE (early)** CI/CD pipeline live — GitHub Actions workflow created: lint → typecheck → build → `npm audit` on every PR and push to main
 - [ ] GDPR documentation drafted: data processing register, legal basis, sub-processor list
 - [ ] Privacy policy updated
 - [ ] Incident response plan drafted
