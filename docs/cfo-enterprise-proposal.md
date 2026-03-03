@@ -3,7 +3,7 @@
 **Author:** Chief Financial Officer
 **Date:** 2026-03-03
 **Version:** 1.0
-**Status:** Draft for Review
+**Status:** Active — Stripe billing infrastructure delivered Week 1 (updated 3 March 2026)
 **Ref:** CFO-ENT-001
 
 ---
@@ -99,7 +99,7 @@ duration_hours        NUMERIC
 - **VAT is modelled** at organisation level (vat_registered, vat_rate, vat_number) — a positive sign for UK compliance
 - **Quote financials are tracked** but isolated — no connection to invoicing, payment collection, or revenue recognition
 - **Job pricing exists** but is not aggregated anywhere — revenue by client/period/service type is currently unqueryable in the UI
-- **Stripe fields exist** but the integration was never built — the platform cannot collect a single pound of subscription revenue automatically
+- **Stripe integration is now live (3 March 2026)** — Checkout, Customer Portal, and webhook handler deployed; see §5.1 for activation steps required
 - **No invoice table** — there is no financial document that follows quote acceptance
 - **No payment table** — no record of money received
 - **No revenue recognition logic** — no concept of earned vs. deferred revenue
@@ -108,7 +108,7 @@ duration_hours        NUMERIC
 
 | Risk | Impact | Likelihood | Notes |
 |------|--------|-----------|-------|
-| Billing not automated | Cannot scale revenue beyond manual collection | Certain | Stripe stubbed, no webhooks |
+| ~~Billing not automated~~ | **RESOLVED (3 March 2026)** Stripe Checkout + webhooks live | — | Requires env var setup + Stripe product creation to activate |
 | No dunning management | Revenue leakage from failed payments | High | No retry logic implemented |
 | No invoice generation | Non-compliant with UK invoicing requirements at scale | High | Quotes ≠ invoices |
 | Quote value not reported | Business cannot see pipeline value | Certain | No reporting layer exists |
@@ -334,6 +334,24 @@ For enterprise plan customers, a self-serve report builder:
 This section complements the COO's billing section (ref: OPS-ENT-001, §5) by providing the financial design and requirements for the billing system, not just the technical implementation.
 
 ### 5.1 Stripe Integration Architecture
+
+> **Week 1 Update (3 March 2026):** The Stripe billing infrastructure is code-complete. Files delivered:
+> - `src/lib/stripe/index.ts` — Stripe SDK singleton
+> - `src/lib/stripe/plans.ts` — Plan config (Starter/Professional/Business) with price IDs from env vars
+> - `src/app/api/billing/checkout/route.ts` — Checkout session creation (creates/reuses Stripe Customer)
+> - `src/app/api/billing/portal/route.ts` — Customer Portal session
+> - `src/app/api/webhooks/stripe/route.ts` — Webhook handler for all subscription lifecycle events
+> - `/billing` — Plan picker page with monthly/annual pricing and checkout CTAs
+> - `/dashboard/settings/billing` — Current plan management page
+> - Migration `20260303000002_billing_schema.sql` — adds `stripe_subscription_id`, `stripe_price_id` to organisations
+>
+> **To activate (one-time setup by CTO/CFO):**
+> 1. Create Products + Prices in Stripe Dashboard (test mode first, then live)
+> 2. Set env vars: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+> 3. Set price ID vars: `STRIPE_PRICE_STARTER_MONTHLY/ANNUAL`, `STRIPE_PRICE_PROFESSIONAL_MONTHLY/ANNUAL`, `STRIPE_PRICE_BUSINESS_MONTHLY/ANNUAL`
+> 4. Register webhook endpoint in Stripe Dashboard → Webhooks → `https://app.lustre.app/api/webhooks/stripe`
+> 5. Enable Stripe Tax for UK VAT (20%) in Stripe Dashboard → Tax settings
+> 6. Run `npm run db:push` to apply migration `20260303000002`
 
 The COO has identified Stripe integration as a Phase 1 operational priority. From a CFO perspective, the requirements are:
 

@@ -7,7 +7,7 @@
 // Organisation (Tenant)
 // -----------------------------------------------------------------------------
 
-export type Plan = 'free' | 'starter' | 'pro'
+export type Plan = 'free' | 'starter' | 'professional' | 'business' | 'enterprise'
 export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'cancelled'
 
 export interface Organisation {
@@ -26,6 +26,8 @@ export interface Organisation {
   plan: Plan
   subscription_status: SubscriptionStatus
   stripe_customer_id: string | null
+  stripe_subscription_id: string | null
+  stripe_price_id: string | null
   onboarding_step: number
   onboarding_completed_at: string | null
   trial_ends_at: string | null

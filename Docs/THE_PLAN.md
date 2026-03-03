@@ -522,7 +522,7 @@ Synthesised from all seven plans, ranked by combined likelihood × impact:
 - [x] **DONE** Remove service role key from application request path (CTO) — replaced with SECURITY DEFINER PostgreSQL RPC functions; `service.ts` deleted; `SUPABASE_SERVICE_ROLE_KEY` no longer required in the app
 - [x] **DONE** Configure Supabase CLI migration tooling (CTO) — `supabase/config.toml` created, migrations directory structured (`20260303000000_initial_schema.sql`, `20260303000001_public_quote_functions.sql`), `npm run db:push/pull/diff/reset` scripts added
 - [ ] Sign DPAs with Supabase, Vercel, Resend, Upstash (COO/CISO — paperwork)
-- [ ] Begin Stripe billing integration scope (CTO)
+- [x] **DONE (ahead of schedule)** Stripe billing integration — full infrastructure built: Stripe client + plans config, Checkout session API, Customer Portal API, webhook handler (checkout.session.completed, subscription.created/updated/deleted, invoice.payment_succeeded/failed), `/billing` plan picker page, `/dashboard/settings/billing` plan management page, `stripe_subscription_id` + `stripe_price_id` DB migration. `stripe` added to dependencies. **Needs:** Stripe Products + Prices created in dashboard, Price IDs set as env vars, webhook endpoint registered.
 - [ ] Set up HubSpot CRM — all prospects enter here from today
 - [x] **DONE** Deploy Sentry (CTO) — `@sentry/nextjs` configured; client/server/edge config files live; `global-error.tsx` captures to Sentry; CSP updated; Checkly setup pending (external service config)
 - [ ] Personal outreach to 10 design-partner candidates
@@ -538,8 +538,8 @@ Synthesised from all seven plans, ranked by combined likelihood × impact:
 - [ ] Write pricing page copy (CRO)
 
 **Week 3:**
-- [ ] Stripe billing live (Checkout + webhooks)
-- [ ] Pricing page live
+- [x] **DONE (early)** Stripe billing live (Checkout + webhooks) — code complete; activation requires Stripe product/price setup and env vars
+- [x] **DONE (early)** Pricing / billing page live (`/billing`) — plan picker with monthly + annual options, enterprise callout
 - [ ] Trial-to-paid email sequence live in Resend
 - [ ] Design-partner calls underway — 2+ advanced to proposal
 
