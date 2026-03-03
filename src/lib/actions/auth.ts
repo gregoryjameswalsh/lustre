@@ -7,6 +7,35 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
+import { checkRateLimit, loginRateLimit, signupRateLimit } from '@/lib/ratelimit'
+
+// -----------------------------------------------------------------------------
+// Sign In
+// -----------------------------------------------------------------------------
+
+export type SignInState = { error?: string }
+
+export async function signIn(
+  prevState: SignInState,
+  formData: FormData
+): Promise<SignInState> {
+  const email    = formData.get('email') as string
+  const password = formData.get('password') as string
+
+  if (!email?.trim()) return { error: 'Please enter your email.' }
+  if (!password)      return { error: 'Please enter your password.' }
+
+  const ip = ((await headers()).get('x-forwarded-for') ?? 'unknown').split(',')[0].trim()
+  const { success } = await checkRateLimit(loginRateLimit, ip)
+  if (!success) return { error: 'Too many login attempts. Please wait 15 minutes and try again.' }
+
+  const supabase = await createClient()
+  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error) return { error: 'Invalid email or password.' }
+
+  redirect('/dashboard')
+}
 
 // -----------------------------------------------------------------------------
 // Sign Up
@@ -36,6 +65,10 @@ export async function signUp(
   if (!password || password.length < 8)
     return { error: 'Password must be at least 8 characters.' }
 
+  const ip = ((await headers()).get('x-forwarded-for') ?? 'unknown').split(',')[0].trim()
+  const { success } = await checkRateLimit(signupRateLimit, ip)
+  if (!success) return { error: 'Too many sign up attempts. Please try again later.' }
+
   const supabase = await createClient()
 
   const { data, error } = await supabase.auth.signUp({
@@ -57,7 +90,7 @@ export async function signUp(
     if (error.message.includes('already registered')) {
       return { error: 'An account with this email already exists. Try logging in.' }
     }
-    return { error: error.message }
+    return { error: 'Sign up failed. Please check your details and try again.' }
   }
 
   // Supabase returns a session immediately if email confirmation is disabled.

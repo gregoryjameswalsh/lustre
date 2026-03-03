@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
+import Nav from '@/components/dashboard/Nav'
+import { deleteClientAction } from '@/lib/actions/clients'
+
 export default function EditClientPage() {
   const router = useRouter()
   const params = useParams()
@@ -13,17 +16,25 @@ export default function EditClientPage() {
   const [error, setError] = useState('')
   const [deleting, setDeleting] = useState(false)
   const [client, setClient] = useState<any>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   const supabase = createClient()
 
   useEffect(() => {
     async function loadClient() {
-      const { data } = await supabase
-        .from('clients')
-        .select('*')
-        .eq('id', clientId)
-        .single()
+      const [{ data }, { data: { user } }] = await Promise.all([
+        supabase.from('clients').select('*').eq('id', clientId).single(),
+        supabase.auth.getUser(),
+      ])
       setClient(data)
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+        setIsAdmin(profile?.role === 'admin')
+      }
       setFetching(false)
     }
     loadClient()
@@ -48,7 +59,7 @@ export default function EditClientPage() {
     }).eq('id', clientId)
 
     if (error) {
-      setError(error.message)
+      setError("Something went wrong. Please try again.")
       setLoading(false)
     } else {
       router.push(`/dashboard/clients/${clientId}`)
@@ -59,9 +70,7 @@ export default function EditClientPage() {
   async function handleDelete() {
     if (!confirm('Delete this client? This will also delete all their properties and jobs. This cannot be undone.')) return
     setDeleting(true)
-    await supabase.from('clients').delete().eq('id', clientId)
-    router.push('/dashboard/clients')
-    router.refresh()
+    await deleteClientAction(clientId)
   }
 
   const inputClass = "w-full border border-zinc-200 rounded-md px-4 py-2.5 text-sm text-zinc-900 focus:outline-none focus:border-zinc-400 bg-zinc-50 transition-colors"
@@ -180,14 +189,19 @@ export default function EditClientPage() {
                 Cancel
               </a>
             </div>
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={deleting}
-              className="text-xs text-red-400 hover:text-red-600 transition-colors tracking-wide"
+            <span
+              title={!isAdmin ? 'Only admins can delete clients' : undefined}
+              className={!isAdmin ? 'cursor-not-allowed' : ''}
             >
-              {deleting ? 'Deleting…' : 'Delete client'}
-            </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={!isAdmin || deleting}
+                className={`text-xs tracking-wide transition-colors ${isAdmin ? 'text-red-400 hover:text-red-600' : 'text-zinc-300 pointer-events-none'}`}
+              >
+                {deleting ? 'Deleting…' : 'Delete client'}
+              </button>
+            </span>
           </div>
 
         </form>
