@@ -38,29 +38,6 @@ export async function signIn(
 }
 
 // -----------------------------------------------------------------------------
-// Sign In
-// -----------------------------------------------------------------------------
-
-export type SignInState = { error?: string }
-
-export async function signIn(
-  prevState: SignInState,
-  formData: FormData
-): Promise<SignInState> {
-  const email    = formData.get('email') as string
-  const password = formData.get('password') as string
-
-  if (!email?.trim()) return { error: 'Please enter your email.' }
-  if (!password)      return { error: 'Please enter your password.' }
-
-  const supabase = await createClient()
-  const { error } = await supabase.auth.signInWithPassword({ email, password })
-  if (error) return { error: 'Invalid email or password.' }
-
-  redirect('/dashboard')
-}
-
-// -----------------------------------------------------------------------------
 // Sign Up
 // Creates a Supabase auth user. The database trigger handle_new_user()
 // automatically creates the organisation and profile rows.
