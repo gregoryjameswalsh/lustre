@@ -107,11 +107,8 @@ export default function VatSettingsForm({ vatRegistered, vatRate, vatNumber, isA
         </div>
       )}
 
-      <div className="flex justify-start pt-2 sm:justify-end">
-        <SubmitButton />
-      </div>
       {isAdmin && (
-        <div className="flex justify-end pt-2">
+        <div className="flex justify-start pt-2 sm:justify-end">
           <SubmitButton />
         </div>
       )}

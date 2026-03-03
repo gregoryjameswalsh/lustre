@@ -57,6 +57,7 @@ export default async function SettingsPage() {
                 vatRegistered={org.vat_registered ?? false}
                 vatRate={org.vat_rate ?? 20}
                 vatNumber={org.vat_number ?? ''}
+                isAdmin={isAdmin}
               />
             </div>
           </div>
@@ -76,13 +77,6 @@ export default async function SettingsPage() {
                 </button>
               </form>
             </div>
-          <div className="p-5">
-            <VatSettingsForm
-              vatRegistered={org.vat_registered ?? false}
-              vatRate={org.vat_rate ?? 20}
-              vatNumber={org.vat_number ?? ''}
-              isAdmin={isAdmin}
-            />
           </div>
 
         </div>
