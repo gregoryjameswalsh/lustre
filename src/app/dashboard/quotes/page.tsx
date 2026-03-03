@@ -27,13 +27,14 @@ function formatDate(date: string | null) {
 }
 
 interface QuotesPageProps {
-  searchParams: { status?: string }
+  searchParams: Promise<{ status?: string }>
 }
 
 export default async function QuotesPage({ searchParams }: QuotesPageProps) {
-  const statusFilter = searchParams.status === 'all' || !searchParams.status
+  const { status } = await searchParams
+  const statusFilter = status === 'all' || !status
     ? undefined
-    : searchParams.status
+    : status
 
   const quotes = await getQuotes(statusFilter)
 
