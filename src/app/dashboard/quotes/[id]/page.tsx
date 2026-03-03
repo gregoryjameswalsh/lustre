@@ -37,8 +37,8 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
   const addonItems = quote.quote_line_items.filter(i => i.is_addon).sort((a, b) => a.sort_order - b.sort_order)
 
   return (
-    <div className="min-h-screen bg-[#f9f8f5] p-6">
-      <div className="mx-auto max-w-3xl">
+    <div className="min-h-screen bg-[#f9f8f5]">
+      <main className="mx-auto max-w-3xl px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
 
         {/* Back */}
         <Link href="/dashboard/quotes" className="mb-4 inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-600">
@@ -49,10 +49,10 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
         </Link>
 
         {/* Header */}
-        <div className="mb-6 flex items-start justify-between">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <div className="flex items-center gap-3">
-              <h1 className="font-['Urbanist'] text-2xl font-light text-[#0c0c0b]">{quote.quote_number}</h1>
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-2xl font-light tracking-tight text-zinc-900 sm:text-3xl">{quote.quote_number}</h1>
               <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${STATUS_STYLES[quote.status]}`}>
                 {quote.status}
               </span>
@@ -197,15 +197,15 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
 
             {/* Public link */}
             {['sent', 'viewed'].includes(quote.status) && (
-  <div className="rounded-xl border border-zinc-200 bg-white p-5">
-    <h2 className="mb-2 text-xs font-medium uppercase tracking-widest text-zinc-400">Client link</h2>
-    <p className="mb-2 text-xs text-zinc-400">Share this with your client to accept or decline.</p>
-    <CopyLinkInput url={`${process.env.NEXT_PUBLIC_APP_URL ?? ''}/q/${quote.accept_token}`} />
-  </div>
-)}
+              <div className="rounded-xl border border-zinc-200 bg-white p-5">
+                <h2 className="mb-2 text-xs font-medium uppercase tracking-widest text-zinc-400">Client link</h2>
+                <p className="mb-2 text-xs text-zinc-400">Share this with your client to accept or decline.</p>
+                <CopyLinkInput url={`${process.env.NEXT_PUBLIC_APP_URL ?? ''}/q/${quote.accept_token}`} />
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      </main>
     </div>
   )
 }

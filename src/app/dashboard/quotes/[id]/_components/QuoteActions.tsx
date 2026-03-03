@@ -35,7 +35,7 @@ export default function QuoteActions({ quoteId, quoteNumber, status }: QuoteActi
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       {error && (
         <span className="text-xs text-red-500">{error}</span>
       )}

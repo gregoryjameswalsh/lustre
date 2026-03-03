@@ -1,7 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
-import Nav from '@/components/dashboard/Nav'
-
 export default async function PropertyPage({
   params,
 }: {
@@ -39,17 +37,15 @@ export default async function PropertyPage({
 
   return (
     <div className="min-h-screen bg-[#f9f8f5]">
-      <Nav />
-
-      <main className="max-w-4xl mx-auto px-6 pt-24 pb-16">
+      <main className="max-w-4xl mx-auto px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
 
         {/* Header */}
-        <div className="flex items-start justify-between mb-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-6 md:mb-8">
           <div>
             <a href={`/dashboard/clients/${clientId}`} className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors tracking-wide">
               ← {client?.first_name} {client?.last_name}
             </a>
-            <h1 className="text-3xl font-light tracking-tight text-zinc-900 mt-3">
+            <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-zinc-900 mt-3">
               {property.address_line1}
             </h1>
             {property.town && (
@@ -58,13 +54,13 @@ export default async function PropertyPage({
           </div>
           <a
             href={`/dashboard/clients/${clientId}/properties/${propertyId}/edit`}
-            className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-600 px-5 py-2.5 rounded-full hover:border-zinc-400 transition-colors"
+            className="self-start text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-600 px-5 py-2.5 rounded-full hover:border-zinc-400 transition-colors"
           >
             Edit
           </a>
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
 
           {/* Property details */}
           <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">

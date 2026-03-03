@@ -1,8 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getClientWithProperties } from '@/lib/queries/clients'
 import { redirect, notFound } from 'next/navigation'
-import Nav from '@/components/dashboard/Nav'
-
 import ActivityTimeline from '@/components/dashboard/ActivityTimeline'
 import { getClientActivities, getOpenFollowUps } from '@/lib/queries/activities'
 
@@ -57,22 +55,21 @@ export default async function ClientProfilePage({
 
   return (
     <div className="min-h-screen bg-[#f9f8f5]">
-      <Nav />
 
-      <main className="max-w-7xl mx-auto px-6 pt-24 pb-16">
+      <main className="max-w-7xl mx-auto px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
 
         {/* Header */}
-        <div className="flex items-start justify-between mb-8">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between mb-6 md:mb-8">
           <div>
             <a href="/dashboard/clients" className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors tracking-wide">
               ← Clients
             </a>
             <div className="flex items-center gap-4 mt-3">
-              <div className="w-12 h-12 rounded-full bg-zinc-200 flex items-center justify-center text-sm font-medium text-zinc-600">
+              <div className="w-12 h-12 rounded-full bg-zinc-200 flex items-center justify-center text-sm font-medium text-zinc-600 flex-shrink-0">
                 {client.first_name[0]}{client.last_name[0]}
               </div>
               <div>
-                <h1 className="text-3xl font-light tracking-tight text-zinc-900">
+                <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-zinc-900">
                   {client.first_name} {client.last_name}
                 </h1>
                 <span className={`text-xs px-2.5 py-1 rounded-full font-medium tracking-wide inline-flex mt-1 ${clientStatusColour[client.status]}`}>
@@ -81,7 +78,7 @@ export default async function ClientProfilePage({
               </div>
             </div>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <a
               href={`/dashboard/clients/${id}/edit`}
               className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-600 px-5 py-2.5 rounded-full hover:border-zinc-400 transition-colors"
@@ -97,7 +94,7 @@ export default async function ClientProfilePage({
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
 
           {/* Left column — contact + notes */}
           <div className="space-y-6">
@@ -173,7 +170,7 @@ export default async function ClientProfilePage({
           </div>
 
           {/* Right columns — properties + jobs */}
-          <div className="col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-6">
 
             {/* Properties */}
             <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
@@ -263,11 +260,10 @@ export default async function ClientProfilePage({
                 </div>
               ) : (
                 <div>
-                  {/* Header row */}
-                  <div className="grid grid-cols-[1fr_140px_120px_100px] gap-4 px-6 py-2 bg-zinc-50 border-b border-zinc-100">
+                  {/* Header row — tablet+ only */}
+                  <div className="hidden sm:grid grid-cols-[1fr_140px_100px] gap-4 px-6 py-2 bg-zinc-50 border-b border-zinc-100">
                     <span className="text-xs font-medium tracking-[0.15em] uppercase text-zinc-400">Property</span>
                     <span className="text-xs font-medium tracking-[0.15em] uppercase text-zinc-400">Service</span>
-                    <span className="text-xs font-medium tracking-[0.15em] uppercase text-zinc-400">Date</span>
                     <span className="text-xs font-medium tracking-[0.15em] uppercase text-zinc-400">Status</span>
                   </div>
                   <div className="divide-y divide-zinc-50">
@@ -277,20 +273,34 @@ export default async function ClientProfilePage({
                         <a
                           key={job.id}
                           href={`/dashboard/jobs/${job.id}`}
-                          className="grid grid-cols-[1fr_140px_120px_100px] gap-4 px-6 py-3.5 items-center hover:bg-zinc-50 transition-colors"
+                          className="block hover:bg-zinc-50 transition-colors"
                         >
-                          <span className="text-sm text-zinc-700">
-                            {job.properties?.address_line1 ?? '—'}
-                          </span>
-                          <span className="text-sm text-zinc-500">
-                            {serviceLabels[job.service_type] ?? '—'}
-                          </span>
-                          <span className="text-sm text-zinc-500">
-                            {job.scheduled_date ? formatDate(job.scheduled_date) : '—'}
-                          </span>
-                          <span className={`text-xs px-2.5 py-1 rounded-full font-medium tracking-wide inline-flex w-fit ${statusColour[job.status]}`}>
-                            {job.status.replace('_', ' ')}
-                          </span>
+                          {/* Mobile card */}
+                          <div className="sm:hidden flex items-center justify-between px-4 py-3.5 gap-3">
+                            <div className="min-w-0">
+                              <p className="text-sm text-zinc-700 truncate">
+                                {job.properties?.address_line1 ?? '—'}
+                              </p>
+                              <p className="text-xs text-zinc-400 mt-0.5">
+                                {serviceLabels[job.service_type] ?? '—'} · {job.scheduled_date ? formatDate(job.scheduled_date) : 'No date'}
+                              </p>
+                            </div>
+                            <span className={`text-xs px-2.5 py-1 rounded-full font-medium tracking-wide flex-shrink-0 ${statusColour[job.status]}`}>
+                              {job.status.replace('_', ' ')}
+                            </span>
+                          </div>
+                          {/* Desktop row */}
+                          <div className="hidden sm:grid grid-cols-[1fr_140px_100px] gap-4 px-6 py-3.5 items-center">
+                            <span className="text-sm text-zinc-700 truncate">
+                              {job.properties?.address_line1 ?? '—'}
+                            </span>
+                            <span className="text-sm text-zinc-500">
+                              {serviceLabels[job.service_type] ?? '—'}
+                            </span>
+                            <span className={`text-xs px-2.5 py-1 rounded-full font-medium tracking-wide inline-flex w-fit ${statusColour[job.status]}`}>
+                              {job.status.replace('_', ' ')}
+                            </span>
+                          </div>
                         </a>
                       ))}
                   </div>

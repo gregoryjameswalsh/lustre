@@ -62,7 +62,7 @@ export default async function PublicQuotePage({ params }: { params: { token: str
     <div className="min-h-screen bg-[#f9f8f5]">
 
       {/* Header */}
-      <header className="border-b border-zinc-100 bg-white px-6 py-5">
+      <header className="border-b border-zinc-100 bg-white px-4 py-4 sm:px-6 sm:py-5">
         <div className="mx-auto max-w-2xl">
           <p className="font-['Urbanist'] text-lg font-light tracking-widest text-[#0c0c0b]">
             {org.name}
@@ -75,7 +75,7 @@ export default async function PublicQuotePage({ params }: { params: { token: str
         </div>
       </header>
 
-      <main className="mx-auto max-w-2xl px-6 py-10">
+      <main className="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-10">
 
         {/* Quote header */}
         <div className="mb-6">

@@ -24,6 +24,34 @@ export default function LoginPage() {
           </p>
         </div>
 
+                    <form onSubmit={handleLogin} className="space-y-5">
+                        <div>
+                            <label className="block text-xs font-medium tracking-wider uppercase text-zinc-500 mb-2">
+                                Email
+                            </label>
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={e => setEmail(e.target.value)}
+                                required
+                                className="w-full border border-zinc-200 rounded-md px-4 py-3 text-base text-zinc-900 placeholder:text-zinc-300 focus:outline-none focus:border-zinc-400 transition-colors bg-zinc-50"
+                                placeholder="you@example.com"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-medium tracking-wider uppercase text-zinc-500-mb-2">
+                                Password
+                            </label>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={e => setPassword(e.target.value)}
+                                required
+                                className="w-full border border-zinc-200 rounded-md px-4 py-3 text-base text-zinc-900 placeholder:text-zinc-300 focus:outline-none focus:border-zinc-400 transition-colors bg-zinc-50"
+                                placeholder="••••••••"
+                            />
+                        </div>
         {/* Card */}
         <div className="bg-white border border-zinc-200 rounded-lg p-8">
           <h1 className="text-xl font-light tracking-tight text-zinc-900 mb-1">

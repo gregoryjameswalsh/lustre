@@ -18,7 +18,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <>
       <Nav orgName={orgName} />
-      <main className="pt-14">{children}</main>
+      <main className="pt-12 pb-safe-tab md:pt-14 md:pb-0">{children}</main>
     </>
   )
 }
