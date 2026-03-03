@@ -139,6 +139,12 @@ export default function JobDetailPage() {
 
           {/* Status actions */}
           <div className="flex flex-wrap items-center gap-2 md:gap-3">
+            <a
+              href={`/dashboard/jobs/${jobId}/edit`}
+              className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-600 px-5 py-2.5 rounded-full hover:border-zinc-400 transition-colors"
+            >
+              Edit
+            </a>
             {nextStatus && nextStatus !== 'cancelled' && (
               <button
                 onClick={() => updateStatus(nextStatus)}
