@@ -5,13 +5,14 @@
 // LUSTRE — Quote Server Actions
 // =============================================================================
 
-import { createServiceClient } from '@/lib/supabase/service'
+import { createAnonClient } from '@/lib/supabase/anon'
 import { checkRateLimit, quoteRateLimit } from '@/lib/ratelimit'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { getOrgAndUser, requireAdmin } from './_auth'
 import { str, requiredStr } from './_validate'
 import { logAuditEvent } from '@/lib/audit'
+import { captureServerEvent } from '@/lib/posthog'
 
 // -----------------------------------------------------------------------------
 // Helpers
@@ -48,7 +49,7 @@ export async function createQuote(
   prevState: QuoteFormState,
   formData: FormData
 ): Promise<QuoteFormState> {
-  const { supabase, profileId, orgId } = await getOrgAndUser()
+  const { supabase, profileId, orgId, userId } = await getOrgAndUser()
 
   const pricingType   = formData.get('pricing_type') as string
   const clientId      = formData.get('client_id') as string
@@ -100,6 +101,12 @@ export async function createQuote(
     .single()
 
   if (error) return { error: 'Failed to create quote. Please try again.' }
+
+  await captureServerEvent({
+    distinctId: userId,
+    event:      'quote_created',
+    properties: { pricing_type: pricingType, total },
+  })
 
   // Save line items for itemised quotes — MUST happen before redirect
   // DB trigger fires after each insert and recalculates totals on the quote
@@ -294,7 +301,7 @@ export async function updateQuoteStatus(
   quoteId: string,
   status: 'sent' | 'accepted' | 'declined' | 'expired'
 ): Promise<{ error?: string }> {
-  const { supabase, orgId } = await getOrgAndUser()
+  const { supabase, orgId, userId } = await getOrgAndUser()
 
   const updates: Record<string, unknown> = { status }
   if (status === 'sent')
@@ -310,10 +317,19 @@ export async function updateQuoteStatus(
 
   if (error) return { error: 'Failed to update quote status.' }
 
-  if (status === 'accepted') await createJobFromQuote(quoteId)
+  if (status === 'accepted') {
+    await captureServerEvent({ distinctId: userId, event: 'quote_accepted', properties: { quote_id: quoteId } })
+    await createJobFromQuote(quoteId, supabase)
+    await captureServerEvent({ distinctId: userId, event: 'job_created', properties: { from_quote: true, quote_id: quoteId } })
+  }
+
+  if (status === 'declined') {
+    await captureServerEvent({ distinctId: userId, event: 'quote_declined', properties: { quote_id: quoteId } })
+  }
 
   // Send quote email to client when owner clicks "Send to client"
   if (status === 'sent') {
+    await captureServerEvent({ distinctId: userId, event: 'quote_sent', properties: { quote_id: quoteId } })
     await sendQuoteToClient(quoteId, supabase)
   }
 
@@ -367,15 +383,15 @@ async function sendQuoteToClient(quoteId: string, supabase: any): Promise<void> 
 }
 
 // -----------------------------------------------------------------------------
-// Create Job from Accepted Quote
+// Create Job from Accepted Quote (authenticated dashboard path only)
 // -----------------------------------------------------------------------------
 
-async function createJobFromQuote(quoteId: string): Promise<void> {
-  // Uses service client — this is called from the unauthenticated public quote
-  // flow so there is no session. The job is created unassigned; the org can
-  // assign it from the dashboard.
-  const supabase = createServiceClient()
-
+// Called when an authenticated admin marks a quote as accepted from the
+// dashboard. Uses the session-bound client — RLS ensures the user can only
+// create jobs within their own org.
+// For the unauthenticated public quote flow, job creation is handled atomically
+// inside the public_respond_to_quote SECURITY DEFINER DB function.
+async function createJobFromQuote(quoteId: string, supabase: any): Promise<void> {
   const { data: quote } = await supabase
     .from('quotes')
     .select('organisation_id, client_id, property_id, total, quote_number, title')
@@ -451,28 +467,22 @@ export async function respondToQuote(
   const { success: rateOk } = await checkRateLimit(quoteRateLimit, token)
   if (!rateOk) return { error: 'Too many requests. Please try again later.' }
 
-  const supabase = createServiceClient()
-
-  const { data: quote } = await supabase
-    .from('quotes')
-    .select('id, status, valid_until, created_by')
-    .eq('accept_token', token)
-    .single()
-
-  if (!quote) return { error: 'Quote not found.' }
-  if (quote.status !== 'sent' && quote.status !== 'viewed')
-    return { error: 'This quote is no longer open for responses.' }
-  if (quote.valid_until && new Date(quote.valid_until) < new Date())
-    return { error: 'This quote has expired. Please contact us for an updated quote.' }
-
-  const { error } = await supabase
-    .from('quotes')
-    .update({ status: response, responded_at: new Date().toISOString() })
-    .eq('accept_token', token)
+  // Delegate to SECURITY DEFINER DB function — handles validation, status
+  // update, and job creation atomically without requiring the service role key.
+  const supabase = createAnonClient()
+  const { data, error } = await supabase
+    .rpc('public_respond_to_quote', { p_token: token, p_response: response })
 
   if (error) return { error: 'Failed to record your response. Please try again.' }
 
-  if (response === 'accepted') await createJobFromQuote(quote.id)
+  const result = data as { success?: boolean; error?: string }
+  if (result.error) return { error: result.error }
+
+  // Use the token as distinct_id — anonymous client, no session available
+  await captureServerEvent({
+    distinctId: `quote-${token}`,
+    event:      response === 'accepted' ? 'quote_accepted_by_client' : 'quote_declined_by_client',
+  })
 
   return { success: true }
 }
@@ -482,11 +492,9 @@ export async function respondToQuote(
 // -----------------------------------------------------------------------------
 
 export async function markQuoteViewed(token: string): Promise<void> {
-  const supabase = createServiceClient()
-
-  await supabase
-    .from('quotes')
-    .update({ status: 'viewed', viewed_at: new Date().toISOString() })
-    .eq('accept_token', token)
-    .eq('status', 'sent')
+  const supabase = createAnonClient()
+  await Promise.all([
+    supabase.rpc('public_mark_quote_viewed', { p_token: token }),
+    captureServerEvent({ distinctId: `quote-${token}`, event: 'quote_viewed_by_client' }),
+  ])
 }

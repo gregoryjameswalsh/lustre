@@ -1,6 +1,6 @@
-// src/middleware.ts
+// src/proxy.ts
 // =============================================================================
-// LUSTRE — Middleware
+// LUSTRE — Proxy (formerly middleware; renamed for Next.js 16)
 // Handles three concerns in order:
 //   1. Authentication — redirect unauthenticated users to /login
 //   2. Onboarding gate — redirect incomplete users to /onboarding
@@ -11,12 +11,12 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 // Routes that don't require authentication
-const PUBLIC_ROUTES = ['/login', '/signup', '/auth', '/terms', '/privacy', '/q']
+const PUBLIC_ROUTES = ['/login', '/signup', '/auth', '/terms', '/privacy', '/q', '/api/webhooks', '/api/health']
 
 // Routes that authenticated users can access even mid-onboarding
 const ONBOARDING_ALLOWED = ['/onboarding', '/auth/signout']
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Allow public routes through without any checks
@@ -86,7 +86,7 @@ export async function middleware(request: NextRequest) {
 
   const { data: org } = await supabase
     .from('organisations')
-    .select('onboarding_completed_at, subscription_status, trial_ends_at, plan')
+    .select('onboarding_completed_at, subscription_status, trial_ends_at, plan, stripe_subscription_id')
     .eq('id', profile.organisation_id)
     .single()
 
@@ -103,9 +103,12 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith('/dashboard')) {
     const trialExpired =
       org.trial_ends_at && new Date(org.trial_ends_at) < new Date()
+    // past_due always blocks. cancelled only blocks when there's no subscription
+    // ID — a subscription in the incomplete→active transition has an ID but maps
+    // to 'cancelled' status, so we must not gate those users out.
     const subscriptionLapsed =
-      org.subscription_status === 'cancelled' ||
-      org.subscription_status === 'past_due'
+      org.subscription_status === 'past_due' ||
+      (org.subscription_status === 'cancelled' && !org.stripe_subscription_id)
 
     if (org.plan === 'free' && trialExpired) {
       const billingUrl = request.nextUrl.clone()

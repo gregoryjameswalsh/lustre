@@ -3,7 +3,7 @@
 **Reference:** CISO-ENT-001
 **Author:** Chief Information Security Officer
 **Date:** March 2026
-**Status:** Draft for Executive Review
+**Status:** Active — Week 1 implementation in progress (updated 3 March 2026)
 **Companion Documents:** CTO-ENT-001, OPS-ENT-001, CFO-ENT-001, CRM-ENT-001, CPO-ENT-001
 
 ---
@@ -17,6 +17,8 @@ But the gap between "secure enough for early adopters" and "secure enough for en
 My assessment is that Lustre faces four categories of security work:
 
 **Category 1 — Critical vulnerabilities to close immediately.** These are issues that represent genuine, present risk: rate limiting that fails open, a `SUPABASE_SERVICE_ROLE_KEY` usage pattern that could be dangerously copied, no Multi-Factor Authentication, stack traces potentially exposed to clients, and no incident response capability. These must be resolved before any enterprise sales motion begins.
+
+> **Week 1 Update (3 March 2026):** `SUPABASE_SERVICE_ROLE_KEY` has been fully removed from the application. `service.ts` deleted. Three SECURITY DEFINER RPC functions created for the public quote path. Sentry error monitoring deployed — stack trace exposure via client-visible errors is now tracked. CI/CD pipeline live. See CTO-ENT-001 for details.
 
 **Category 2 — Compliance obligations to meet.** GDPR is not optional — it is law. Lustre processes personal data of UK and EU data subjects and currently has no data subject rights workflow, no consent management, no data retention enforcement, and no documented legal basis for processing. This is not a future problem; it is a present legal exposure.
 
@@ -419,26 +421,22 @@ The following secrets are currently managed as environment variables in Vercel:
 
 | Secret | Scope | Sensitivity | Risk if Compromised |
 |--------|-------|-------------|-------------------|
-| `SUPABASE_SERVICE_ROLE_KEY` | Server-only | Critical | Full database access, bypasses all RLS |
+| ~~`SUPABASE_SERVICE_ROLE_KEY`~~ | ~~Server-only~~ | ~~Critical~~ | **REMOVED (3 March 2026)** — No longer used. Delete from Vercel env vars and `.env.local`. |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public | Low | Limited to RLS-scoped queries — this is by design |
 | `UPSTASH_REDIS_REST_TOKEN` | Server-only | High | Rate limit bypass, potential data exposure |
 | `RESEND_API_KEY` | Server-only | High | Send email from Lustre domain, phishing vector |
 | `STRIPE_SECRET_KEY` | Server-only | Critical | Financial transactions |
 | `STRIPE_WEBHOOK_SECRET` | Server-only | High | Webhook forgery |
 
-### 7.2 The Service Role Key Problem
+### 7.2 ~~The Service Role Key Problem~~ ✅ RESOLVED (3 March 2026)
 
-The `SUPABASE_SERVICE_ROLE_KEY` (SEC-003 / CTO TD-003) is the single most dangerous secret in the Lustre infrastructure. It bypasses all Row-Level Security policies. Any query made with this client has unrestricted read and write access to all data across all tenants.
+The `SUPABASE_SERVICE_ROLE_KEY` has been **fully removed** from the application codebase. `src/lib/supabase/service.ts` has been deleted. The public quote operations previously served via this key now use SECURITY DEFINER PostgreSQL functions callable with the anon key:
 
-Currently, this key is used in `/src/lib/supabase/service.ts` for the public quote token lookup. This is the minimum necessary use case. The risk is the **established pattern**: any developer who needs to bypass RLS "just this once" has a ready-made template to follow. In a growing team, this pattern will be copied.
+- `public_get_quote_by_token(token)` — returns all quote data for the `/q/[token]` page
+- `public_mark_quote_viewed(token)` — transitions quote status `sent → viewed`
+- `public_respond_to_quote(token, response)` — handles accept/decline + job creation atomically
 
-**Required controls:**
-
-1. **Restrict service role usage to a dedicated server-side boundary.** The service client should only be importable from specific approved locations. A lint rule should flag any import of the service client outside those approved paths.
-
-2. **Audit all service role usage on each PR.** Any PR that touches `service.ts` or imports the service client requires security team review.
-
-3. **Move service role key to a secrets manager** (AWS Secrets Manager, Doppler, or HashiCorp Vault) in Phase 2. Environment variables in Vercel are convenient but do not provide rotation, access auditing, or fine-grained access control.
+These functions are granted `EXECUTE` to the `anon` role. They execute as the function owner (postgres), are tightly scoped to the minimum required operations, and do not establish the "bypass RLS" pattern. **`SUPABASE_SERVICE_ROLE_KEY` should be removed from Vercel environment variables and `.env.local` immediately.**
 
 ### 7.3 Secrets Rotation Policy
 

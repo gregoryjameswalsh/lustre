@@ -517,19 +517,20 @@ Synthesised from all seven plans, ranked by combined likelihood × impact:
 
 ## The CEO's First 30 Days
 
-**This week (Week 1):**
+**This week (Week 1):** *(Updated: 3 March 2026)*
 - [ ] Identify top 10 ICP-fit trial accounts — review every existing signup, score for ICP fit
-- [ ] Remove service role key from application request path (CTO — Day 1)
-- [ ] Configure Supabase CLI migration tooling (CTO — Day 1)
+- [x] **DONE** Remove service role key from application request path (CTO) — replaced with SECURITY DEFINER PostgreSQL RPC functions; `service.ts` deleted; `SUPABASE_SERVICE_ROLE_KEY` no longer required in the app
+- [x] **DONE** Configure Supabase CLI migration tooling (CTO) — `supabase/config.toml` created, migrations directory structured (`20260303000000_initial_schema.sql`, `20260303000001_public_quote_functions.sql`), `npm run db:push/pull/diff/reset` scripts added
 - [ ] Sign DPAs with Supabase, Vercel, Resend, Upstash (COO/CISO — paperwork)
-- [ ] Begin Stripe billing integration scope (CTO)
+- [x] **DONE (ahead of schedule)** Stripe billing integration — full infrastructure built: Stripe client + plans config, Checkout session API, Customer Portal API, webhook handler (checkout.session.completed, subscription.created/updated/deleted, invoice.payment_succeeded/failed), `/billing` plan picker page, `/dashboard/settings/billing` plan management page, `stripe_subscription_id` + `stripe_price_id` DB migration. `stripe` added to dependencies. **Needs:** Stripe Products + Prices created in dashboard, Price IDs set as env vars, webhook endpoint registered.
 - [ ] Set up HubSpot CRM — all prospects enter here from today
-- [ ] Deploy Sentry and Checkly (CTO/COO)
+- [x] **DONE** Deploy Sentry (CTO) — `@sentry/nextjs` configured; client/server/edge config files live; `global-error.tsx` captures to Sentry; CSP updated; Checkly setup pending (external service config)
 - [ ] Personal outreach to 10 design-partner candidates
 
 **Week 2:**
-- [ ] PostHog live and instrumented (CPO)
-- [ ] CI/CD pipeline live — no more unvalidated deploys (CTO)
+- [x] **DONE** PostHog live and instrumented (CPO) — posthog-js + posthog-node installed; 11 events instrumented across auth, clients, and quotes (user_signed_up, user_signed_in, onboarding_completed, client_created, quote_created, quote_sent, quote_accepted, quote_declined, job_created, quote_viewed_by_client, quote_accepted/declined_by_client); /ingest reverse proxy configured in next.config.ts; user identified in root layout
+- [x] **DONE** Uptime monitoring (Checkly) — three API checks live (health endpoint, login page, Stripe webhook); deployed to eu-west-1 + eu-central-1; 5-minute frequency; BrowserCheck with HMAC signing for Stripe webhook check
+- [x] **DONE (early)** CI/CD pipeline live — GitHub Actions workflow created: lint → typecheck → build → `npm audit` on every PR and push to main
 - [ ] GDPR documentation drafted: data processing register, legal basis, sub-processor list
 - [ ] Privacy policy updated
 - [ ] Incident response plan drafted
@@ -538,8 +539,8 @@ Synthesised from all seven plans, ranked by combined likelihood × impact:
 - [ ] Write pricing page copy (CRO)
 
 **Week 3:**
-- [ ] Stripe billing live (Checkout + webhooks)
-- [ ] Pricing page live
+- [x] **DONE (early)** Stripe billing live (Checkout + webhooks) — code complete; activation requires Stripe product/price setup and env vars
+- [x] **DONE (early)** Pricing / billing page live (`/billing`) — plan picker with monthly + annual options, enterprise callout
 - [ ] Trial-to-paid email sequence live in Resend
 - [ ] Design-partner calls underway — 2+ advanced to proposal
 
