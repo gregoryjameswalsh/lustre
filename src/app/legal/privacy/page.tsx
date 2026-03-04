@@ -46,11 +46,12 @@ export default function PrivacyPage() {
         ]} />
       </Section>
 
-      <Section heading="4. Legal Bases for Processing (GDPR)">
+      <Section heading="4. Legal Bases for Processing (UK GDPR)">
         <P>
-          Where the GDPR applies, we process your personal data on the following
-          bases: contract performance (to provide the Service), legitimate interests
-          (security, analytics), consent (marketing), and legal obligation.
+          We process your personal data under the UK GDPR and the Data Protection Act
+          2018. Our legal bases are: contract performance (to provide the Service),
+          legitimate interests (security, analytics), consent (marketing), and
+          compliance with a legal obligation.
         </P>
       </Section>
 
@@ -83,9 +84,14 @@ export default function PrivacyPage() {
 
       <Section heading="8. Your Rights">
         <P>
-          Depending on your location you may have the right to access, correct,
-          delete, or restrict processing of your personal data, as well as the right
-          to data portability and to withdraw consent. Submit requests to{' '}
+          Under the UK GDPR you have the right to access, rectify, erase, or restrict
+          processing of your personal data, as well as the right to data portability
+          and to object to processing. You also have the right to lodge a complaint
+          with the Information Commissioner's Office (ICO) at{' '}
+          <a href="https://ico.org.uk" className="text-[#4a5c4e] underline underline-offset-2" target="_blank" rel="noopener noreferrer">
+            ico.org.uk
+          </a>
+          . Submit data requests to{' '}
           <a href="mailto:privacy@altrera.com" className="text-[#4a5c4e] underline underline-offset-2">
             privacy@altrera.com
           </a>
@@ -105,9 +111,9 @@ export default function PrivacyPage() {
 
       <Section heading="10. International Transfers">
         <P>
-          Your data may be transferred to and processed in countries outside your
-          own. Where required, we rely on Standard Contractual Clauses or other
-          approved transfer mechanisms.
+          Your data may be transferred to and processed in countries outside the UK.
+          Where required, we rely on the UK International Data Transfer Agreement
+          (IDTA) or another mechanism approved by the ICO.
         </P>
       </Section>
 

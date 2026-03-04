@@ -90,8 +90,9 @@ export default function TermsPage() {
 
       <Section heading="10. Governing Law">
         <P>
-          These Terms are governed by the laws of the jurisdiction in which Altrera
-          Industries is registered, without regard to conflict of law principles.
+          These Terms are governed by the laws of England and Wales. Any disputes
+          shall be subject to the exclusive jurisdiction of the courts of England
+          and Wales.
         </P>
       </Section>
 

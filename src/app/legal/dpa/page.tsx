@@ -21,8 +21,8 @@ export default function DpaPage() {
       </Section>
 
       <Section heading="2. Definitions">
-        <P>Terms used in this DPA have the meanings given in the GDPR or applicable
-          data protection law:
+        <P>Terms used in this DPA have the meanings given in the UK GDPR and the
+          Data Protection Act 2018:
         </P>
         <Ul items={[
           '"Personal Data" — any information relating to an identified or identifiable natural person',
@@ -46,9 +46,9 @@ export default function DpaPage() {
 
       <Section heading="4. Controller Obligations">
         <P>
-          The Controller warrants that it has a lawful basis for the personal data
-          provided to the Service and that its instructions comply with applicable
-          data protection law.
+          The Controller warrants that it has a lawful basis under the UK GDPR and
+          the Data Protection Act 2018 for the personal data provided to the Service,
+          and that its instructions comply with applicable data protection law.
         </P>
       </Section>
 
@@ -77,9 +77,9 @@ export default function DpaPage() {
 
       <Section heading="7. International Transfers">
         <P>
-          Where personal data is transferred outside the EEA, we rely on Standard
-          Contractual Clauses (SCCs) adopted by the European Commission, or another
-          approved transfer mechanism.
+          Where personal data is transferred outside the UK, we rely on the UK
+          International Data Transfer Agreement (IDTA), as approved by the Secretary
+          of State, or another mechanism approved by the ICO.
         </P>
       </Section>
 
