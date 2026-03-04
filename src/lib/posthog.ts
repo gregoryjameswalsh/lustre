@@ -43,5 +43,6 @@ export async function captureServerEvent({
   if (!client) return
 
   client.capture({ distinctId, event, properties })
-  await client.flushAsync()
+  await client.shutdown()
+  _client = null  // reset so next call gets a fresh client
 }
