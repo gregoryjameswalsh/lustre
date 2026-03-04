@@ -528,7 +528,8 @@ Synthesised from all seven plans, ranked by combined likelihood × impact:
 - [ ] Personal outreach to 10 design-partner candidates
 
 **Week 2:**
-- [ ] PostHog live and instrumented (CPO)
+- [x] **DONE** PostHog live and instrumented (CPO) — posthog-js + posthog-node installed; 11 events instrumented across auth, clients, and quotes (user_signed_up, user_signed_in, onboarding_completed, client_created, quote_created, quote_sent, quote_accepted, quote_declined, job_created, quote_viewed_by_client, quote_accepted/declined_by_client); /ingest reverse proxy configured in next.config.ts; user identified in root layout
+- [x] **DONE** Uptime monitoring (Checkly) — three API checks live (health endpoint, login page, Stripe webhook); deployed to eu-west-1 + eu-central-1; 5-minute frequency; BrowserCheck with HMAC signing for Stripe webhook check
 - [x] **DONE (early)** CI/CD pipeline live — GitHub Actions workflow created: lint → typecheck → build → `npm audit` on every PR and push to main
 - [ ] GDPR documentation drafted: data processing register, legal basis, sub-processor list
 - [ ] Privacy policy updated
