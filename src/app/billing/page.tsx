@@ -31,7 +31,7 @@ async function getOrgBillingState() {
 
   const { data: org } = await supabase
     .from('organisations')
-    .select('name, plan, subscription_status, trial_ends_at, stripe_customer_id')
+    .select('name, plan, subscription_status, trial_ends_at, stripe_customer_id, subscription_current_period_end, subscription_cancel_at_period_end')
     .eq('id', profile.organisation_id)
     .single()
 
@@ -68,7 +68,7 @@ export default async function BillingPage({
   const [org, { billing }] = await Promise.all([getOrgBillingState(), searchParams])
   if (!org) redirect('/login')
 
-  // If already on a paid plan, redirect to billing settings
+  // Active subscribers (including those pending cancellation) → billing settings
   if (org.plan !== 'free' && org.subscription_status === 'active') {
     redirect('/dashboard/settings/billing')
   }

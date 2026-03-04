@@ -56,19 +56,26 @@ async function updateOrgFromSubscription(
     return
   }
 
-  const priceId = subscription.items.data[0]?.price.id ?? null
+  const item    = subscription.items.data[0]
+  const priceId = item?.price.id ?? null
   const plan: Plan = (priceId ? planFromPriceId(priceId) : null) ?? 'free'
   const status = mapStatus(subscription.status)
+  // current_period_end moved to SubscriptionItem in API version 2025-02-24.acacia
+  const periodEnd = item?.current_period_end ?? null
 
   await supabase.rpc('stripe_update_org_subscription', {
-    p_org_id:          orgId,
-    p_subscription_id: subscription.id,
-    p_price_id:        priceId,
-    p_plan:            plan,
-    p_status:          status,
-    p_trial_ends_at:   subscription.trial_end
+    p_org_id:                orgId,
+    p_subscription_id:       subscription.id,
+    p_price_id:              priceId,
+    p_plan:                  plan,
+    p_status:                status,
+    p_trial_ends_at:         subscription.trial_end
       ? new Date(subscription.trial_end * 1000).toISOString()
       : null,
+    p_current_period_end:    periodEnd
+      ? new Date(periodEnd * 1000).toISOString()
+      : null,
+    p_cancel_at_period_end:  subscription.cancel_at_period_end,
   })
 }
 

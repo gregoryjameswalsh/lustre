@@ -25,7 +25,7 @@ async function getOrgBilling() {
 
   const { data: org } = await supabase
     .from('organisations')
-    .select('name, plan, subscription_status, trial_ends_at, stripe_customer_id')
+    .select('name, plan, subscription_status, trial_ends_at, stripe_customer_id, subscription_current_period_end, subscription_cancel_at_period_end')
     .eq('id', profile.organisation_id)
     .single()
 
@@ -124,6 +124,25 @@ export default async function BillingSettingsPage({
                   )}
                 </div>
               </div>
+
+              {/* Renewal / cancellation date */}
+              {org.subscription_current_period_end && org.plan !== 'free' && (
+                <p className="text-sm text-zinc-500">
+                  {org.subscription_cancel_at_period_end
+                    ? <>Access until <strong className="text-zinc-700">{new Date(org.subscription_current_period_end).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</strong></>
+                    : <>Renews <strong className="text-zinc-700">{new Date(org.subscription_current_period_end).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</strong></>
+                  }
+                </p>
+              )}
+
+              {/* Cancels at period end notice */}
+              {org.subscription_cancel_at_period_end && org.subscription_current_period_end && (
+                <div className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                  Your subscription is cancelled and will end on{' '}
+                  <strong>{new Date(org.subscription_current_period_end).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>.
+                  {' '}You can reactivate it any time before then in the customer portal.
+                </div>
+              )}
 
               {/* Trial countdown */}
               {org.plan === 'free' && daysLeft !== null && daysLeft > 0 && (
