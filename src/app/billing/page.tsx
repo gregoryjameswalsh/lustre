@@ -63,9 +63,9 @@ function statusBanner(
 export default async function BillingPage({
   searchParams,
 }: {
-  searchParams: { billing?: string }
+  searchParams: Promise<{ billing?: string }>
 }) {
-  const org = await getOrgBillingState()
+  const [org, { billing }] = await Promise.all([getOrgBillingState(), searchParams])
   if (!org) redirect('/login')
 
   // If already on a paid plan, redirect to billing settings
@@ -99,7 +99,7 @@ export default async function BillingPage({
       <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
 
         {/* Cancelled success banner */}
-        {searchParams.billing === 'cancelled' && (
+        {billing === 'cancelled' && (
           <div className="mb-6 rounded-xl border border-amber-100 bg-amber-50 px-5 py-4 text-sm text-amber-700">
             Checkout was cancelled — no charge was made. Choose a plan below whenever you're ready.
           </div>
