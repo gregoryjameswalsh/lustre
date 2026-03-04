@@ -6,9 +6,10 @@ import type { ClientStatus } from '@/lib/types'
 import { getOrgAndUser, requireAdmin } from './_auth'
 import { str, requiredStr } from './_validate'
 import { logAuditEvent } from '@/lib/audit'
+import { captureServerEvent } from '@/lib/posthog'
 
 export async function createClientAction(formData: FormData) {
-  const { supabase, orgId } = await getOrgAndUser()
+  const { supabase, orgId, userId } = await getOrgAndUser()
 
   const { error } = await supabase.from('clients').insert({
     organisation_id:  orgId,
@@ -23,6 +24,15 @@ export async function createClientAction(formData: FormData) {
   })
 
   if (error) throw new Error('Failed to create client. Please try again.')
+
+  await captureServerEvent({
+    distinctId: userId,
+    event:      'client_created',
+    properties: {
+      status: formData.get('status') as string ?? 'active',
+      source: str(formData, 'source', 50) || null,
+    },
+  })
 
   revalidatePath('/dashboard/clients')
   redirect('/dashboard/clients')

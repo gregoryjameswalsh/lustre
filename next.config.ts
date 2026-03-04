@@ -9,6 +9,25 @@ const nextConfig: NextConfig = {
   // An empty object is sufficient — we don't need custom Turbopack rules.
   turbopack: {},
 
+  // Proxy PostHog through our own domain so requests pass the CSP 'self'
+  // allowlist and aren't blocked by ad-blockers.
+  async rewrites() {
+    return [
+      {
+        source:      '/ingest/static/:path*',
+        destination: 'https://eu-assets.i.posthog.com/static/:path*',
+      },
+      {
+        source:      '/ingest/decide',
+        destination: 'https://eu.i.posthog.com/decide',
+      },
+      {
+        source:      '/ingest/:path*',
+        destination: 'https://eu.i.posthog.com/:path*',
+      },
+    ]
+  },
+
   async headers() {
     return [
       {

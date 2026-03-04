@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { checkRateLimit, loginRateLimit, signupRateLimit } from '@/lib/ratelimit'
+import { captureServerEvent } from '@/lib/posthog'
 
 // -----------------------------------------------------------------------------
 // Sign In
@@ -31,8 +32,10 @@ export async function signIn(
   if (!success) return { error: 'Too many login attempts. Please wait 15 minutes and try again.' }
 
   const supabase = await createClient()
-  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
   if (error) return { error: 'Invalid email or password.' }
+
+  await captureServerEvent({ distinctId: data.user.id, event: 'user_signed_in' })
 
   redirect('/dashboard')
 }
@@ -95,6 +98,14 @@ export async function signUp(
 
   // Supabase returns a session immediately if email confirmation is disabled.
   // If enabled, data.session is null and we show a "check your email" message.
+  if (data.user) {
+    await captureServerEvent({
+      distinctId: data.user.id,
+      event:      'user_signed_up',
+      properties: { requires_email_confirmation: !data.session },
+    })
+  }
+
   if (!data.session) {
     return { success: true, requiresEmailConfirmation: true }
   }
@@ -133,6 +144,7 @@ export async function advanceOnboardingStep(step: number): Promise<void> {
     .eq('id', profile.organisation_id)
 
   if (isComplete) {
+    await captureServerEvent({ distinctId: user.id, event: 'onboarding_completed' })
     redirect('/dashboard')
   } else {
     redirect(`/onboarding?step=${step + 1}`)

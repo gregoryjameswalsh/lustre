@@ -12,6 +12,7 @@ import { revalidatePath } from 'next/cache'
 import { getOrgAndUser, requireAdmin } from './_auth'
 import { str, requiredStr } from './_validate'
 import { logAuditEvent } from '@/lib/audit'
+import { captureServerEvent } from '@/lib/posthog'
 
 // -----------------------------------------------------------------------------
 // Helpers
@@ -48,7 +49,7 @@ export async function createQuote(
   prevState: QuoteFormState,
   formData: FormData
 ): Promise<QuoteFormState> {
-  const { supabase, profileId, orgId } = await getOrgAndUser()
+  const { supabase, profileId, orgId, userId } = await getOrgAndUser()
 
   const pricingType   = formData.get('pricing_type') as string
   const clientId      = formData.get('client_id') as string
@@ -100,6 +101,12 @@ export async function createQuote(
     .single()
 
   if (error) return { error: 'Failed to create quote. Please try again.' }
+
+  await captureServerEvent({
+    distinctId: userId,
+    event:      'quote_created',
+    properties: { pricing_type: pricingType, total },
+  })
 
   // Save line items for itemised quotes — MUST happen before redirect
   // DB trigger fires after each insert and recalculates totals on the quote
@@ -294,7 +301,7 @@ export async function updateQuoteStatus(
   quoteId: string,
   status: 'sent' | 'accepted' | 'declined' | 'expired'
 ): Promise<{ error?: string }> {
-  const { supabase, orgId } = await getOrgAndUser()
+  const { supabase, orgId, userId } = await getOrgAndUser()
 
   const updates: Record<string, unknown> = { status }
   if (status === 'sent')
@@ -310,10 +317,19 @@ export async function updateQuoteStatus(
 
   if (error) return { error: 'Failed to update quote status.' }
 
-  if (status === 'accepted') await createJobFromQuote(quoteId, supabase)
+  if (status === 'accepted') {
+    await captureServerEvent({ distinctId: userId, event: 'quote_accepted', properties: { quote_id: quoteId } })
+    await createJobFromQuote(quoteId, supabase)
+    await captureServerEvent({ distinctId: userId, event: 'job_created', properties: { from_quote: true, quote_id: quoteId } })
+  }
+
+  if (status === 'declined') {
+    await captureServerEvent({ distinctId: userId, event: 'quote_declined', properties: { quote_id: quoteId } })
+  }
 
   // Send quote email to client when owner clicks "Send to client"
   if (status === 'sent') {
+    await captureServerEvent({ distinctId: userId, event: 'quote_sent', properties: { quote_id: quoteId } })
     await sendQuoteToClient(quoteId, supabase)
   }
 
@@ -462,6 +478,12 @@ export async function respondToQuote(
   const result = data as { success?: boolean; error?: string }
   if (result.error) return { error: result.error }
 
+  // Use the token as distinct_id — anonymous client, no session available
+  await captureServerEvent({
+    distinctId: `quote-${token}`,
+    event:      response === 'accepted' ? 'quote_accepted_by_client' : 'quote_declined_by_client',
+  })
+
   return { success: true }
 }
 
@@ -471,5 +493,8 @@ export async function respondToQuote(
 
 export async function markQuoteViewed(token: string): Promise<void> {
   const supabase = createAnonClient()
-  await supabase.rpc('public_mark_quote_viewed', { p_token: token })
+  await Promise.all([
+    supabase.rpc('public_mark_quote_viewed', { p_token: token }),
+    captureServerEvent({ distinctId: `quote-${token}`, event: 'quote_viewed_by_client' }),
+  ])
 }
