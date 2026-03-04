@@ -4,6 +4,10 @@
 // Catches errors in the root layout itself (rare but possible).
 // Must include its own <html> and <body> tags.
 
+import * as Sentry from "@sentry/nextjs";
+import Error from "next/error";
+import { useEffect } from "react";
+
 export default function GlobalError({
   error,
   reset,

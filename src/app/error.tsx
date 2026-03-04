@@ -16,7 +16,7 @@ export default function Error({
 }) {
   useEffect(() => {
     console.error('[Lustre] unhandled error:', error)
-    // Sentry.captureException(error)
+    Sentry.captureException(error)
   }, [error])
 
   return (
