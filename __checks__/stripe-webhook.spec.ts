@@ -16,9 +16,8 @@ test('Stripe webhook returns 200 with valid signature', async ({ request }) => {
   const payload   = JSON.stringify({ id: 'evt_test_checkly', type: 'ping', data: { object: {} } })
   const timestamp = Math.floor(Date.now() / 1000)
 
-  // Stripe signature: HMAC-SHA256 of "<timestamp>.<payload>" with the raw secret bytes
-  const secretBytes = Buffer.from(secret.replace('whsec_', ''), 'base64')
-  const sig         = crypto.createHmac('sha256', secretBytes).update(`${timestamp}.${payload}`).digest('hex')
+  // Stripe signature: HMAC-SHA256 of "<timestamp>.<payload>" keyed with the full secret string
+  const sig = crypto.createHmac('sha256', secret).update(`${timestamp}.${payload}`).digest('hex')
 
   const response = await request.post(`${BASE_URL}/api/webhooks/stripe`, {
     headers: {
