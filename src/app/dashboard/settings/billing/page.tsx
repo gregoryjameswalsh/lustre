@@ -59,9 +59,9 @@ function statusBadge(status: SubscriptionStatus): { label: string; colour: strin
 export default async function BillingSettingsPage({
   searchParams,
 }: {
-  searchParams: { billing?: string }
+  searchParams: Promise<{ billing?: string }>
 }) {
-  const org = await getOrgBilling()
+  const [org, { billing }] = await Promise.all([getOrgBilling(), searchParams])
   if (!org) redirect('/login')
 
   const daysLeft = trialDaysRemaining(org.trial_ends_at)
@@ -89,7 +89,7 @@ export default async function BillingSettingsPage({
         </div>
 
         {/* Success banner */}
-        {searchParams.billing === 'success' && (
+        {billing === 'success' && (
           <div className="mb-6 rounded-xl border border-emerald-100 bg-emerald-50 px-5 py-4 text-sm text-emerald-700">
             Subscription activated — welcome aboard! Your account is now fully active.
           </div>
