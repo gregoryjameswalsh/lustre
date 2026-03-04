@@ -45,50 +45,55 @@ export async function POST(request: Request) {
 
   let stripeCustomerId = org.stripe_customer_id
 
-  if (!stripeCustomerId) {
-    const customer = await stripe.customers.create({
-      name:     org.name,
-      email:    org.email ?? user.email ?? undefined,
-      metadata: { organisation_id: org.id },
-    })
-    stripeCustomerId = customer.id
+  try {
+    if (!stripeCustomerId) {
+      const customer = await stripe.customers.create({
+        name:     org.name,
+        email:    org.email ?? user.email ?? undefined,
+        metadata: { organisation_id: org.id },
+      })
+      stripeCustomerId = customer.id
 
-    await supabase
-      .from('organisations')
-      .update({ stripe_customer_id: stripeCustomerId })
-      .eq('id', org.id)
-  }
+      await supabase
+        .from('organisations')
+        .update({ stripe_customer_id: stripeCustomerId })
+        .eq('id', org.id)
+    }
 
-  // ── 4. Create Checkout Session ────────────────────────────────────────────
+    // ── 4. Create Checkout Session ──────────────────────────────────────────
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 
-  const session = await stripe.checkout.sessions.create({
-    customer:             stripeCustomerId,
-    mode:                 'subscription',
-    payment_method_types: ['card'],
-    line_items: [{ price: priceId, quantity: 1 }],
-    // Stripe Tax handles UK VAT automatically when enabled in dashboard
-    automatic_tax: { enabled: true },
-    customer_update: { address: 'auto' },
-    // Collect billing address for VAT purposes
-    billing_address_collection: 'required',
-    success_url: `${appUrl}/dashboard?billing=success`,
-    cancel_url:  `${appUrl}/billing?billing=cancelled`,
-    metadata: {
-      organisation_id: org.id,
-      price_id:        priceId,
-    },
-    subscription_data: {
+    const session = await stripe.checkout.sessions.create({
+      customer:             stripeCustomerId,
+      mode:                 'subscription',
+      payment_method_types: ['card'],
+      line_items: [{ price: priceId, quantity: 1 }],
+      // Stripe Tax handles UK VAT automatically when enabled in dashboard
+      automatic_tax: { enabled: true },
+      customer_update: { address: 'auto' },
+      // Collect billing address for VAT purposes
+      billing_address_collection: 'required',
+      success_url: `${appUrl}/dashboard/settings/billing?billing=success`,
+      cancel_url:  `${appUrl}/billing?billing=cancelled`,
       metadata: {
         organisation_id: org.id,
+        price_id:        priceId,
       },
-    },
-  })
+      subscription_data: {
+        metadata: {
+          organisation_id: org.id,
+        },
+      },
+    })
 
-  if (!session.url) {
+    if (!session.url) {
+      return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 })
+    }
+
+    return NextResponse.json({ url: session.url })
+  } catch (err) {
+    console.error('Stripe checkout error:', err)
     return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 })
   }
-
-  return NextResponse.json({ url: session.url })
 }
