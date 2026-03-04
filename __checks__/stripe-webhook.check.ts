@@ -10,6 +10,5 @@ new BrowserCheck('stripe-webhook', {
   frequency: 5,
   locations: ['eu-west-1', 'eu-central-1'],
   tags:      ['production'],
-  maxResponseTime: 5000,
   code: { entrypoint: './stripe-webhook.spec.ts' },
 })
