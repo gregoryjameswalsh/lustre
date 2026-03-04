@@ -60,8 +60,11 @@ async function updateOrgFromSubscription(
   const priceId = item?.price.id ?? null
   const plan: Plan = (priceId ? planFromPriceId(priceId) : null) ?? 'free'
   const status = mapStatus(subscription.status)
-  // current_period_end moved to SubscriptionItem in API version 2025-02-24.acacia
-  const periodEnd = item?.current_period_end ?? null
+  // current_period_end is typed on Stripe.Subscription in 2025-02-24.acacia
+  // (moved to SubscriptionItem in the API payload but not yet in the SDK types)
+  const periodEnd: number | null = (subscription as unknown as Record<string, number>)['current_period_end']
+    ?? (item as unknown as Record<string, number>)?.['current_period_end']
+    ?? null
 
   await supabase.rpc('stripe_update_org_subscription', {
     p_org_id:                orgId,
