@@ -13,35 +13,21 @@
 //   invoice.payment_succeeded          — payment received → ensure status active
 //   invoice.payment_failed             — payment failed → mark past_due
 //
-// This route intentionally uses the Supabase service role via a direct SDK call
-// (not the app client) because webhooks are unauthenticated requests from Stripe.
-// The scope is strictly limited to UPDATE on organisations, keyed by Stripe IDs
-// stored in our own database.
+// This route uses the anon Supabase client and calls SECURITY DEFINER RPC
+// functions (stripe_update_org_subscription, stripe_cancel_org_subscription,
+// stripe_set_org_past_due) to write billing state back to organisations.
+// SUPABASE_SERVICE_ROLE_KEY is not required.
 // =============================================================================
 
 import { NextResponse }       from 'next/server'
 import Stripe                 from 'stripe'
 import { stripe }             from '@/lib/stripe'
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createAnonClient }   from '@/lib/supabase/anon'
 import { planFromPriceId }    from '@/lib/stripe/plans'
 import type { Plan, SubscriptionStatus } from '@/lib/types'
 
 // Webhook signature secret — set in Stripe Dashboard → Webhooks → Signing secret
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET
-
-// Direct Supabase admin client for webhook use only.
-// This is the only permitted use of the service role in the app, and it is
-// scoped entirely to writing billing state back to organisations.
-function getAdminClient() {
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set')
-  }
-  return createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
-    { auth: { persistSession: false } }
-  )
-}
 
 // Map Stripe subscription status → our SubscriptionStatus
 function mapStatus(stripeStatus: Stripe.Subscription.Status): SubscriptionStatus {
@@ -61,7 +47,7 @@ function mapStatus(stripeStatus: Stripe.Subscription.Status): SubscriptionStatus
 }
 
 async function updateOrgFromSubscription(
-  supabase: ReturnType<typeof getAdminClient>,
+  supabase: ReturnType<typeof createAnonClient>,
   subscription: Stripe.Subscription
 ) {
   const orgId = subscription.metadata?.organisation_id
@@ -74,19 +60,16 @@ async function updateOrgFromSubscription(
   const plan: Plan = (priceId ? planFromPriceId(priceId) : null) ?? 'free'
   const status = mapStatus(subscription.status)
 
-  await supabase
-    .from('organisations')
-    .update({
-      stripe_subscription_id: subscription.id,
-      stripe_price_id:        priceId,
-      plan,
-      subscription_status:    status,
-      trial_ends_at:
-        subscription.trial_end
-          ? new Date(subscription.trial_end * 1000).toISOString()
-          : null,
-    })
-    .eq('id', orgId)
+  await supabase.rpc('stripe_update_org_subscription', {
+    p_org_id:          orgId,
+    p_subscription_id: subscription.id,
+    p_price_id:        priceId,
+    p_plan:            plan,
+    p_status:          status,
+    p_trial_ends_at:   subscription.trial_end
+      ? new Date(subscription.trial_end * 1000).toISOString()
+      : null,
+  })
 }
 
 export async function POST(request: Request) {
@@ -110,7 +93,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
-  const supabase = getAdminClient()
+  const supabase = createAnonClient()
 
   try {
     switch (event.type) {
@@ -120,9 +103,6 @@ export async function POST(request: Request) {
         const session = event.data.object as Stripe.Checkout.Session
         if (session.mode !== 'subscription') break
 
-        // The subscription.created event will fire immediately after and
-        // handle the full state sync — nothing extra needed here.
-        // We do log the checkout completion for audit purposes.
         const orgId = session.metadata?.organisation_id
         if (orgId) {
           console.log(`Checkout completed for org ${orgId}, subscription ${session.subscription}`)
@@ -150,15 +130,9 @@ export async function POST(request: Request) {
         const orgId = subscription.metadata?.organisation_id
         if (!orgId) break
 
-        await supabase
-          .from('organisations')
-          .update({
-            plan:                'free',
-            subscription_status: 'cancelled',
-            stripe_subscription_id: null,
-            stripe_price_id:        null,
-          })
-          .eq('id', orgId)
+        await supabase.rpc('stripe_cancel_org_subscription', {
+          p_org_id: orgId,
+        })
         break
       }
 
@@ -185,21 +159,17 @@ export async function POST(request: Request) {
         const orgId = subscription.metadata?.organisation_id
         if (!orgId) break
 
-        await supabase
-          .from('organisations')
-          .update({ subscription_status: 'past_due' })
-          .eq('id', orgId)
+        await supabase.rpc('stripe_set_org_past_due', {
+          p_org_id: orgId,
+        })
         break
       }
 
       default:
-        // Unhandled event types — log and return 200 so Stripe doesn't retry
         console.log(`Unhandled Stripe event type: ${event.type}`)
     }
   } catch (err) {
     console.error(`Error processing Stripe event ${event.type}:`, err)
-    // Return 500 so Stripe retries — but only for unexpected errors, not
-    // validation errors (those should return 200 to stop retries)
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }
 
