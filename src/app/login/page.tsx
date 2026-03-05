@@ -5,6 +5,7 @@
 // allowing rate limiting and keeping credentials off the client-side bundle.
 
 import { useActionState } from 'react'
+import Link from 'next/link'
 import { signIn } from '@/lib/actions/auth'
 
 export default function LoginPage() {
@@ -78,9 +79,9 @@ export default function LoginPage() {
 
         <p className="text-center text-xs text-zinc-300 mt-8 tracking-wider">
           &copy; 2026 Altrera Industries &middot;{' '}
-          <a href="/legal/terms" className="hover:text-zinc-500 transition-colors">Terms</a>
+          <Link href="/legal/terms" className="text-zinc-400 hover:text-zinc-600 transition-colors underline underline-offset-2">Terms</Link>
           {' '}&middot;{' '}
-          <a href="/legal/privacy" className="hover:text-zinc-500 transition-colors">Privacy</a>
+          <Link href="/legal/privacy" className="text-zinc-400 hover:text-zinc-600 transition-colors underline underline-offset-2">Privacy</Link>
         </p>
       </div>
     </div>
