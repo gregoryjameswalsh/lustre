@@ -216,7 +216,7 @@ export default function JobDetailPage() {
               </div>
               <div className="px-5 py-2 divide-y divide-zinc-50">
                 {[
-                  { label: 'Service', value: serviceLabels[job.service_type] },
+                  { label: 'Service', value: serviceLabels[job.service_type ?? ''] },
                   { label: 'Date', value: job.scheduled_date ? formatDate(job.scheduled_date) : null },
                   { label: 'Time', value: job.scheduled_time ? formatTime(job.scheduled_time) : null },
                   { label: 'Duration', value: job.duration_hours ? `${job.duration_hours} hrs` : null },
