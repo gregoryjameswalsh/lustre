@@ -37,7 +37,20 @@ function formatTime(time: string) {
   return `${hour % 12 || 12}:${m}${ampm}`
 }
 
-type JobDetail = Record<string, unknown>
+type JobDetail = {
+  id: string
+  status: string
+  service_type: string | null
+  scheduled_date: string | null
+  scheduled_time: string | null
+  duration_hours: number | null
+  price: number | null
+  notes: string | null
+  internal_notes: string | null
+  created_at: string
+  clients?: { id: string; first_name: string; last_name: string; email: string | null; phone: string | null } | null
+  properties?: { id: string; address_line1: string; address_line2: string | null; town: string | null; postcode: string | null; access_instructions: string | null; alarm_instructions: string | null; parking_instructions: string | null; pets: string | null; specialist_surfaces: string | null; key_held: boolean | null } | null
+}
 
 export default function JobDetailPage() {
   const params = useParams()
