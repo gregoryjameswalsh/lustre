@@ -150,7 +150,7 @@ export default function JobDetailPage() {
             </Link>
             <div className="flex items-center gap-3 mt-3">
               <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-zinc-900">
-                {serviceLabels[job.service_type] ?? 'Job'}
+                {serviceLabels[job.service_type ?? ''] ?? 'Job'}
               </h1>
               <span className={`text-xs px-3 py-1.5 rounded-full font-medium tracking-wide border ${statusColour[job.status]}`}>
                 {job.status.replace('_', ' ')}
