@@ -6,6 +6,17 @@
 import Link from 'next/link'
 import { getQuotes } from '@/lib/queries/quotes'
 
+type QuoteRow = {
+  id: string
+  quote_number: string
+  title: string
+  total: number
+  status: string
+  valid_until: string | null
+  created_at: string
+  clients?: { first_name: string; last_name: string } | null
+}
+
 const STATUS_STYLES: Record<string, string> = {
   draft:    'bg-zinc-100 text-zinc-600',
   sent:     'bg-blue-50 text-blue-700',
@@ -91,7 +102,7 @@ export default async function QuotesPage({ searchParams }: QuotesPageProps) {
           <>
             {/* Mobile cards (hidden sm+) */}
             <div className="space-y-2 sm:hidden">
-              {quotes.map((quote: any) => (
+              {quotes.map((quote: QuoteRow) => (
                 <Link
                   key={quote.id}
                   href={`/dashboard/quotes/${quote.id}`}
@@ -132,7 +143,7 @@ export default async function QuotesPage({ searchParams }: QuotesPageProps) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100">
-                  {quotes.map((quote: any) => (
+                  {quotes.map((quote: QuoteRow) => (
                     <tr key={quote.id} className="hover:bg-zinc-50 transition-colors">
                       <td className="px-4 py-3">
                         <span className="font-medium text-[#0c0c0b]">{quote.quote_number}</span>

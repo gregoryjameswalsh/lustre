@@ -1,6 +1,7 @@
 import { getClients } from '@/lib/queries/clients'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import Link from 'next/link'
 import type { Client } from '@/lib/types'
 
 export default async function ClientsPage() {
@@ -32,21 +33,21 @@ export default async function ClientsPage() {
               <span className="text-zinc-300 ml-3 text-xl sm:text-2xl">{clients.length}</span>
             </h1>
           </div>
-          <a
+          <Link
             href="/dashboard/clients/new"
             className="self-start sm:self-auto text-xs font-medium tracking-[0.15em] uppercase bg-zinc-900 text-[#f9f8f5] px-5 py-3 rounded-full hover:bg-[#4a5c4e] transition-colors"
           >
             + Add Client
-          </a>
+          </Link>
         </div>
 
         {/* Table */}
         {clients.length === 0 ? (
           <div className="bg-white border border-zinc-200 rounded-lg px-8 py-16 text-center">
             <p className="text-sm text-zinc-300 tracking-wide mb-3">No clients yet</p>
-            <a href="/dashboard/clients/new" className="text-xs text-[#4a5c4e] hover:underline">
+            <Link href="/dashboard/clients/new" className="text-xs text-[#4a5c4e] hover:underline">
               Add your first client →
-            </a>
+            </Link>
           </div>
         ) : (
           <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">

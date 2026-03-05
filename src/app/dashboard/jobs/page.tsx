@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { getJobs } from '@/lib/queries/jobs'
+import type { JobWithRelations } from '@/lib/types'
 
 const serviceLabels: Record<string, string> = {
   regular: 'Regular Clean',
@@ -50,12 +52,12 @@ export default async function JobsPage() {
               <span className="text-zinc-300 ml-3 text-xl sm:text-2xl">{jobs.length}</span>
             </h1>
           </div>
-          <a
+          <Link
             href="/dashboard/jobs/new"
             className="self-start sm:self-auto text-xs font-medium tracking-[0.15em] uppercase bg-zinc-900 text-[#f9f8f5] px-5 py-3 rounded-full hover:bg-[#4a5c4e] transition-colors"
           >
             + Schedule Job
-          </a>
+          </Link>
         </div>
 
         {/* Status summary */}
@@ -81,9 +83,9 @@ export default async function JobsPage() {
         {jobs.length === 0 ? (
           <div className="bg-white border border-zinc-200 rounded-lg px-8 py-16 text-center">
             <p className="text-sm text-zinc-300 tracking-wide mb-3">No jobs yet</p>
-            <a href="/dashboard/jobs/new" className="text-xs text-[#4a5c4e] hover:underline">
+            <Link href="/dashboard/jobs/new" className="text-xs text-[#4a5c4e] hover:underline">
               Schedule the first →
-            </a>
+            </Link>
           </div>
         ) : (
           <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
@@ -94,7 +96,7 @@ export default async function JobsPage() {
               ))}
             </div>
             <div className="divide-y divide-zinc-50">
-              {jobs.map((job: any) => (
+              {jobs.map((job: JobWithRelations) => (
                 <a
                   key={job.id}
                   href={`/dashboard/jobs/${job.id}`}

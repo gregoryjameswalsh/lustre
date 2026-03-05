@@ -13,7 +13,7 @@ export default function PrivacyPage() {
     >
       <Section heading="1. Overview">
         <P>
-          Altrera Industries ("we", "us") is committed to protecting your personal
+          Altrera Industries (&quot;we&quot;, &quot;us&quot;) is committed to protecting your personal
           data. This policy explains what information we collect, how we use it, and
           your rights regarding that information when you use Lustre.
         </P>
@@ -87,7 +87,7 @@ export default function PrivacyPage() {
           Under the UK GDPR you have the right to access, rectify, erase, or restrict
           processing of your personal data, as well as the right to data portability
           and to object to processing. You also have the right to lodge a complaint
-          with the Information Commissioner's Office (ICO) at{' '}
+          with the Information Commissioner&apos;s Office (ICO) at{' '}
           <a href="https://ico.org.uk" className="text-[#4a5c4e] underline underline-offset-2" target="_blank" rel="noopener noreferrer">
             ico.org.uk
           </a>

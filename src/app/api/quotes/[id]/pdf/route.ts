@@ -9,7 +9,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { renderToBuffer } from '@react-pdf/renderer'
 import { QuotePDF, QuotePDFData } from '@/lib/pdf/QuotePDF'
-import { createElement } from 'react'
 import { checkRateLimit, pdfRateLimit } from '@/lib/ratelimit'
 
 export async function GET(
@@ -60,9 +59,10 @@ export async function GET(
     ? quote.properties[0] ?? null
     : quote.properties ?? null
 
+  type LineItemRow = { description: string; quantity: number; unit_price: number; amount: number; is_addon: boolean; sort_order: number }
   const lineItems = (quote.quote_line_items ?? [])
-    .sort((a: any, b: any) => a.sort_order - b.sort_order)
-    .map((item: any) => ({
+    .sort((a: LineItemRow, b: LineItemRow) => a.sort_order - b.sort_order)
+    .map((item: LineItemRow) => ({
       description: item.description,
       quantity:    item.quantity,
       unitPrice:   item.unit_price,

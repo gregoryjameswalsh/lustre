@@ -13,9 +13,9 @@ export default function TermsPage() {
     >
       <Section heading="1. Acceptance of Terms">
         <P>
-          By accessing or using Lustre ("Service"), operated by Altrera Industries
-          ("Company", "we", "us"), you agree to be bound by these Terms of Service
-          ("Terms"). If you do not agree, do not use the Service.
+          By accessing or using Lustre (&quot;Service&quot;), operated by Altrera Industries
+          (&quot;Company&quot;, &quot;we&quot;, &quot;us&quot;), you agree to be bound by these Terms of Service
+          (&quot;Terms&quot;). If you do not agree, do not use the Service.
         </P>
       </Section>
 
@@ -58,7 +58,7 @@ export default function TermsPage() {
         <P>
           Paid plans are billed in advance on a monthly or annual basis via Stripe.
           All fees are non-refundable except as required by applicable law or as
-          explicitly stated in our refund policy. We may change pricing with 30 days'
+          explicitly stated in our refund policy. We may change pricing with 30 days&apos;
           notice.
         </P>
       </Section>

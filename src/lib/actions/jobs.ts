@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect }       from 'next/navigation'
-import { getOrgAndUser, requireAdmin } from './_auth'
+import { requireAdmin } from './_auth'
 import { logAuditEvent } from '@/lib/audit'
 
 export async function deleteJobAction(jobId: string): Promise<{ error?: string }> {

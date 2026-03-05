@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { advanceOnboardingStep } from '@/lib/actions/auth'
 
-export default function StepTeam({ organisationId }: { organisationId: string }) {
+export default function StepTeam({ organisationId: _organisationId }: { organisationId: string }) {
   const router = useRouter()
 
   async function handleContinue() {
@@ -30,7 +30,7 @@ export default function StepTeam({ organisationId }: { organisationId: string })
         </div>
         <p className="text-sm font-medium text-[#0c0c0b]">Team invites coming soon</p>
         <p className="mt-1 text-xs text-zinc-400">
-          You'll be able to invite cleaners by email in a future update.
+          You&apos;ll be able to invite cleaners by email in a future update.
           For now, you can add team members from your settings.
         </p>
       </div>

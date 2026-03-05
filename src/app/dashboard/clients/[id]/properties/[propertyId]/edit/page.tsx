@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
-import Nav from '@/components/dashboard/Nav'
 import { deletePropertyAction } from '@/lib/actions/clients'
+import type { Property } from '@/lib/types'
 
 export default function EditPropertyPage() {
   const router = useRouter()
@@ -16,13 +16,12 @@ export default function EditPropertyPage() {
   const [fetching, setFetching] = useState(true)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
-  const [property, setProperty] = useState<any>(null)
+  const [property, setProperty] = useState<Property | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
-
-  const supabase = createClient()
 
   useEffect(() => {
     async function loadProperty() {
+      const supabase = createClient()
       const [{ data }, { data: { user } }] = await Promise.all([
         supabase.from('properties').select('*').eq('id', propertyId).single(),
         supabase.auth.getUser(),
@@ -47,6 +46,7 @@ export default function EditPropertyPage() {
     setError('')
 
     const formData = new FormData(e.currentTarget)
+    const supabase = createClient()
 
     const { error } = await supabase.from('properties').update({
       address_line1: formData.get('address_line1') as string,

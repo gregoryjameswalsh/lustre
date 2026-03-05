@@ -80,7 +80,7 @@ export default function SubprocessorsPage() {
           .
         </P>
         <P>
-          We will provide 30 days' notice of any changes to this list. If you have
+          We will provide 30 days&apos; notice of any changes to this list. If you have
           objections, contact{' '}
           <a href="mailto:legal@altrera.com" className="text-[#4a5c4e] underline underline-offset-2">
             legal@altrera.com

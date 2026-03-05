@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
-import Nav from '@/components/dashboard/Nav'
 import { deleteClientAction } from '@/lib/actions/clients'
+import type { Client } from '@/lib/types'
 
 export default function EditClientPage() {
   const router = useRouter()
@@ -15,13 +15,12 @@ export default function EditClientPage() {
   const [fetching, setFetching] = useState(true)
   const [error, setError] = useState('')
   const [deleting, setDeleting] = useState(false)
-  const [client, setClient] = useState<any>(null)
+  const [client, setClient] = useState<Client | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
-
-  const supabase = createClient()
 
   useEffect(() => {
     async function loadClient() {
+      const supabase = createClient()
       const [{ data }, { data: { user } }] = await Promise.all([
         supabase.from('clients').select('*').eq('id', clientId).single(),
         supabase.auth.getUser(),
@@ -46,6 +45,7 @@ export default function EditClientPage() {
     setError('')
 
     const formData = new FormData(e.currentTarget)
+    const supabase = createClient()
 
     const { error } = await supabase.from('clients').update({
       first_name: formData.get('first_name') as string,

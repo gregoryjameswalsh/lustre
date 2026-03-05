@@ -201,8 +201,8 @@ export async function saveBusinessProfile(
 // -----------------------------------------------------------------------------
 
 export async function saveServiceConfig(
-  prevState: BusinessProfileState,
-  formData: FormData
+  _prevState: BusinessProfileState,
+  _formData: FormData
 ): Promise<BusinessProfileState> {
   const supabase = await createClient()
 

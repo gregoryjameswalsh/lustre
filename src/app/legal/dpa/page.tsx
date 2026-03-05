@@ -13,8 +13,8 @@ export default function DpaPage() {
     >
       <Section heading="1. Scope">
         <P>
-          This Data Processing Agreement ("DPA") forms part of the agreement between
-          Altrera Industries ("Processor") and the customer ("Controller") for the
+          This Data Processing Agreement (&quot;DPA&quot;) forms part of the agreement between
+          Altrera Industries (&quot;Processor&quot;) and the customer (&quot;Controller&quot;) for the
           use of Lustre. It governs the processing of personal data by Altrera
           Industries on behalf of the Controller.
         </P>
