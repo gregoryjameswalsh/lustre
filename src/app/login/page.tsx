@@ -77,7 +77,10 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-xs text-zinc-300 mt-8 tracking-wider">
-          (c) 2026 Altrera Industries
+          &copy; 2026 Altrera Industries &middot;{' '}
+          <a href="/legal/terms" className="hover:text-zinc-500 transition-colors">Terms</a>
+          {' '}&middot;{' '}
+          <a href="/legal/privacy" className="hover:text-zinc-500 transition-colors">Privacy</a>
         </p>
       </div>
     </div>

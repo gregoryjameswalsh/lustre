@@ -107,6 +107,36 @@ export default async function SettingsPage() {
             </div>
           </div>
 
+          {/* Legal & Compliance */}
+          <div className="rounded-xl border border-zinc-200 bg-white">
+            <div className="border-b border-zinc-100 px-5 py-4">
+              <h2 className="text-sm font-medium text-zinc-900">Legal &amp; Compliance</h2>
+              <p className="mt-0.5 text-xs text-zinc-400">
+                Policies, data processing terms, and security information.
+              </p>
+            </div>
+            <div className="p-5">
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { href: '/legal/terms',         label: 'Terms of Service' },
+                  { href: '/legal/privacy',        label: 'Privacy Policy' },
+                  { href: '/legal/dpa',            label: 'Data Processing' },
+                  { href: '/legal/subprocessors',  label: 'Subprocessors' },
+                  { href: '/legal/security',       label: 'Security' },
+                  { href: '/legal/cookies',        label: 'Cookie Policy' },
+                ].map(({ href, label }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    className="text-xs font-medium tracking-[0.12em] uppercase border border-zinc-200 text-zinc-500 px-4 py-2 rounded-full hover:border-zinc-400 hover:text-zinc-700 transition-colors"
+                  >
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+
         </div>
       </main>
     </div>
