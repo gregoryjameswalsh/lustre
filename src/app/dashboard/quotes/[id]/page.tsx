@@ -3,7 +3,7 @@
 // LUSTRE — Quote Detail Page
 // =============================================================================
 
-import { redirect, notFound } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getQuote } from '@/lib/queries/quotes'
 import QuoteActions from './_components/QuoteActions'

@@ -9,6 +9,7 @@
 import { useActionState, useState, useEffect } from 'react'
 import { useFormStatus } from 'react-dom'
 import { createClient } from '@/lib/supabase/client'
+import Link from 'next/link'
 import { createQuote } from '@/lib/actions/quotes'
 
 function SubmitButton() {
@@ -51,7 +52,7 @@ export default function NewQuoteForm({ clients, vatRegistered, vatRate }: NewQuo
   ])
 
   useEffect(() => {
-    if (!selectedClient) { setProperties([]); return }
+    if (!selectedClient) return
     const supabase = createClient()
     supabase
       .from('properties')
@@ -95,12 +96,12 @@ export default function NewQuoteForm({ clients, vatRegistered, vatRate }: NewQuo
       <div className="mx-auto max-w-2xl px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
 
         <div className="mb-6">
-          <a href="/dashboard/quotes" className="mb-3 inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-600">
+          <Link href="/dashboard/quotes" className="mb-3 inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-600">
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             Quotes
-          </a>
+          </Link>
           <h1 className="text-2xl font-light tracking-tight text-zinc-900 sm:text-3xl">New quote</h1>
         </div>
 
@@ -122,7 +123,7 @@ export default function NewQuoteForm({ clients, vatRegistered, vatRate }: NewQuo
                   name="client_id"
                   required
                   value={selectedClient}
-                  onChange={e => setSelectedClient(e.target.value)}
+                  onChange={e => { setSelectedClient(e.target.value); if (!e.target.value) setProperties([]) }}
                   className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-[#0c0c0b] outline-none focus:border-[#4a5c4e] focus:ring-2 focus:ring-[#4a5c4e]/10"
                 >
                   <option value="">Select a client…</option>
@@ -362,7 +363,7 @@ export default function NewQuoteForm({ clients, vatRegistered, vatRate }: NewQuo
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <SubmitButton />
-            <a href="/dashboard/quotes" className="text-sm text-zinc-400 hover:text-zinc-600">Cancel</a>
+            <Link href="/dashboard/quotes" className="text-sm text-zinc-400 hover:text-zinc-600">Cancel</Link>
           </div>
         </form>
       </div>

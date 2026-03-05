@@ -1,8 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { getClientWithProperties } from '@/lib/queries/clients'
 import { redirect, notFound } from 'next/navigation'
+import Link from 'next/link'
 import ActivityTimeline from '@/components/dashboard/ActivityTimeline'
 import { getClientActivities, getOpenFollowUps } from '@/lib/queries/activities'
+import type { Property, JobWithRelations } from '@/lib/types'
 
 
 const serviceLabels: Record<string, string> = {
@@ -61,9 +63,9 @@ export default async function ClientProfilePage({
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between mb-6 md:mb-8">
           <div>
-            <a href="/dashboard/clients" className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors tracking-wide">
+            <Link href="/dashboard/clients" className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors tracking-wide">
               ← Clients
-            </a>
+            </Link>
             <div className="flex items-center gap-4 mt-3">
               <div className="w-12 h-12 rounded-full bg-zinc-200 flex items-center justify-center text-sm font-medium text-zinc-600 flex-shrink-0">
                 {client.first_name[0]}{client.last_name[0]}
@@ -161,7 +163,7 @@ export default async function ClientProfilePage({
                 <div className="px-5 py-3 flex justify-between items-center">
                   <span className="text-xs text-zinc-400">Completed</span>
                   <span className="text-sm font-medium text-zinc-900">
-                    {jobs.filter((j: any) => j.status === 'completed').length}
+                    {jobs.filter((j: { status: string }) => j.status === 'completed').length}
                   </span>
                 </div>
               </div>
@@ -193,7 +195,7 @@ export default async function ClientProfilePage({
                 </div>
               ) : (
                 <div className="divide-y divide-zinc-50">
-                  {properties.map((property: any) => (
+                  {properties.map((property: Property) => (
                     <a
                       key={property.id}
                       href={`/dashboard/clients/${id}/properties/${property.id}`}
@@ -268,8 +270,8 @@ export default async function ClientProfilePage({
                   </div>
                   <div className="divide-y divide-zinc-50">
                     {jobs
-                      .sort((a: any, b: any) => new Date(b.scheduled_date ?? b.created_at).getTime() - new Date(a.scheduled_date ?? a.created_at).getTime())
-                      .map((job: any) => (
+                      .sort((a: JobWithRelations, b: JobWithRelations) => new Date(b.scheduled_date ?? b.created_at).getTime() - new Date(a.scheduled_date ?? a.created_at).getTime())
+                      .map((job: JobWithRelations) => (
                         <a
                           key={job.id}
                           href={`/dashboard/jobs/${job.id}`}

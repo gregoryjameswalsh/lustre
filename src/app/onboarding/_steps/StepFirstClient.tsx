@@ -7,23 +7,9 @@
 // dramatically improves 30-day retention. Don't let them skip easily.
 // =============================================================================
 
-import { useActionState, useState } from 'react'
-import { useFormStatus } from 'react-dom'
+import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-
-function SubmitButton({ label }: { label: string }) {
-  const { pending } = useFormStatus()
-  return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="w-full rounded-full bg-[#4a5c4e] px-6 py-3 text-xs font-medium uppercase tracking-widest text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-    >
-      {pending ? 'Adding client…' : label}
-    </button>
-  )
-}
 
 export default function StepFirstClient({ organisationId }: { organisationId: string }) {
   const [error, setError]     = useState<string | null>(null)
@@ -76,7 +62,7 @@ export default function StepFirstClient({ organisationId }: { organisationId: st
             </svg>
           </div>
         </div>
-        <h2 className="font-['Urbanist'] text-xl font-light text-[#0c0c0b]">You're all set</h2>
+        <h2 className="font-['Urbanist'] text-xl font-light text-[#0c0c0b]">You&apos;re all set</h2>
         <p className="mt-2 text-sm text-zinc-500">Taking you to your dashboard…</p>
       </div>
     )
@@ -88,7 +74,7 @@ export default function StepFirstClient({ organisationId }: { organisationId: st
         Add your first client
       </h1>
       <p className="mb-2 text-sm font-light text-zinc-500">
-        Who's your first regular? Add them now and see Lustre come to life.
+        Who&apos;s your first regular? Add them now and see Lustre come to life.
       </p>
       <p className="mb-8 text-xs text-zinc-400">
         You can add properties and jobs from their profile afterwards.
@@ -178,7 +164,7 @@ export default function StepFirstClient({ organisationId }: { organisationId: st
           }}
           className="text-xs text-zinc-300 hover:text-zinc-500 hover:underline"
         >
-          I'll add clients later
+          I&apos;ll add clients later
         </button>
       </div>
     </div>

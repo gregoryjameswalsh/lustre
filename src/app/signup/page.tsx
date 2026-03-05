@@ -54,7 +54,7 @@ export default function SignUpPage() {
             Check your email
           </h1>
           <p className="text-sm font-light leading-relaxed text-zinc-500">
-            We've sent a confirmation link to your inbox. Click it to activate your account and continue setup.
+            We&apos;ve sent a confirmation link to your inbox. Click it to activate your account and continue setup.
           </p>
           <p className="mt-6 text-xs text-zinc-400">
             Already confirmed?{' '}

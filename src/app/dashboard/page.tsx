@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-
+import Link from 'next/link'
 import { getAllOpenFollowUps } from '@/lib/queries/activities'
+import type { Client, JobWithRelations, FollowUp } from '@/lib/types'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -115,20 +116,20 @@ function getGreeting() {
           <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
             <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
               <h2 className="text-sm font-medium tracking-tight text-zinc-900">Upcoming Jobs</h2>
-              <a href="/dashboard/jobs" className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors tracking-wide">
+              <Link href="/dashboard/jobs" className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors tracking-wide">
                 View all →
-              </a>
+              </Link>
             </div>
             <div className="divide-y divide-zinc-50">
               {!upcomingJobs || upcomingJobs.length === 0 ? (
                 <div className="px-6 py-8 text-center">
                   <p className="text-xs text-zinc-300 tracking-wide">No upcoming jobs</p>
-                  <a href="/dashboard/jobs/new" className="text-xs text-[#4a5c4e] mt-2 inline-block hover:underline">
+                  <Link href="/dashboard/jobs/new" className="text-xs text-[#4a5c4e] mt-2 inline-block hover:underline">
                     Schedule one →
-                  </a>
+                  </Link>
                 </div>
               ) : (
-                upcomingJobs.map((job: any) => (
+                upcomingJobs.map((job: JobWithRelations) => (
                   <div key={job.id} className="px-6 py-4 flex items-center justify-between hover:bg-zinc-50 transition-colors">
                     <div>
                       <p className="text-sm text-zinc-900 font-medium">
@@ -156,20 +157,20 @@ function getGreeting() {
           <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
             <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
               <h2 className="text-sm font-medium tracking-tight text-zinc-900">Recent Clients</h2>
-              <a href="/dashboard/clients" className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors tracking-wide">
+              <Link href="/dashboard/clients" className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors tracking-wide">
                 View all →
-              </a>
+              </Link>
             </div>
             <div className="divide-y divide-zinc-50">
               {!recentClients || recentClients.length === 0 ? (
                 <div className="px-6 py-8 text-center">
                   <p className="text-xs text-zinc-300 tracking-wide">No clients yet</p>
-                  <a href="/dashboard/clients/new" className="text-xs text-[#4a5c4e] mt-2 inline-block hover:underline">
+                  <Link href="/dashboard/clients/new" className="text-xs text-[#4a5c4e] mt-2 inline-block hover:underline">
                     Add your first →
-                  </a>
+                  </Link>
                 </div>
               ) : (
-                recentClients.map((client: any) => (
+                recentClients.map((client: Client) => (
                   <a
                     key={client.id}
                     href={`/dashboard/clients/${client.id}`}
@@ -211,7 +212,7 @@ function getGreeting() {
                   <p className="text-xs text-zinc-300 tracking-wide">All clear</p>
                 </div>
               ) : (
-                allFollowUps.slice(0, 5).map((fu: any) => {
+                allFollowUps.slice(0, 5).map((fu: FollowUp & { clients?: { first_name: string; last_name: string } }) => {
                   const due = fu.due_date ? new Date(fu.due_date) : null
                   const now = new Date()
                   now.setHours(0,0,0,0)
@@ -258,18 +259,18 @@ function getGreeting() {
 
         {/* Quick actions */}
         <div className="mt-6 flex flex-wrap gap-3">
-          <a
+          <Link
             href="/dashboard/clients/new"
             className="text-xs font-medium tracking-[0.15em] uppercase bg-zinc-900 text-[#f9f8f5] px-5 py-3 rounded-full hover:bg-[#4a5c4e] transition-colors"
           >
             + Add Client
-          </a>
-          <a
+          </Link>
+          <Link
             href="/dashboard/jobs/new"
             className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-600 px-5 py-3 rounded-full hover:border-zinc-400 transition-colors"
           >
             + Schedule Job
-          </a>
+          </Link>
         </div>
 
       </main>

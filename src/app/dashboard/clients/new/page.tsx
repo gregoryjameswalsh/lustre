@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 export default function NewClientPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -58,9 +59,9 @@ export default function NewClientPage() {
       <main className="max-w-3xl mx-auto px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
 
         <div className="mb-8">
-          <a href="/dashboard/clients" className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors tracking-wide">
+          <Link href="/dashboard/clients" className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors tracking-wide">
             ← Back to Clients
-          </a>
+          </Link>
           <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-zinc-900 mt-4">New Client</h1>
         </div>
 
@@ -184,12 +185,12 @@ export default function NewClientPage() {
             >
               {loading ? 'Saving…' : 'Save Client'}
             </button>
-            <a
+            <Link
               href="/dashboard/clients"
               className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-6 py-3 rounded-full hover:border-zinc-400 transition-colors"
             >
               Cancel
-            </a>
+            </Link>
           </div>
 
         </form>

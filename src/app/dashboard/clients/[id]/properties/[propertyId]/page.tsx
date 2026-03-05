@@ -1,5 +1,16 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
+
+function Row({ label, value }: { label: string; value?: string | number | boolean | null }) {
+  if (!value && value !== false) return null
+  return (
+    <div className="py-3 flex justify-between items-start border-b border-zinc-50 last:border-0">
+      <span className="text-xs text-zinc-400 flex-shrink-0 w-36">{label}</span>
+      <span className="text-sm text-zinc-900 text-right">{String(value)}</span>
+    </div>
+  )
+}
+
 export default async function PropertyPage({
   params,
 }: {
@@ -24,16 +35,6 @@ export default async function PropertyPage({
     .select('first_name, last_name')
     .eq('id', clientId)
     .single()
-
-  const Row = ({ label, value }: { label: string; value?: string | number | boolean | null }) => {
-    if (!value && value !== false) return null
-    return (
-      <div className="py-3 flex justify-between items-start border-b border-zinc-50 last:border-0">
-        <span className="text-xs text-zinc-400 flex-shrink-0 w-36">{label}</span>
-        <span className="text-sm text-zinc-900 text-right">{String(value)}</span>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-[#f9f8f5]">

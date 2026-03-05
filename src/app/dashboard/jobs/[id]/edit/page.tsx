@@ -3,8 +3,11 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
-import Nav from '@/components/dashboard/Nav'
 import { deleteJobAction } from '@/lib/actions/jobs'
+
+type JobData = { id: string; client_id: string; property_id: string | null; service_type: string | null; status: string; scheduled_date: string | null; scheduled_time: string | null; duration_hours: number | null; price: number | null; notes: string | null; internal_notes: string | null }
+type ClientOption = { id: string; first_name: string; last_name: string }
+type PropertyOption = { id: string; address_line1: string; town: string }
 
 export default function EditJobPage() {
   const router = useRouter()
@@ -15,16 +18,15 @@ export default function EditJobPage() {
   const [fetching, setFetching] = useState(true)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
-  const [job, setJob] = useState<any>(null)
-  const [clients, setClients] = useState<any[]>([])
-  const [properties, setProperties] = useState<any[]>([])
+  const [job, setJob] = useState<JobData | null>(null)
+  const [clients, setClients] = useState<ClientOption[]>([])
+  const [properties, setProperties] = useState<PropertyOption[]>([])
   const [selectedClientId, setSelectedClientId] = useState('')
   const [isAdmin, setIsAdmin] = useState(false)
 
-  const supabase = createClient()
-
   useEffect(() => {
     async function load() {
+      const supabase = createClient()
       const [{ data: jobData }, { data: clientData }, { data: { user } }] = await Promise.all([
         supabase.from('jobs').select('*, clients(id, first_name, last_name), properties(id, address_line1, town)').eq('id', jobId).single(),
         supabase.from('clients').select('id, first_name, last_name').neq('status', 'inactive').order('last_name'),
@@ -49,6 +51,7 @@ export default function EditJobPage() {
   useEffect(() => {
     async function loadProperties() {
       if (!selectedClientId) { setProperties([]); return }
+      const supabase = createClient()
       const { data } = await supabase
         .from('properties')
         .select('id, address_line1, town')
@@ -64,6 +67,7 @@ export default function EditJobPage() {
     setError('')
 
     const formData = new FormData(e.currentTarget)
+    const supabase = createClient()
 
     const { error } = await supabase.from('jobs').update({
       client_id: formData.get('client_id') as string,

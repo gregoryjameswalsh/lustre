@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useParams, useRouter } from 'next/navigation'
-import Nav from '@/components/dashboard/Nav'
+import { useParams } from 'next/navigation'
+import Link from 'next/link'
 import { deleteJobAction } from '@/lib/actions/jobs'
 
 const serviceLabels: Record<string, string> = {
@@ -37,19 +37,20 @@ function formatTime(time: string) {
   return `${hour % 12 || 12}:${m}${ampm}`
 }
 
+type JobDetail = Record<string, unknown>
+
 export default function JobDetailPage() {
   const params = useParams()
-  const router = useRouter()
   const jobId = params.id as string
-  const supabase = createClient()
 
-  const [job, setJob] = useState<any>(null)
+  const [job, setJob] = useState<JobDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     async function loadJob() {
+      const supabase = createClient()
       const [{ data }, { data: { user } }] = await Promise.all([
         supabase
           .from('jobs')
@@ -77,9 +78,10 @@ export default function JobDetailPage() {
   }, [jobId])
 
   async function updateStatus(newStatus: string) {
+    const supabase = createClient()
     setUpdating(true)
     await supabase.from('jobs').update({ status: newStatus }).eq('id', jobId)
-    setJob((prev: any) => ({ ...prev, status: newStatus }))
+    setJob((prev) => prev ? { ...prev, status: newStatus } : prev)
     setUpdating(false)
   }
 
@@ -130,9 +132,9 @@ export default function JobDetailPage() {
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between mb-6 md:mb-8">
           <div>
-            <a href="/dashboard/jobs" className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors tracking-wide">
+            <Link href="/dashboard/jobs" className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors tracking-wide">
               ← Jobs
-            </a>
+            </Link>
             <div className="flex items-center gap-3 mt-3">
               <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-zinc-900">
                 {serviceLabels[job.service_type] ?? 'Job'}

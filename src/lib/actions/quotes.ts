@@ -10,7 +10,8 @@ import { checkRateLimit, quoteRateLimit } from '@/lib/ratelimit'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { getOrgAndUser, requireAdmin } from './_auth'
-import { str, requiredStr } from './_validate'
+import { str } from './_validate'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { logAuditEvent } from '@/lib/audit'
 import { captureServerEvent } from '@/lib/posthog'
 
@@ -18,7 +19,7 @@ import { captureServerEvent } from '@/lib/posthog'
 // Helpers
 // -----------------------------------------------------------------------------
 
-async function getOrgVat(supabase: any, orgId: string) {
+async function getOrgVat(supabase: SupabaseClient, orgId: string) {
   const { data: org } = await supabase
     .from('organisations')
     .select('vat_registered, vat_rate')
@@ -29,6 +30,8 @@ async function getOrgVat(supabase: any, orgId: string) {
     vatRate:       org?.vat_rate ?? 0,
   }
 }
+
+type LineItemInput = { description: string; quantity: number; unit_price: number; is_addon: boolean }
 
 function calcTotals(totalIncVat: number, vatRate: number, vatRegistered: boolean) {
   if (!vatRegistered || vatRate === 0) {
@@ -113,7 +116,7 @@ export async function createQuote(
   if (pricingType === 'itemised') {
     const lineItemsJson = formData.get('line_items') as string
     if (lineItemsJson) {
-      let items: any[]
+      let items: LineItemInput[]
       try {
         items = JSON.parse(lineItemsJson)
       } catch {
@@ -122,8 +125,8 @@ export async function createQuote(
       }
 
       const rows = items
-        .filter((item: any) => item.description?.trim())
-        .map((item: any, i: number) => {
+        .filter((item: LineItemInput) => item.description?.trim())
+        .map((item: LineItemInput, i: number) => {
           const qty   = Number(item.quantity)
           const price = Number(item.unit_price)
           const safeQty   = Number.isFinite(qty)   && qty   > 0 && qty   <= 9999   ? qty   : 1
@@ -213,7 +216,7 @@ export async function updateQuote(
   if (pricingType === 'itemised') {
     const lineItemsJson = formData.get('line_items') as string
     if (lineItemsJson) {
-      let items: any[]
+      let items: LineItemInput[]
       try {
         items = JSON.parse(lineItemsJson)
       } catch {
@@ -222,8 +225,8 @@ export async function updateQuote(
 
       await supabase.from('quote_line_items').delete().eq('quote_id', quoteId)
       const rows = items
-        .filter((item: any) => item.description?.trim())
-        .map((item: any, i: number) => {
+        .filter((item: LineItemInput) => item.description?.trim())
+        .map((item: LineItemInput, i: number) => {
           const qty   = Number(item.quantity)
           const price = Number(item.unit_price)
           const safeQty   = Number.isFinite(qty)   && qty   > 0 && qty   <= 9999   ? qty   : 1
@@ -342,7 +345,7 @@ export async function updateQuoteStatus(
 // Send Quote Email
 // -----------------------------------------------------------------------------
 
-async function sendQuoteToClient(quoteId: string, supabase: any): Promise<void> {
+async function sendQuoteToClient(quoteId: string, supabase: SupabaseClient): Promise<void> {
   const { data: quote } = await supabase
     .from('quotes')
     .select(`
@@ -391,7 +394,7 @@ async function sendQuoteToClient(quoteId: string, supabase: any): Promise<void> 
 // create jobs within their own org.
 // For the unauthenticated public quote flow, job creation is handled atomically
 // inside the public_respond_to_quote SECURITY DEFINER DB function.
-async function createJobFromQuote(quoteId: string, supabase: any): Promise<void> {
+async function createJobFromQuote(quoteId: string, supabase: SupabaseClient): Promise<void> {
   const { data: quote } = await supabase
     .from('quotes')
     .select('organisation_id, client_id, property_id, total, quote_number, title')

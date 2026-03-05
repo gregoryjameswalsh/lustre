@@ -101,7 +101,7 @@ export default async function BillingPage({
         {/* Cancelled success banner */}
         {billing === 'cancelled' && (
           <div className="mb-6 rounded-xl border border-amber-100 bg-amber-50 px-5 py-4 text-sm text-amber-700">
-            Checkout was cancelled — no charge was made. Choose a plan below whenever you're ready.
+            Checkout was cancelled — no charge was made. Choose a plan below whenever you&apos;re ready.
           </div>
         )}
 

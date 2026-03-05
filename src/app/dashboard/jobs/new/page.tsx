@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 
 function NewJobForm() {
   const router = useRouter()
@@ -10,16 +11,18 @@ function NewJobForm() {
   const preselectedClientId = searchParams.get('client_id') ?? ''
   const preselectedPropertyId = searchParams.get('property_id') ?? ''
 
+  type ClientOption = { id: string; first_name: string; last_name: string }
+  type PropertyOption = { id: string; address_line1: string; town: string }
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [clients, setClients] = useState<any[]>([])
-  const [properties, setProperties] = useState<any[]>([])
+  const [clients, setClients] = useState<ClientOption[]>([])
+  const [properties, setProperties] = useState<PropertyOption[]>([])
   const [selectedClientId, setSelectedClientId] = useState(preselectedClientId)
-
-  const supabase = createClient()
 
   useEffect(() => {
     async function loadClients() {
+      const supabase = createClient()
       const { data } = await supabase
         .from('clients')
         .select('id, first_name, last_name')
@@ -33,6 +36,7 @@ function NewJobForm() {
   useEffect(() => {
     async function loadProperties() {
       if (!selectedClientId) { setProperties([]); return }
+      const supabase = createClient()
       const { data } = await supabase
         .from('properties')
         .select('id, address_line1, town')
@@ -48,6 +52,7 @@ function NewJobForm() {
     setError('')
 
     const formData = new FormData(e.currentTarget)
+    const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
 
@@ -101,9 +106,9 @@ function NewJobForm() {
   return (
     <main className="max-w-3xl mx-auto px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
       <div className="mb-8">
-        <a href="/dashboard/jobs" className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors tracking-wide">
+        <Link href="/dashboard/jobs" className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors tracking-wide">
           ← Back to Jobs
-        </a>
+        </Link>
         <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-zinc-900 mt-4">Schedule Job</h1>
       </div>
 
@@ -247,12 +252,12 @@ function NewJobForm() {
           >
             {loading ? 'Saving…' : 'Schedule Job'}
           </button>
-          <a
+          <Link
             href="/dashboard/jobs"
             className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-6 py-3 rounded-full hover:border-zinc-400 transition-colors"
           >
             Cancel
-          </a>
+          </Link>
         </div>
 
       </form>

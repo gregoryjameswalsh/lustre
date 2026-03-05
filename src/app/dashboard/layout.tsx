@@ -13,7 +13,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .eq('id', user!.id)
     .single()
 
-  const orgName = (profile?.organisations as any)?.name ?? 'Dashboard'
+  const orgName = (profile?.organisations as { name: string } | null)?.name ?? 'Dashboard'
 
   return (
     <>
