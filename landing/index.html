@@ -71,7 +71,7 @@
         <p class="hero-small-print">No credit card required &nbsp;·&nbsp; Set up in under 30 minutes &nbsp;·&nbsp; Cancel anytime</p>
 
         <!-- Product screenshot / mockup -->
-        <div class="hero-mockup" role="img" aria-label="Lustre dashboard showing quote pipeline and client management">
+        <div class="hero-mockup" role="img" aria-label="Lustre dashboard showing client management and upcoming jobs">
           <div class="mockup-browser">
             <div class="mockup-browser-bar">
               <span class="browser-dot red" aria-hidden="true"></span>
@@ -79,60 +79,92 @@
               <span class="browser-dot green" aria-hidden="true"></span>
               <span class="browser-address">app.simplylustre.com/dashboard</span>
             </div>
-            <div class="mockup-screen">
-              <div class="mockup-sidebar">
-                <div class="sidebar-logo" aria-hidden="true">✦ Lustre</div>
-                <nav aria-label="Dashboard navigation mock">
-                  <div class="sidebar-item active">Dashboard</div>
-                  <div class="sidebar-item">Clients</div>
-                  <div class="sidebar-item">Quotes</div>
-                  <div class="sidebar-item">Jobs</div>
-                  <div class="sidebar-item">Reports</div>
-                </nav>
+            <!-- Top nav (matches the real app) -->
+            <div class="mockup-topnav" aria-hidden="true">
+              <div class="mockup-topnav-logo">✦ Lustre</div>
+              <nav class="mockup-topnav-links">
+                <span class="mockup-nav-link active">Dashboard</span>
+                <span class="mockup-nav-link">Clients</span>
+                <span class="mockup-nav-link">Jobs</span>
+                <span class="mockup-nav-link">Quotes</span>
+              </nav>
+              <div class="mockup-topnav-actions">
+                <span class="mockup-nav-action">Settings</span>
+                <span class="mockup-nav-action">Sign out</span>
               </div>
-              <div class="mockup-content">
-                <div class="mockup-top-row">
-                  <div class="mockup-greeting">Good morning, Sarah</div>
-                  <div class="mockup-date">Thursday, 5 March 2026</div>
+            </div>
+            <!-- Dashboard content -->
+            <div class="mockup-main">
+              <div class="mockup-page-header">
+                <div class="mockup-overline">Overview</div>
+                <div class="mockup-greeting">Good morning, Sarah</div>
+              </div>
+              <!-- 3 KPI cards matching the real app -->
+              <div class="mockup-kpis" role="list" aria-label="Key performance indicators">
+                <div class="kpi-card" role="listitem">
+                  <div class="kpi-value">34</div>
+                  <div class="kpi-label">Active Clients</div>
                 </div>
-                <div class="mockup-kpis" role="list" aria-label="Key performance indicators">
-                  <div class="kpi-card" role="listitem">
-                    <div class="kpi-label">Revenue this month</div>
-                    <div class="kpi-value">£24,180</div>
-                    <div class="kpi-delta positive" aria-label="12% up on last month">↑ 12% vs last month</div>
+                <div class="kpi-card" role="listitem">
+                  <div class="kpi-value">8</div>
+                  <div class="kpi-label">Upcoming Jobs</div>
+                </div>
+                <div class="kpi-card" role="listitem">
+                  <div class="kpi-value">143</div>
+                  <div class="kpi-label">Total Jobs</div>
+                </div>
+              </div>
+              <!-- Content cards grid -->
+              <div class="mockup-cards-grid">
+                <div class="mockup-card">
+                  <div class="mockup-card-header">Upcoming Jobs</div>
+                  <div class="mockup-job-row">
+                    <div class="mockup-job-info">
+                      <span class="mockup-job-client">Pinnacle FM Ltd</span>
+                      <span class="mockup-job-detail">47 Baker St · Fri 6 Mar · Regular Clean</span>
+                    </div>
+                    <span class="mockup-badge blue">Scheduled</span>
                   </div>
-                  <div class="kpi-card" role="listitem">
-                    <div class="kpi-label">Open quotes</div>
-                    <div class="kpi-value">18</div>
-                    <div class="kpi-delta" aria-label="Worth £9,600">£9,600 pipeline value</div>
+                  <div class="mockup-job-row">
+                    <div class="mockup-job-info">
+                      <span class="mockup-job-client">Horizon Properties</span>
+                      <span class="mockup-job-detail">12 Park Lane · Fri 6 Mar · Deep Clean</span>
+                    </div>
+                    <span class="mockup-badge blue">Scheduled</span>
                   </div>
-                  <div class="kpi-card" role="listitem">
-                    <div class="kpi-label">Quote win rate</div>
-                    <div class="kpi-value">74%</div>
-                    <div class="kpi-delta positive" aria-label="Up 8 points on last month">↑ 8pts vs last month</div>
-                  </div>
-                  <div class="kpi-card" role="listitem">
-                    <div class="kpi-label">Jobs this week</div>
-                    <div class="kpi-value">43</div>
-                    <div class="kpi-delta">12 operatives active</div>
+                  <div class="mockup-job-row">
+                    <div class="mockup-job-info">
+                      <span class="mockup-job-client">BlueWave Facilities</span>
+                      <span class="mockup-job-detail">8 Regent St · Sat 7 Mar · Regular Clean</span>
+                    </div>
+                    <span class="mockup-badge amber">In Progress</span>
                   </div>
                 </div>
-                <div class="mockup-quotes">
-                  <div class="quotes-header">Recent quotes</div>
-                  <div class="quote-row">
-                    <span class="quote-client">Pinnacle FM Ltd</span>
-                    <span class="quote-amount">£2,400/mo</span>
-                    <span class="quote-badge accepted">Accepted</span>
+                <div class="mockup-card">
+                  <div class="mockup-card-header">Recent Clients</div>
+                  <div class="mockup-client-row">
+                    <div class="mockup-avatar">PF</div>
+                    <div class="mockup-client-info">
+                      <span class="mockup-client-name">Pinnacle FM Ltd</span>
+                      <span class="mockup-client-email">accounts@pinnaclefm.co.uk</span>
+                    </div>
+                    <span class="mockup-badge green">Active</span>
                   </div>
-                  <div class="quote-row">
-                    <span class="quote-client">Horizon Property Services</span>
-                    <span class="quote-amount">£1,850/mo</span>
-                    <span class="quote-badge viewed">Viewed</span>
+                  <div class="mockup-client-row">
+                    <div class="mockup-avatar">HP</div>
+                    <div class="mockup-client-info">
+                      <span class="mockup-client-name">Horizon Properties</span>
+                      <span class="mockup-client-email">info@horizonprop.co.uk</span>
+                    </div>
+                    <span class="mockup-badge green">Active</span>
                   </div>
-                  <div class="quote-row">
-                    <span class="quote-client">BlueWave Facilities</span>
-                    <span class="quote-amount">£3,100/mo</span>
-                    <span class="quote-badge sent">Sent</span>
+                  <div class="mockup-client-row">
+                    <div class="mockup-avatar">SW</div>
+                    <div class="mockup-client-info">
+                      <span class="mockup-client-name">Sarah Williams</span>
+                      <span class="mockup-client-email">sarah.w@gmail.com</span>
+                    </div>
+                    <span class="mockup-badge amber">Lead</span>
                   </div>
                 </div>
               </div>
