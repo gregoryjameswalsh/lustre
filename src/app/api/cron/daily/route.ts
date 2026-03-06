@@ -63,6 +63,7 @@ async function runExpireQuotes(
     client_first: string; client_last: string
   }
 
+  // Group by org, send one digest per org
   const byOrg = new Map<string, { orgEmail: string; orgName: string; quotes: ExpiredQuote[] }>()
 
   for (const row of data as Row[]) {
@@ -110,6 +111,7 @@ async function runFollowUpReminders(
     client_first: string; client_last: string
   }
 
+  // Group by org, send one digest per org
   const byOrg = new Map<string, { orgEmail: string; orgName: string; followUps: DueFollowUp[] }>()
 
   for (const row of data as Row[]) {
