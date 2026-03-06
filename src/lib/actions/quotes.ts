@@ -359,6 +359,7 @@ async function sendQuoteToClient(quoteId: string, supabase: SupabaseClient): Pro
   if (!quote) return
 
   const client = Array.isArray(quote.clients) ? quote.clients[0] : quote.clients
+  const org = Array.isArray(quote.organisations) ? quote.organisations[0] : quote.organisations
   const clientEmail = client?.email
   if (!clientEmail) {
     console.warn(`Quote ${quote.quote_number}: client has no email address, skipping send.`)
@@ -380,9 +381,9 @@ async function sendQuoteToClient(quoteId: string, supabase: SupabaseClient): Pro
     quoteTotal:      quote.total,
     quoteValidUntil: quote.valid_until,
     acceptUrl:       `${appUrl}/q/${quote.accept_token}`,
-    orgName:         quote.organisations.name,
-    orgEmail:        quote.organisations.email,
-    orgPhone:        quote.organisations.phone,
+    orgName:         org?.name,
+    orgEmail:        org?.email,
+    orgPhone:        org?.phone,
   })
 }
 
