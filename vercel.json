@@ -5,5 +5,4 @@
       "schedule": "0 7 * * *"
     }
   ]
-  "ignoreCommand": "git diff HEAD^ HEAD --quiet -- src/ public/ package.json package-lock.json next.config.ts tsconfig.json postcss.config.mjs"
 }
