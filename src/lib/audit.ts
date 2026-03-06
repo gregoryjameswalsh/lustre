@@ -23,6 +23,8 @@ export type AuditAction =
   | 'delete_job'
   | 'delete_quote'
   | 'update_vat_settings'
+  | 'invite_team_member'
+  | 'revoke_invitation'
 
 export async function logAuditEvent(
   supabase: SupabaseClient,
