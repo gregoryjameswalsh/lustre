@@ -1,15 +1,29 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useActionState } from 'react'
+import { useFormStatus }  from 'react-dom'
 import { advanceOnboardingStep } from '@/lib/actions/auth'
+import { inviteTeamMember }      from '@/lib/actions/team'
+
+function InviteSubmitButton() {
+  const { pending } = useFormStatus()
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="rounded-full border border-zinc-300 px-5 py-2 text-xs font-medium uppercase tracking-widest text-zinc-600 transition-colors hover:border-zinc-500 hover:text-zinc-900 disabled:opacity-50"
+    >
+      {pending ? 'Sending…' : 'Send invite'}
+    </button>
+  )
+}
 
 export default function StepTeam({ organisationId: _organisationId }: { organisationId: string }) {
-  const router = useRouter()
+  const [inviteState, inviteAction] = useActionState(inviteTeamMember, {})
 
   async function handleContinue() {
-  await advanceOnboardingStep(3)
-  router.push('/onboarding?step=4')
-}
+    await advanceOnboardingStep(3)
+  }
 
   return (
     <div>
@@ -17,23 +31,34 @@ export default function StepTeam({ organisationId: _organisationId }: { organisa
         Your team
       </h1>
       <p className="mb-8 text-sm font-light text-zinc-500">
-        Invite your cleaners so they can see their jobs. You can do this later too.
+        Invite your cleaners so they can see their jobs. You can skip this and do it later from Settings.
       </p>
 
-      <div className="mb-6 rounded-lg border border-dashed border-zinc-200 bg-white px-5 py-6 text-center">
-        <div className="mb-3 flex justify-center">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100">
-            <svg className="h-5 w-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-            </svg>
+      {/* Invite form */}
+      <form action={inviteAction} className="mb-4 space-y-3">
+        <input type="hidden" name="role" value="team_member" />
+
+        {inviteState.error && (
+          <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-3">
+            <p className="text-sm text-red-600">{inviteState.error}</p>
           </div>
+        )}
+        {inviteState.success && (
+          <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3">
+            <p className="text-sm text-emerald-700">Invitation sent.</p>
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          <input
+            name="email"
+            type="email"
+            placeholder="colleague@example.com"
+            className="flex-1 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-[#0c0c0b] placeholder-zinc-300 outline-none focus:border-[#4a5c4e] focus:ring-2 focus:ring-[#4a5c4e]/10"
+          />
+          <InviteSubmitButton />
         </div>
-        <p className="text-sm font-medium text-[#0c0c0b]">Team invites coming soon</p>
-        <p className="mt-1 text-xs text-zinc-400">
-          You&apos;ll be able to invite cleaners by email in a future update.
-          For now, you can add team members from your settings.
-        </p>
-      </div>
+      </form>
 
       <div className="mb-8 flex items-center gap-3 rounded-lg border border-zinc-100 bg-zinc-50 px-4 py-3">
         <svg className="h-4 w-4 flex-shrink-0 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -41,6 +66,7 @@ export default function StepTeam({ organisationId: _organisationId }: { organisa
         </svg>
         <p className="text-xs text-zinc-500">
           Just you for now? No problem — Lustre works great for solo operators too.
+          You can add team members anytime from <strong>Settings → Team</strong>.
         </p>
       </div>
 

@@ -5,6 +5,28 @@ import { LayoutDashboard, Users, ClipboardList, FileText, Settings2, LogOut } fr
 
 interface NavProps {
   orgName?: string
+  userName?: string
+}
+
+/** Returns up to 2 uppercase initials from a full name, e.g. "Jane Smith" → "JS" */
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return '?'
+  if (parts.length === 1) return parts[0][0].toUpperCase()
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+}
+
+function Avatar({ name }: { name: string }) {
+  const initials = getInitials(name)
+  return (
+    <span
+      title={name}
+      aria-label={name}
+      className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#4a5c4e] text-[10px] font-semibold uppercase tracking-wider text-white"
+    >
+      {initials}
+    </span>
+  )
 }
 
 const navLinks = [
@@ -22,7 +44,7 @@ const tabs = [
   { href: '/dashboard/settings', label: 'Settings', Icon: Settings2 },
 ]
 
-export default function Nav({ orgName }: NavProps) {
+export default function Nav({ orgName, userName }: NavProps) {
   const path = usePathname()
 
   const isTabActive = (href: string) =>
@@ -32,7 +54,10 @@ export default function Nav({ orgName }: NavProps) {
     <>
       {/* ── Mobile header (phone only) ─────────────────────────────── */}
       <div className="md:hidden fixed top-0 inset-x-0 z-50 h-12 flex items-center bg-[rgba(249,248,245,0.9)] backdrop-blur-md border-b border-zinc-200">
-        <div className="w-12" />
+        {/* User avatar — left */}
+        <div className="w-12 flex items-center justify-center">
+          {userName ? <Avatar name={userName} /> : <div className="w-7" />}
+        </div>
         <a href="/dashboard" className="flex-1 flex flex-col items-center leading-tight">
           <span className="text-xs font-medium tracking-[0.22em] uppercase text-zinc-900">
             {orgName ?? 'Lustre'}
@@ -80,6 +105,14 @@ export default function Nav({ orgName }: NavProps) {
           </div>
 
           <div className="flex items-center gap-4">
+            {userName && (
+              <span className="flex items-center gap-2">
+                <Avatar name={userName} />
+                <span className="text-xs text-zinc-500 max-w-[140px] truncate" title={userName}>
+                  {userName}
+                </span>
+              </span>
+            )}
             <a
               href="/dashboard/settings"
               className={`text-xs tracking-wide transition-colors ${

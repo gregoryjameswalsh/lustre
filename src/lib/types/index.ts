@@ -37,6 +37,22 @@ export interface Organisation {
 export type OnboardingStep = 1 | 2 | 3 | 4 | 5
 
 // -----------------------------------------------------------------------------
+// Invitation
+// -----------------------------------------------------------------------------
+
+export interface Invitation {
+  id:              string
+  organisation_id: string
+  email:           string
+  role:            UserRole
+  token:           string
+  invited_by:      string | null
+  accepted_at:     string | null
+  expires_at:      string
+  created_at:      string
+}
+
+// -----------------------------------------------------------------------------
 // Profile (User within an org)
 // -----------------------------------------------------------------------------
 
