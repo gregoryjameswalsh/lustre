@@ -16,11 +16,18 @@ async function getOrgAndRole() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('organisation_id, role')
+    .select('organisation_id, role, email')
     .eq('id', user.id)
     .single()
 
   if (!profile) redirect('/login')
+
+  // Lazily sync profiles.email after a confirmed email change.
+  // auth.users.email only updates once the user clicks the confirmation link,
+  // so this is the safe point to propagate it — no risk from unconfirmed typos.
+  if (user.email && profile.email !== user.email) {
+    await supabase.from('profiles').update({ email: user.email }).eq('id', user.id)
+  }
 
   const { data: org } = await supabase
     .from('organisations')

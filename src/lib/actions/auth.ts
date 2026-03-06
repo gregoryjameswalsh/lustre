@@ -162,8 +162,9 @@ export async function updateEmail(
     return { error: 'Failed to update email. Please try again.' }
   }
 
-  // Keep profiles.email in sync so invite membership checks reflect the new address
-  await supabase.from('profiles').update({ email: newEmail }).eq('id', user.id)
+  // Do NOT update profiles.email here — auth.users.email only changes after the
+  // user clicks the confirmation link. profiles.email is synced lazily on the
+  // next settings page load once the confirmed email differs from the stored one.
 
   return { success: true }
 }
