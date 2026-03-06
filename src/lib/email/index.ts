@@ -25,8 +25,9 @@ export interface SendQuoteEmailParams {
 
   // Org (sender context)
   orgName: string
-  orgEmail: string   // reply-to
+  orgEmail: string         // reply-to
   orgPhone: string | null
+  customFromEmail?: string // if set and DNS-verified, used as the from address
 }
 
 // -----------------------------------------------------------------------------
@@ -180,13 +181,14 @@ function quoteEmailText(params: SendQuoteEmailParams): string {
 // -----------------------------------------------------------------------------
 
 export async function sendQuoteEmail(params: SendQuoteEmailParams): Promise<{ error?: string }> {
-  const { clientEmail, quoteNumber, orgEmail } = params
+  const { clientEmail, quoteNumber, orgEmail, customFromEmail } = params
   // Strip newlines to prevent email header injection
   const orgName = params.orgName.replace(/[\r\n]/g, ' ').trim()
+  const fromAddress = customFromEmail ?? 'hello@simplylustre.com'
 
   try {
     const { error } = await resend.emails.send({
-      from:     `${orgName} <hello@simplylustre.com>`,
+      from:     `${orgName} <${fromAddress}>`,
       to:       clientEmail,
       replyTo:  orgEmail,
       subject:  `Your quote from ${orgName} — ${quoteNumber}`,

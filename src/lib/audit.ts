@@ -23,6 +23,9 @@ export type AuditAction =
   | 'delete_job'
   | 'delete_quote'
   | 'update_vat_settings'
+  | 'add_custom_email_domain'
+  | 'verify_custom_email_domain'
+  | 'remove_custom_email_domain'
 
 export async function logAuditEvent(
   supabase: SupabaseClient,
