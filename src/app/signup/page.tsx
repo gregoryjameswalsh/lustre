@@ -9,6 +9,7 @@
 
 import { useActionState } from 'react'
 import { useFormStatus } from 'react-dom'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { signUp, type SignUpState } from '@/lib/actions/auth'
 
@@ -37,6 +38,9 @@ const initialState: SignUpState = {}
 
 export default function SignUpPage() {
   const [state, formAction] = useActionState(signUp, initialState)
+  const searchParams = useSearchParams()
+  const redirect = searchParams.get('redirect') ?? ''
+  const isInviteSignup = redirect.startsWith('/invite/')
 
   // Email confirmation required state
   if (state.requiresEmailConfirmation) {
@@ -80,10 +84,12 @@ export default function SignUpPage() {
           </div>
 
           <h1 className="mb-2 font-['Urbanist'] text-3xl font-light text-[#0c0c0b]">
-            Start your free trial
+            {isInviteSignup ? 'Create your account' : 'Start your free trial'}
           </h1>
           <p className="mb-8 text-sm font-light text-zinc-500">
-            14 days free. No credit card required.
+            {isInviteSignup
+              ? 'Set a password to accept your team invitation.'
+              : '14 days free. No credit card required.'}
           </p>
 
           {/* Error message */}
@@ -94,6 +100,9 @@ export default function SignUpPage() {
           )}
 
           <form action={formAction} className="space-y-4">
+            {/* Pass redirect through so the action can use it */}
+            {redirect && <input type="hidden" name="redirect" value={redirect} />}
+
             {/* Your name */}
             <div>
               <label
@@ -113,23 +122,25 @@ export default function SignUpPage() {
               />
             </div>
 
-            {/* Business name */}
-            <div>
-              <label
-                htmlFor="organisation_name"
-                className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-zinc-500"
-              >
-                Business name
-              </label>
-              <input
-                id="organisation_name"
-                name="organisation_name"
-                type="text"
-                required
-                placeholder="Sparkle Cleaning Co."
-                className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm text-[#0c0c0b] placeholder-zinc-300 outline-none transition focus:border-[#4a5c4e] focus:ring-2 focus:ring-[#4a5c4e]/10"
-              />
-            </div>
+            {/* Business name — hidden for invite sign-ups */}
+            {!isInviteSignup && (
+              <div>
+                <label
+                  htmlFor="organisation_name"
+                  className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-zinc-500"
+                >
+                  Business name
+                </label>
+                <input
+                  id="organisation_name"
+                  name="organisation_name"
+                  type="text"
+                  required
+                  placeholder="Sparkle Cleaning Co."
+                  className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm text-[#0c0c0b] placeholder-zinc-300 outline-none transition focus:border-[#4a5c4e] focus:ring-2 focus:ring-[#4a5c4e]/10"
+                />
+              </div>
+            )}
 
             {/* Email */}
             <div>
@@ -177,7 +188,10 @@ export default function SignUpPage() {
           {/* Footer links */}
           <p className="mt-6 text-center text-xs text-zinc-400">
             Already have an account?{' '}
-            <Link href="/login" className="text-[#4a5c4e] hover:underline">
+            <Link
+              href={redirect ? `/login?redirect=${encodeURIComponent(redirect)}` : '/login'}
+              className="text-[#4a5c4e] hover:underline"
+            >
               Log in
             </Link>
           </p>

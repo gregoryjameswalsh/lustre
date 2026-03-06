@@ -57,15 +57,20 @@ export async function signUp(
   prevState: SignUpState,
   formData: FormData
 ): Promise<SignUpState> {
-  const fullName        = formData.get('full_name') as string
+  const fullName         = formData.get('full_name') as string
   const organisationName = formData.get('organisation_name') as string
-  const email           = formData.get('email') as string
-  const password        = formData.get('password') as string
+  const email            = formData.get('email') as string
+  const password         = formData.get('password') as string
+  // Optional: passed when signing up via an invite link
+  const redirectTo       = formData.get('redirect') as string | null
+
+  const isInviteSignup = redirectTo?.startsWith('/invite/')
 
   // Basic validation
-  if (!fullName?.trim())           return { error: 'Please enter your name.' }
-  if (!organisationName?.trim())   return { error: 'Please enter your business name.' }
-  if (!email?.trim())              return { error: 'Please enter your email address.' }
+  if (!fullName?.trim())  return { error: 'Please enter your name.' }
+  if (!isInviteSignup && !organisationName?.trim())
+    return { error: 'Please enter your business name.' }
+  if (!email?.trim())     return { error: 'Please enter your email address.' }
   if (!password || password.length < 8)
     return { error: 'Password must be at least 8 characters.' }
 
@@ -75,35 +80,40 @@ export async function signUp(
 
   const supabase = await createClient()
 
+  // For invite sign-ups there's no business name — use full name as a placeholder.
+  // The handle_new_user() trigger creates a temporary org which accept_invitation() cleans up.
+  const orgName = isInviteSignup
+    ? (fullName.trim() + "'s workspace")
+    : organisationName.trim()
+
+  const postConfirmUrl = redirectTo
+    ? `${process.env.NEXT_PUBLIC_APP_URL}${redirectTo}`
+    : `${process.env.NEXT_PUBLIC_APP_URL}/onboarding`
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      // This metadata is read by the handle_new_user() trigger
       data: {
         full_name:         fullName.trim(),
-        organisation_name: organisationName.trim(),
+        organisation_name: orgName,
       },
-      // After email confirmation, send them to onboarding
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/onboarding`,
+      emailRedirectTo: postConfirmUrl,
     },
   })
 
   if (error) {
-    // Surface friendly messages for common errors
     if (error.message.includes('already registered')) {
       return { error: 'An account with this email already exists. Try logging in.' }
     }
     return { error: 'Sign up failed. Please check your details and try again.' }
   }
 
-  // Supabase returns a session immediately if email confirmation is disabled.
-  // If enabled, data.session is null and we show a "check your email" message.
   if (data.user) {
     await captureServerEvent({
       distinctId: data.user.id,
       event:      'user_signed_up',
-      properties: { requires_email_confirmation: !data.session },
+      properties: { requires_email_confirmation: !data.session, via_invite: !!isInviteSignup },
     })
   }
 
@@ -111,8 +121,8 @@ export async function signUp(
     return { success: true, requiresEmailConfirmation: true }
   }
 
-  // Session exists — go straight to onboarding
-  redirect('/onboarding')
+  // Session exists — go to invite page or onboarding
+  redirect(redirectTo ?? '/onboarding')
 }
 
 // -----------------------------------------------------------------------------
