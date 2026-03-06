@@ -44,6 +44,18 @@ export async function inviteTeamMember(
 
   if (!org) return { error: 'Organisation not found.' }
 
+  // Check the email isn't already a member of this org
+  const { data: existingMember } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('organisation_id', orgId)
+    .ilike('email', email)
+    .maybeSingle()
+
+  if (existingMember) {
+    return { error: 'This person is already a member of your team.' }
+  }
+
   // Check for an existing active (pending) invitation for this email
   const { data: existing } = await supabase
     .from('invitations')

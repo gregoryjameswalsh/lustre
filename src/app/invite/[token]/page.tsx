@@ -156,16 +156,16 @@ export default async function InvitePage({
 
         <div className="mt-8 space-y-3">
           <Link
-            href={`/login?redirect=/invite/${token}`}
+            href={`/signup?redirect=/invite/${token}`}
             className="block w-full rounded-full bg-[#4a5c4e] px-6 py-3 text-center text-xs font-semibold uppercase tracking-widest text-white transition-opacity hover:opacity-90"
           >
-            Log in to accept
+            Create an account
           </Link>
           <Link
-            href={`/signup?redirect=/invite/${token}`}
+            href={`/login?redirect=/invite/${token}`}
             className="block w-full rounded-full border border-zinc-200 px-6 py-3 text-center text-xs font-medium uppercase tracking-widest text-zinc-500 transition-colors hover:border-zinc-400 hover:text-zinc-700"
           >
-            Create an account
+            Already have an account? Log in
           </Link>
         </div>
       </div>
