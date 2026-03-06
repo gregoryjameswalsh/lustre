@@ -62,8 +62,9 @@ export async function checkRateLimit(
     const result = await limiter.limit(key)
     return { success: result.success }
   } catch (err) {
-    // Redis unreachable or returned an error — deny to prevent bypass under outage.
-    console.error('[ratelimit] Redis error — denying request (fail-closed):', err)
-    return { success: false }
+    // Redis unreachable — log but allow through so a Redis outage doesn't lock out all users.
+    // TODO: revert to fail-closed once Upstash env vars are confirmed working in production.
+    console.error('[ratelimit] Redis error — allowing request (temporary fail-open):', err)
+    return { success: true }
   }
 }
