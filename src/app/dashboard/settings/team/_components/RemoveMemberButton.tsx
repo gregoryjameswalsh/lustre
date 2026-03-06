@@ -22,6 +22,8 @@ export default function RemoveMemberButton({ profileId }: { profileId: string })
       setConfirming(false)
     } else {
       router.refresh()
+      setPending(false)
+      setConfirming(false)
     }
   }
 
