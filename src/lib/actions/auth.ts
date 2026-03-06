@@ -169,7 +169,7 @@ export async function signUpAsInvitee(
     password,
     options: {
       data: { full_name: fullName, organisation_name: orgName },
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/invite/${token}`,
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/invite/${token}/accept`,
     },
   })
 
@@ -235,6 +235,37 @@ export async function updateEmail(
   // Do NOT update profiles.email here — auth.users.email only changes after the
   // user clicks the confirmation link. profiles.email is synced lazily on the
   // next settings page load once the confirmed email differs from the stored one.
+
+  return { success: true }
+}
+
+// -----------------------------------------------------------------------------
+// Update User Name
+// Updates profiles.full_name and keeps auth user metadata in sync.
+// -----------------------------------------------------------------------------
+
+export type UpdateNameState = { error?: string; success?: boolean }
+
+export async function updateUserName(
+  prevState: UpdateNameState,
+  formData: FormData
+): Promise<UpdateNameState> {
+  const newName = (formData.get('full_name') as string)?.trim()
+  if (!newName) return { error: 'Please enter your name.' }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .update({ full_name: newName })
+    .eq('id', user.id)
+
+  if (profileError) return { error: 'Failed to update name. Please try again.' }
+
+  // Keep auth metadata in sync (used by handle_new_user and analytics)
+  await supabase.auth.updateUser({ data: { full_name: newName } })
 
   return { success: true }
 }

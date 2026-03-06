@@ -8,6 +8,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import VatSettingsForm from './_components/VatSettingsForm'
 import EmailForm from './_components/EmailForm'
+import NameForm from './_components/NameForm'
 
 async function getOrgAndRole() {
   const supabase = await createClient()
@@ -16,7 +17,7 @@ async function getOrgAndRole() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('organisation_id, role, email')
+    .select('organisation_id, role, email, full_name')
     .eq('id', user.id)
     .single()
 
@@ -35,11 +36,16 @@ async function getOrgAndRole() {
     .eq('id', profile.organisation_id)
     .single()
 
-  return { org, isAdmin: profile.role === 'admin', userEmail: user.email ?? '' }
+  return {
+    org,
+    isAdmin:   profile.role === 'admin',
+    userEmail: user.email ?? '',
+    userName:  profile.full_name ?? '',
+  }
 }
 
 export default async function SettingsPage() {
-  const { org, isAdmin, userEmail } = await getOrgAndRole()
+  const { org, isAdmin, userEmail, userName } = await getOrgAndRole()
   if (!org) redirect('/login')
 
   return (
@@ -53,23 +59,25 @@ export default async function SettingsPage() {
 
         <div className="space-y-6">
 
-          {/* VAT */}
-          <div className="rounded-xl border border-zinc-200 bg-white">
-            <div className="border-b border-zinc-100 px-5 py-4">
-              <h2 className="text-sm font-medium text-zinc-900">VAT</h2>
-              <p className="mt-0.5 text-xs text-zinc-400">
-                These settings apply to all quotes. If you are VAT registered, your VAT number will appear on quotes and invoices.
-              </p>
+          {/* VAT — admin only */}
+          {isAdmin && (
+            <div className="rounded-xl border border-zinc-200 bg-white">
+              <div className="border-b border-zinc-100 px-5 py-4">
+                <h2 className="text-sm font-medium text-zinc-900">VAT</h2>
+                <p className="mt-0.5 text-xs text-zinc-400">
+                  These settings apply to all quotes. If you are VAT registered, your VAT number will appear on quotes and invoices.
+                </p>
+              </div>
+              <div className="p-5">
+                <VatSettingsForm
+                  vatRegistered={org.vat_registered ?? false}
+                  vatRate={org.vat_rate ?? 20}
+                  vatNumber={org.vat_number ?? ''}
+                  isAdmin={isAdmin}
+                />
+              </div>
             </div>
-            <div className="p-5">
-              <VatSettingsForm
-                vatRegistered={org.vat_registered ?? false}
-                vatRate={org.vat_rate ?? 20}
-                vatNumber={org.vat_number ?? ''}
-                isAdmin={isAdmin}
-              />
-            </div>
-          </div>
+          )}
 
           {/* Team */}
           <div className="rounded-xl border border-zinc-200 bg-white">
@@ -91,32 +99,34 @@ export default async function SettingsPage() {
             </div>
           </div>
 
-          {/* Billing */}
-          <div className="rounded-xl border border-zinc-200 bg-white">
-            <div className="border-b border-zinc-100 px-5 py-4 flex items-center justify-between">
-              <div>
-                <h2 className="text-sm font-medium text-zinc-900">Billing</h2>
-                <p className="mt-0.5 text-xs text-zinc-400 capitalize">
-                  {org.plan === 'free' ? 'Free trial' : org.plan} plan
-                  {org.subscription_status === 'active' ? ' · Active' : ''}
-                  {org.subscription_status === 'past_due' ? ' · Payment failed' : ''}
-                </p>
+          {/* Billing — admin only */}
+          {isAdmin && (
+            <div className="rounded-xl border border-zinc-200 bg-white">
+              <div className="border-b border-zinc-100 px-5 py-4 flex items-center justify-between">
+                <div>
+                  <h2 className="text-sm font-medium text-zinc-900">Billing</h2>
+                  <p className="mt-0.5 text-xs text-zinc-400 capitalize">
+                    {org.plan === 'free' ? 'Free trial' : org.plan} plan
+                    {org.subscription_status === 'active' ? ' · Active' : ''}
+                    {org.subscription_status === 'past_due' ? ' · Payment failed' : ''}
+                  </p>
+                </div>
+                {org.subscription_status === 'past_due' && (
+                  <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
+                    Action required
+                  </span>
+                )}
               </div>
-              {org.subscription_status === 'past_due' && (
-                <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
-                  Action required
-                </span>
-              )}
+              <div className="p-5">
+                <Link
+                  href="/dashboard/settings/billing"
+                  className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-5 py-2.5 rounded-full hover:border-zinc-400 hover:text-zinc-700 transition-colors inline-block"
+                >
+                  Manage billing
+                </Link>
+              </div>
             </div>
-            <div className="p-5">
-              <Link
-                href="/dashboard/settings/billing"
-                className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-5 py-2.5 rounded-full hover:border-zinc-400 hover:text-zinc-700 transition-colors inline-block"
-              >
-                Manage billing
-              </Link>
-            </div>
-          </div>
+          )}
 
           {/* Account */}
           <div className="rounded-xl border border-zinc-200 bg-white">
@@ -125,6 +135,16 @@ export default async function SettingsPage() {
               <p className="mt-0.5 text-xs text-zinc-400">{userEmail}</p>
             </div>
             <div className="divide-y divide-zinc-100">
+              {/* Name */}
+              <div className="p-5">
+                <p className="mb-4 text-sm font-medium text-zinc-700">Your name</p>
+                {isAdmin ? (
+                  <NameForm currentName={userName} />
+                ) : (
+                  <p className="text-sm text-zinc-500">{userName || '—'}</p>
+                )}
+              </div>
+              {/* Email */}
               <div className="p-5">
                 <p className="mb-4 text-sm font-medium text-zinc-700">Email address</p>
                 <EmailForm currentEmail={userEmail} />
