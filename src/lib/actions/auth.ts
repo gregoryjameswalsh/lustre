@@ -126,6 +126,49 @@ export async function signUp(
 }
 
 // -----------------------------------------------------------------------------
+// Update Email
+// Triggers a confirmation email to the new address via Supabase.
+// Also updates profiles.email immediately so invite/member checks stay in sync.
+// -----------------------------------------------------------------------------
+
+export type UpdateEmailState = { error?: string; success?: boolean }
+
+export async function updateEmail(
+  prevState: UpdateEmailState,
+  formData: FormData
+): Promise<UpdateEmailState> {
+  const newEmail = (formData.get('email') as string)?.trim().toLowerCase()
+
+  if (!newEmail) return { error: 'Please enter an email address.' }
+  if (!newEmail.includes('@')) return { error: 'Please enter a valid email address.' }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  if (newEmail === user.email?.toLowerCase()) {
+    return { error: 'That\'s already your current email address.' }
+  }
+
+  const { error } = await supabase.auth.updateUser(
+    { email: newEmail },
+    { emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings` }
+  )
+
+  if (error) {
+    if (error.message.toLowerCase().includes('already registered')) {
+      return { error: 'An account with this email already exists.' }
+    }
+    return { error: 'Failed to update email. Please try again.' }
+  }
+
+  // Keep profiles.email in sync so invite membership checks reflect the new address
+  await supabase.from('profiles').update({ email: newEmail }).eq('id', user.id)
+
+  return { success: true }
+}
+
+// -----------------------------------------------------------------------------
 // Update Onboarding Step
 // Called by each step of the onboarding wizard on completion.
 // -----------------------------------------------------------------------------

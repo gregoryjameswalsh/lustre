@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import VatSettingsForm from './_components/VatSettingsForm'
+import EmailForm from './_components/EmailForm'
 
 async function getOrgAndRole() {
   const supabase = await createClient()
@@ -27,11 +28,11 @@ async function getOrgAndRole() {
     .eq('id', profile.organisation_id)
     .single()
 
-  return { org, isAdmin: profile.role === 'admin' }
+  return { org, isAdmin: profile.role === 'admin', userEmail: user.email ?? '' }
 }
 
 export default async function SettingsPage() {
-  const { org, isAdmin } = await getOrgAndRole()
+  const { org, isAdmin, userEmail } = await getOrgAndRole()
   if (!org) redirect('/login')
 
   return (
@@ -110,20 +111,27 @@ export default async function SettingsPage() {
             </div>
           </div>
 
-          {/* Account — sign out (always visible; especially useful on mobile) */}
+          {/* Account */}
           <div className="rounded-xl border border-zinc-200 bg-white">
             <div className="border-b border-zinc-100 px-5 py-4">
               <h2 className="text-sm font-medium text-zinc-900">Account</h2>
+              <p className="mt-0.5 text-xs text-zinc-400">{userEmail}</p>
             </div>
-            <div className="p-5">
-              <form action="/auth/signout" method="post">
-                <button
-                  type="submit"
-                  className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-5 py-2.5 rounded-full hover:border-zinc-400 hover:text-zinc-700 transition-colors"
-                >
-                  Sign out
-                </button>
-              </form>
+            <div className="divide-y divide-zinc-100">
+              <div className="p-5">
+                <p className="mb-4 text-sm font-medium text-zinc-700">Email address</p>
+                <EmailForm currentEmail={userEmail} />
+              </div>
+              <div className="p-5">
+                <form action="/auth/signout" method="post">
+                  <button
+                    type="submit"
+                    className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-5 py-2.5 rounded-full hover:border-zinc-400 hover:text-zinc-700 transition-colors"
+                  >
+                    Sign out
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
 
