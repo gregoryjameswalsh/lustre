@@ -63,6 +63,26 @@ export default async function SettingsPage() {
             </div>
           </div>
 
+          {/* Team */}
+          <div className="rounded-xl border border-zinc-200 bg-white">
+            <div className="border-b border-zinc-100 px-5 py-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-medium text-zinc-900">Team</h2>
+                <p className="mt-0.5 text-xs text-zinc-400">
+                  Manage members and invitations.
+                </p>
+              </div>
+            </div>
+            <div className="p-5">
+              <Link
+                href="/dashboard/settings/team"
+                className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-5 py-2.5 rounded-full hover:border-zinc-400 hover:text-zinc-700 transition-colors inline-block"
+              >
+                Manage team
+              </Link>
+            </div>
+          </div>
+
           {/* Billing */}
           <div className="rounded-xl border border-zinc-200 bg-white">
             <div className="border-b border-zinc-100 px-5 py-4 flex items-center justify-between">

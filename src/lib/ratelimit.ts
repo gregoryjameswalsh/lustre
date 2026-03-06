@@ -1,8 +1,15 @@
 // src/lib/ratelimit.ts
 // =============================================================================
 // LUSTRE — Rate Limiting
-// Uses Upstash Redis. If UPSTASH_REDIS_REST_URL / TOKEN are not set (e.g. in
-// local dev without Redis), all checks fail-open so the app keeps working.
+// Uses Upstash Redis.
+//
+// Fail-closed behaviour (SEC-001):
+//   • Production + Redis not configured → request DENIED. Redis is mandatory
+//     in production; a missing env var is a misconfiguration, not a soft skip.
+//   • Production + Redis connection error → request DENIED. An outage must not
+//     open the gate to brute-force or abuse.
+//   • Development + Redis not configured → request ALLOWED (fail-open) so the
+//     app works without Upstash credentials locally.
 // =============================================================================
 
 import { Ratelimit } from '@upstash/ratelimit'
@@ -36,12 +43,27 @@ export const quoteRateLimit = redis
   ? new Ratelimit({ redis, limiter: Ratelimit.fixedWindow(5, '1 h'), prefix: 'rl:quote' })
   : null
 
-// Convenience wrapper — returns success:true (fail open) if Redis isn't configured
+// Convenience wrapper — fail-closed in production, fail-open in development.
 export async function checkRateLimit(
   limiter: Ratelimit | null,
   key: string
 ): Promise<{ success: boolean }> {
-  if (!limiter) return { success: true }
-  const result = await limiter.limit(key)
-  return { success: result.success }
+  if (!limiter) {
+    if (process.env.NODE_ENV === 'production') {
+      // Redis is required in production. Missing config = deny.
+      console.error('[ratelimit] Redis not configured in production — denying request (fail-closed)')
+      return { success: false }
+    }
+    // Local dev without Upstash — allow through.
+    return { success: true }
+  }
+
+  try {
+    const result = await limiter.limit(key)
+    return { success: result.success }
+  } catch (err) {
+    // Redis unreachable or returned an error — deny to prevent bypass under outage.
+    console.error('[ratelimit] Redis error — denying request (fail-closed):', err)
+    return { success: false }
+  }
 }
