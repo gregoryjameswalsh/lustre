@@ -1,4 +1,4 @@
-// src/app/api/cron/trial-emails/route.ts
+// src/app/api/cron/daily/route.ts
 // =============================================================================
 // LUSTRE — Trial nurture email cron job
 // Runs daily (configured in vercel.json). Sends Days 7, 10, 13, 14 trial
@@ -6,7 +6,7 @@
 // Day 1 is sent directly on onboarding completion (see lib/actions/auth.ts).
 //
 // Security: requires the CRON_SECRET header set by Vercel's cron scheduler.
-// Locally: POST /api/cron/trial-emails with x-cron-secret header.
+// Locally: POST /api/cron/daily with x-cron-secret header.
 // =============================================================================
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     })
 
     if (error) {
-      console.error(`cron/trial-emails: DB error for ${key}:`, error)
+      console.error(`cron/daily: DB error for ${key}:`, error)
       results.push({ key, sent: 0, failed: -1 })
       continue
     }
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
       })
 
       if (emailError) {
-        console.error(`cron/trial-emails: email failed for ${org.org_id} (${key}):`, emailError)
+        console.error(`cron/daily: email failed for ${org.org_id} (${key}):`, emailError)
         failed++
       } else {
         sent++
@@ -75,6 +75,6 @@ export async function GET(request: NextRequest) {
     results.push({ key, sent, failed })
   }
 
-  console.log('cron/trial-emails completed:', results)
+  console.log('cron/daily completed:', results)
   return NextResponse.json({ ok: true, results })
 }
