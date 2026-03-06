@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import VatSettingsForm from './_components/VatSettingsForm'
+import EmailSettingsForm from './_components/EmailSettingsForm'
 import EmailForm from './_components/EmailForm'
 import NameForm from './_components/NameForm'
 
@@ -32,7 +33,7 @@ async function getOrgAndRole() {
 
   const { data: org } = await supabase
     .from('organisations')
-    .select('name, email, phone, vat_registered, vat_rate, vat_number, plan, subscription_status, trial_ends_at')
+    .select('name, email, phone, vat_registered, vat_rate, vat_number, plan, subscription_status, trial_ends_at, email_domain_status, email_domain_name, custom_from_email')
     .eq('id', profile.organisation_id)
     .single()
 
@@ -79,6 +80,25 @@ export default async function SettingsPage() {
             </div>
           )}
 
+          {/* Email Sending */}
+          <div className="rounded-xl border border-zinc-200 bg-white">
+            <div className="border-b border-zinc-100 px-5 py-4">
+              <h2 className="text-sm font-medium text-zinc-900">Email Sending</h2>
+              <p className="mt-0.5 text-xs text-zinc-400">
+                Choose whether quotes are sent from our shared address or your own domain.
+              </p>
+            </div>
+            <div className="p-5">
+              <EmailSettingsForm
+                domainStatus={org.email_domain_status ?? null}
+                domainName={org.email_domain_name ?? null}
+                customFromEmail={org.custom_from_email ?? null}
+                isAdmin={isAdmin}
+              />
+            </div>
+          </div>
+
+          {/* Billing */}
           {/* Team */}
           <div className="rounded-xl border border-zinc-200 bg-white">
             <div className="border-b border-zinc-100 px-5 py-4 flex items-center justify-between">
