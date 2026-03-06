@@ -6,22 +6,19 @@
 // Vercel automatically sends Authorization: Bearer $CRON_SECRET — we verify
 // it before doing anything.
 //
-// Two jobs run in sequence:
+// Two SECURITY DEFINER RPC functions handle all DB work atomically (mark rows
+// and return data in one CTE), so no service role key is needed in application
+// code. The anon client calls them exactly as the Stripe webhook does.
 //
-//   1. Expire quotes — marks any quote with valid_until < now() and
-//      status IN ('sent', 'viewed') as 'expired', then sends a per-org
-//      digest email listing the newly-expired quotes.
+// Jobs:
+//   cron_expire_quotes()       — marks overdue quotes 'expired', returns rows
+//   cron_get_due_follow_ups()  — marks due follow-ups reminded, returns rows
 //
-//   2. Follow-up reminders — finds all open follow_ups with
-//      due_date <= today AND reminder_sent_at IS NULL, marks them sent,
-//      then sends a per-org digest email.
-//
-// The service role client is used here because both jobs need to read and
-// write across all organisations — there is no user session to scope to.
+// Results are grouped by org and one digest email is sent per org per job.
 // =============================================================================
 
-import { NextResponse }        from 'next/server'
-import { createServiceClient } from '@/lib/supabase/service'
+import { NextResponse }      from 'next/server'
+import { createAnonClient }  from '@/lib/supabase/anon'
 import {
   sendExpiredQuotesDigest,
   sendFollowUpDigest,
@@ -30,17 +27,15 @@ import {
 } from '@/lib/email'
 
 // ---------------------------------------------------------------------------
-// Auth guard
+// Auth guard — Vercel injects the CRON_SECRET as a Bearer token
 // ---------------------------------------------------------------------------
 
 function isAuthorised(request: Request): boolean {
   const cronSecret = process.env.CRON_SECRET
   if (!cronSecret) {
-    // If no secret is configured, only allow in development
     return process.env.NODE_ENV === 'development'
   }
-  const auth = request.headers.get('authorization')
-  return auth === `Bearer ${cronSecret}`
+  return request.headers.get('authorization') === `Bearer ${cronSecret}`
 }
 
 // ---------------------------------------------------------------------------
@@ -48,58 +43,37 @@ function isAuthorised(request: Request): boolean {
 // ---------------------------------------------------------------------------
 
 async function runExpireQuotes(
-  supabase: ReturnType<typeof createServiceClient>,
+  supabase: ReturnType<typeof createAnonClient>,
   appUrl: string
 ): Promise<number> {
-  // Fetch all quotes that should be expired now
-  const { data: expiring, error } = await supabase
-    .from('quotes')
-    .select(`
-      id, quote_number, title, total, valid_until,
-      organisations ( id, name, email ),
-      clients ( first_name, last_name )
-    `)
-    .in('status', ['sent', 'viewed'])
-    .lt('valid_until', new Date().toISOString())
+  const { data, error } = await supabase.rpc('cron_expire_quotes')
 
   if (error) {
-    console.error('[cron/daily] expire quotes fetch error:', error)
+    console.error('[cron/daily] cron_expire_quotes error:', error)
     return 0
   }
-  if (!expiring || expiring.length === 0) return 0
+  if (!data || data.length === 0) return 0
 
-  // Mark them all expired in one go
-  const ids = expiring.map(q => q.id)
-  const { error: updateError } = await supabase
-    .from('quotes')
-    .update({ status: 'expired' })
-    .in('id', ids)
-
-  if (updateError) {
-    console.error('[cron/daily] expire quotes update error:', updateError)
-    return 0
+  type Row = {
+    quote_id: string; quote_number: string; title: string; total: number
+    valid_until: string; org_id: string; org_name: string; org_email: string
+    client_first: string; client_last: string
   }
 
-  // Group by org and send one digest per org
-  type OrgGroup = { orgEmail: string; orgName: string; quotes: ExpiredQuote[] }
-  const byOrg = new Map<string, OrgGroup>()
+  // Group by org, send one digest per org
+  const byOrg = new Map<string, { orgEmail: string; orgName: string; quotes: ExpiredQuote[] }>()
 
-  for (const q of expiring) {
-    const org = Array.isArray(q.organisations) ? q.organisations[0] : q.organisations
-    const cl  = Array.isArray(q.clients)       ? q.clients[0]       : q.clients
-    if (!org?.email || !cl) continue
-
-    const orgId = (org as { id?: string }).id ?? org.email
-    if (!byOrg.has(orgId)) {
-      byOrg.set(orgId, { orgEmail: org.email, orgName: org.name ?? '', quotes: [] })
+  for (const row of data as Row[]) {
+    if (!byOrg.has(row.org_id)) {
+      byOrg.set(row.org_id, { orgEmail: row.org_email, orgName: row.org_name, quotes: [] })
     }
-    byOrg.get(orgId)!.quotes.push({
-      quoteNumber:  q.quote_number,
-      title:        q.title,
-      total:        q.total,
-      clientName:   `${cl.first_name ?? ''} ${cl.last_name ?? ''}`.trim(),
-      validUntil:   q.valid_until ?? '',
-      dashboardUrl: `${appUrl}/dashboard/quotes/${q.id}`,
+    byOrg.get(row.org_id)!.quotes.push({
+      quoteNumber:  row.quote_number,
+      title:        row.title,
+      total:        row.total,
+      clientName:   `${row.client_first} ${row.client_last}`.trim(),
+      validUntil:   row.valid_until,
+      dashboardUrl: `${appUrl}/dashboard/quotes/${row.quote_id}`,
     })
   }
 
@@ -109,7 +83,7 @@ async function runExpireQuotes(
     )
   )
 
-  return expiring.length
+  return data.length
 }
 
 // ---------------------------------------------------------------------------
@@ -117,60 +91,36 @@ async function runExpireQuotes(
 // ---------------------------------------------------------------------------
 
 async function runFollowUpReminders(
-  supabase: ReturnType<typeof createServiceClient>,
+  supabase: ReturnType<typeof createAnonClient>,
   appUrl: string
 ): Promise<number> {
-  // Due = due_date up to and including today, never reminded yet
-  const todayDate = new Date().toISOString().split('T')[0]  // YYYY-MM-DD
-
-  const { data: due, error } = await supabase
-    .from('follow_ups')
-    .select(`
-      id, title, notes, due_date, priority,
-      clients ( first_name, last_name ),
-      organisations ( id, name, email )
-    `)
-    .eq('status', 'open')
-    .is('reminder_sent_at', null)
-    .lte('due_date', todayDate)
+  const { data, error } = await supabase.rpc('cron_get_due_follow_ups')
 
   if (error) {
-    console.error('[cron/daily] follow-up fetch error:', error)
+    console.error('[cron/daily] cron_get_due_follow_ups error:', error)
     return 0
   }
-  if (!due || due.length === 0) return 0
+  if (!data || data.length === 0) return 0
 
-  // Mark all as reminded before sending (so a Resend failure doesn't cause re-sends)
-  const ids = due.map(f => f.id)
-  const { error: updateError } = await supabase
-    .from('follow_ups')
-    .update({ reminder_sent_at: new Date().toISOString() })
-    .in('id', ids)
-
-  if (updateError) {
-    console.error('[cron/daily] follow-up update error:', updateError)
-    return 0
+  type Row = {
+    follow_up_id: string; title: string; notes: string | null; due_date: string
+    priority: string; org_id: string; org_name: string; org_email: string
+    client_first: string; client_last: string
   }
 
-  // Group by org and send one digest per org
-  type OrgGroup = { orgEmail: string; orgName: string; followUps: DueFollowUp[] }
-  const byOrg = new Map<string, OrgGroup>()
+  // Group by org, send one digest per org
+  const byOrg = new Map<string, { orgEmail: string; orgName: string; followUps: DueFollowUp[] }>()
 
-  for (const f of due) {
-    const org = Array.isArray(f.organisations) ? f.organisations[0] : f.organisations
-    const cl  = Array.isArray(f.clients)       ? f.clients[0]       : f.clients
-    if (!org?.email || !cl) continue
-
-    const orgId = (org as { id?: string }).id ?? org.email
-    if (!byOrg.has(orgId)) {
-      byOrg.set(orgId, { orgEmail: org.email, orgName: org.name ?? '', followUps: [] })
+  for (const row of data as Row[]) {
+    if (!byOrg.has(row.org_id)) {
+      byOrg.set(row.org_id, { orgEmail: row.org_email, orgName: row.org_name, followUps: [] })
     }
-    byOrg.get(orgId)!.followUps.push({
-      title:      f.title,
-      clientName: `${cl.first_name ?? ''} ${cl.last_name ?? ''}`.trim(),
-      dueDate:    f.due_date ?? todayDate,
-      priority:   f.priority,
-      notes:      f.notes,
+    byOrg.get(row.org_id)!.followUps.push({
+      title:      row.title,
+      clientName: `${row.client_first} ${row.client_last}`.trim(),
+      dueDate:    row.due_date,
+      priority:   row.priority,
+      notes:      row.notes,
     })
   }
 
@@ -180,7 +130,7 @@ async function runFollowUpReminders(
     )
   )
 
-  return due.length
+  return data.length
 }
 
 // ---------------------------------------------------------------------------
@@ -198,7 +148,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'App URL not configured' }, { status: 500 })
   }
 
-  const supabase = createServiceClient()
+  const supabase = createAnonClient()
 
   const [expiredCount, followUpCount] = await Promise.all([
     runExpireQuotes(supabase, appUrl),
