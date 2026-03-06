@@ -105,7 +105,14 @@ export default function Nav({ orgName, userName }: NavProps) {
           </div>
 
           <div className="flex items-center gap-4">
-            {userName && <Avatar name={userName} />}
+            {userName && (
+              <span className="flex items-center gap-2">
+                <Avatar name={userName} />
+                <span className="text-xs text-zinc-500 max-w-[140px] truncate" title={userName}>
+                  {userName}
+                </span>
+              </span>
+            )}
             <a
               href="/dashboard/settings"
               className={`text-xs tracking-wide transition-colors ${
