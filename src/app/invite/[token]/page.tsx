@@ -156,7 +156,7 @@ export default async function InvitePage({
 
         <div className="mt-8 space-y-3">
           <Link
-            href={`/signup?redirect=/invite/${token}`}
+            href={`/invite/${token}/signup`}
             className="block w-full rounded-full bg-[#4a5c4e] px-6 py-3 text-center text-xs font-semibold uppercase tracking-widest text-white transition-opacity hover:opacity-90"
           >
             Create an account

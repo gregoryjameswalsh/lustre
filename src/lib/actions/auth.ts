@@ -126,6 +126,76 @@ export async function signUp(
 }
 
 // -----------------------------------------------------------------------------
+// Sign Up As Invitee
+// Dedicated signup for team members arriving via an invitation link.
+// Email comes from the invite token (server-side lookup), not from the form,
+// so the user can't mistype it and the form is simpler.
+// -----------------------------------------------------------------------------
+
+export type InviteeSignUpState = {
+  error?: string
+  requiresEmailConfirmation?: boolean
+}
+
+export async function signUpAsInvitee(
+  prevState: InviteeSignUpState,
+  formData: FormData
+): Promise<InviteeSignUpState> {
+  const token    = formData.get('token') as string
+  const fullName = (formData.get('full_name') as string)?.trim()
+  const password = formData.get('password') as string
+
+  if (!token)                        return { error: 'Invalid invitation link.' }
+  if (!fullName)                     return { error: 'Please enter your name.' }
+  if (!password || password.length < 8) return { error: 'Password must be at least 8 characters.' }
+
+  const ip = ((await headers()).get('x-forwarded-for') ?? 'unknown').split(',')[0].trim()
+  const { success } = await checkRateLimit(signupRateLimit, ip)
+  if (!success) return { error: 'Too many sign up attempts. Please try again later.' }
+
+  const supabase = await createClient()
+
+  // Resolve the invite email server-side — don't trust anything from the form
+  const { data: invitation } = await supabase.rpc('public_get_invitation_by_token', { p_token: token })
+  if (!invitation) return { error: 'This invitation link is invalid or has expired.' }
+  if (invitation.accepted_at) return { error: 'This invitation has already been accepted.' }
+  if (new Date(invitation.expires_at) < new Date()) return { error: 'This invitation has expired. Please ask your admin to resend it.' }
+
+  const email = invitation.email as string
+  const orgName = fullName + "'s workspace" // temporary org, cleaned up by accept_invitation()
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { full_name: fullName, organisation_name: orgName },
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/invite/${token}`,
+    },
+  })
+
+  if (error) {
+    if (error.message.includes('already registered')) {
+      return { error: 'An account with this email already exists. Try logging in instead.' }
+    }
+    return { error: 'Sign up failed. Please try again.' }
+  }
+
+  if (data.user) {
+    await captureServerEvent({
+      distinctId: data.user.id,
+      event:      'user_signed_up',
+      properties: { via_invite: true, requires_email_confirmation: !data.session },
+    })
+  }
+
+  if (!data.session) {
+    return { requiresEmailConfirmation: true }
+  }
+
+  redirect(`/invite/${token}`)
+}
+
+// -----------------------------------------------------------------------------
 // Update Email
 // Triggers a confirmation email to the new address via Supabase.
 // Also updates profiles.email immediately so invite/member checks stay in sync.
