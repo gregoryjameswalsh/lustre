@@ -490,7 +490,41 @@ export async function respondToQuote(
     event:      response === 'accepted' ? 'quote_accepted_by_client' : 'quote_declined_by_client',
   })
 
+  // Notify the operator — best-effort, never block or fail the response
+  notifyOperatorOfResponse(supabase, token, response).catch(() => null)
+
   return { success: true }
+}
+
+async function notifyOperatorOfResponse(
+  supabase: ReturnType<typeof createAnonClient>,
+  token: string,
+  response: 'accepted' | 'declined'
+): Promise<void> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  if (!appUrl) return
+
+  const { data: quoteData } = await supabase
+    .rpc('public_get_quote_by_token', { p_token: token })
+
+  if (!quoteData) return
+
+  const q   = quoteData as Record<string, unknown>
+  const org = q.organisations as Record<string, string> | null
+  const cl  = q.clients      as Record<string, string> | null
+  if (!org?.email || !cl) return
+
+  const { sendOperatorResponseNotification } = await import('@/lib/email')
+  await sendOperatorResponseNotification({
+    orgEmail:     org.email,
+    orgName:      org.name ?? '',
+    clientName:   `${cl.first_name ?? ''} ${cl.last_name ?? ''}`.trim(),
+    quoteNumber:  String(q.quote_number ?? ''),
+    quoteTitle:   String(q.title ?? ''),
+    quoteTotal:   Number(q.total ?? 0),
+    response,
+    dashboardUrl: `${appUrl}/dashboard/quotes/${q.id}`,
+  })
 }
 
 // -----------------------------------------------------------------------------
@@ -499,8 +533,44 @@ export async function respondToQuote(
 
 export async function markQuoteViewed(token: string): Promise<void> {
   const supabase = createAnonClient()
-  await Promise.all([
+
+  // Run the RPC and PostHog capture in parallel.
+  // The RPC returns true only on the first transition (sent → viewed),
+  // so we can fire the operator notification exactly once.
+  const [{ data: didTransition }] = await Promise.all([
     supabase.rpc('public_mark_quote_viewed', { p_token: token }),
     captureServerEvent({ distinctId: `quote-${token}`, event: 'quote_viewed_by_client' }),
   ])
+
+  if (didTransition) {
+    notifyOperatorOfViewed(supabase, token).catch(() => null)
+  }
+}
+
+async function notifyOperatorOfViewed(
+  supabase: ReturnType<typeof createAnonClient>,
+  token: string
+): Promise<void> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  if (!appUrl) return
+
+  const { data: quoteData } = await supabase
+    .rpc('public_get_quote_by_token', { p_token: token })
+
+  if (!quoteData) return
+
+  const q   = quoteData as Record<string, unknown>
+  const org = q.organisations as Record<string, string> | null
+  const cl  = q.clients      as Record<string, string> | null
+  if (!org?.email || !cl) return
+
+  const { sendOperatorViewedNotification } = await import('@/lib/email')
+  await sendOperatorViewedNotification({
+    orgEmail:     org.email,
+    orgName:      org.name ?? '',
+    clientName:   `${cl.first_name ?? ''} ${cl.last_name ?? ''}`.trim(),
+    quoteNumber:  String(q.quote_number ?? ''),
+    quoteTitle:   String(q.title ?? ''),
+    dashboardUrl: `${appUrl}/dashboard/quotes/${q.id}`,
+  })
 }
