@@ -10,6 +10,7 @@ import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { checkRateLimit, loginRateLimit, signupRateLimit } from '@/lib/ratelimit'
 import { captureServerEvent } from '@/lib/posthog'
+import { sendTrialEmail } from '@/lib/email'
 
 // -----------------------------------------------------------------------------
 // Sign In
@@ -145,6 +146,28 @@ export async function advanceOnboardingStep(step: number): Promise<void> {
 
   if (isComplete) {
     await captureServerEvent({ distinctId: user.id, event: 'onboarding_completed' })
+
+    // Send Day 1 trial nurture email — fire-and-forget, don't block the redirect
+    const { data: org } = await supabase
+      .from('organisations')
+      .select('name, trial_ends_at')
+      .eq('id', profile.organisation_id)
+      .single()
+
+    if (org?.trial_ends_at) {
+      // Record the send first (idempotent), then send the email
+      await supabase.rpc('record_trial_email_sent', {
+        p_org_id:    profile.organisation_id,
+        p_email_key: 'day1',
+      })
+      sendTrialEmail({
+        to:         user.email!,
+        orgName:    org.name,
+        key:        'day1',
+        upgradeUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
+      }).catch((err) => console.error('Trial day1 email failed:', err))
+    }
+
     redirect('/dashboard')
   } else {
     redirect(`/onboarding?step=${step + 1}`)

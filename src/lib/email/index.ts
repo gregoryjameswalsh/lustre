@@ -350,3 +350,158 @@ export async function sendInvitationEmail(
     return { error: 'Failed to send invitation email.' }
   }
 }
+
+
+// =============================================================================
+// Trial nurture email sequence
+// 5 emails sent over the 14-day trial: Day 1, 7, 10, 13, 14.
+// Day 1 is triggered on onboarding completion; Days 7–14 via a daily cron job.
+// =============================================================================
+
+export type TrialEmailKey = 'day1' | 'day7' | 'day10' | 'day13' | 'day14'
+
+export interface SendTrialEmailParams {
+  to:      string   // admin email
+  orgName: string
+  key:     TrialEmailKey
+  upgradeUrl: string
+}
+
+const TRIAL_EMAIL_CONFIG: Record<TrialEmailKey, { subject: string; heading: string; body: string; cta: string }> = {
+  day1: {
+    subject: 'Your 14-day Lustre trial has started',
+    heading: 'Welcome to Lustre',
+    body:    'Your 14-day free trial is live. Here\'s what you can do right now: send your first professional quote, track your clients and jobs, and see how much time you save on admin.',
+    cta:     'Go to your dashboard',
+  },
+  day7: {
+    subject: 'Halfway through your Lustre trial — 7 days left',
+    heading: '7 days in',
+    body:    'You\'re halfway through your trial. If you haven\'t sent your first quote yet, now\'s the time. It takes less than 3 minutes and looks better than anything you\'ve sent before.',
+    cta:     'Send your first quote',
+  },
+  day10: {
+    subject: '4 days left on your Lustre trial',
+    heading: '4 days remaining',
+    body:    'Your trial ends in 4 days. Starter plans start at £39/month — that\'s less than the admin time you\'ll save on a single job. No credit card required until you\'re ready.',
+    cta:     'Choose a plan',
+  },
+  day13: {
+    subject: 'Last chance — your Lustre trial ends tomorrow',
+    heading: 'Trial ends tomorrow',
+    body:    'Your free trial expires tomorrow. Upgrade now to keep access to all your clients, quotes, and jobs. Your data is safe — it\'ll be right where you left it.',
+    cta:     'Upgrade now',
+  },
+  day14: {
+    subject: 'Your Lustre trial has ended',
+    heading: 'Your trial has ended',
+    body:    'Your 14-day free trial has come to an end. Your account and all your data are still here — choose a plan to get back in and pick up where you left off.',
+    cta:     'Reactivate your account',
+  },
+}
+
+function trialEmailHtml(params: SendTrialEmailParams): string {
+  const { orgName, key, upgradeUrl } = params
+  const cfg = TRIAL_EMAIL_CONFIG[key]
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${cfg.subject}</title>
+</head>
+<body style="margin:0;padding:0;background:#f9f8f5;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f8f5;padding:40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+
+          <tr>
+            <td style="padding-bottom:24px;">
+              <p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:#4a5c4e;">
+                Lustre
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="background:#ffffff;border-radius:12px;border:1px solid #e5e7eb;padding:32px;">
+              <p style="margin:0 0 8px;font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#9ca3af;">
+                ${orgName}
+              </p>
+              <h1 style="margin:0 0 16px;font-size:22px;font-weight:300;color:#0c0c0b;">
+                ${cfg.heading}
+              </h1>
+              <p style="margin:0 0 28px;font-size:15px;color:#374151;line-height:1.65;">
+                ${cfg.body}
+              </p>
+
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="left">
+                    <a href="${upgradeUrl}"
+                       style="display:inline-block;background:#4a5c4e;color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:14px 32px;border-radius:100px;">
+                      ${cfg.cta}
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding-top:24px;text-align:center;">
+              <p style="margin:0;color:#d1d5db;font-size:11px;">
+                Powered by Lustre &nbsp;·&nbsp;
+                <a href="${upgradeUrl.replace(/\/dashboard.*/, '/auth/signout')}"
+                   style="color:#d1d5db;text-decoration:none;">Unsubscribe</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+}
+
+function trialEmailText(params: SendTrialEmailParams): string {
+  const { orgName, key, upgradeUrl } = params
+  const cfg = TRIAL_EMAIL_CONFIG[key]
+  return [
+    `${cfg.heading} — ${orgName}`,
+    '',
+    cfg.body,
+    '',
+    `${cfg.cta}:`,
+    upgradeUrl,
+  ].join('\n')
+}
+
+export async function sendTrialEmail(params: SendTrialEmailParams): Promise<{ error?: string }> {
+  const { to, key } = params
+  const cfg = TRIAL_EMAIL_CONFIG[key]
+
+  try {
+    const { error } = await resend.emails.send({
+      from:    `Lustre <hello@simplylustre.com>`,
+      to,
+      subject: cfg.subject,
+      html:    trialEmailHtml(params),
+      text:    trialEmailText(params),
+    })
+
+    if (error) {
+      console.error(`Resend error (trial ${key}):`, error)
+      return { error: `Failed to send trial email (${key}).` }
+    }
+
+    return {}
+  } catch (err) {
+    console.error(`Trial email exception (${key}):`, err)
+    return { error: `Failed to send trial email (${key}).` }
+  }
+}
