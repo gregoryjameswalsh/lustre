@@ -9,15 +9,16 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('organisations(name)')
+    .select('full_name, organisations(name)')
     .eq('id', user!.id)
     .single()
 
-  const orgName = (profile?.organisations as unknown as { name: string } | null)?.name ?? 'Dashboard'
+  const orgName  = (profile?.organisations as unknown as { name: string } | null)?.name ?? 'Dashboard'
+  const userName = profile?.full_name ?? ''
 
   return (
     <>
-      <Nav orgName={orgName} />
+      <Nav orgName={orgName} userName={userName} />
       <main className="pt-12 pb-safe-tab md:pt-14 md:pb-0">{children}</main>
     </>
   )

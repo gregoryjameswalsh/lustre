@@ -26,6 +26,10 @@ export type AuditAction =
   | 'add_custom_email_domain'
   | 'verify_custom_email_domain'
   | 'remove_custom_email_domain'
+  | 'invite_team_member'
+  | 'revoke_invitation'
+  | 'remove_member'
+  | 'update_member_role'
 
 export async function logAuditEvent(
   supabase: SupabaseClient,

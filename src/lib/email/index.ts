@@ -11,6 +11,15 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 // Types
 // -----------------------------------------------------------------------------
 
+export interface SendInvitationEmailParams {
+  inviteeEmail:  string
+  inviterName:   string
+  orgName:       string
+  role:          string
+  acceptUrl:     string
+  expiresAt:     string   // ISO date string
+}
+
 export interface SendQuoteEmailParams {
   // Recipient
   clientEmail: string
@@ -496,12 +505,24 @@ function expiredQuotesHtml(orgName: string, quotes: ExpiredQuote[]): string {
     ? '1 quote expired without a response'
     : `${count} quotes expired without a response`
 
+// -----------------------------------------------------------------------------
+// Invitation email
+// -----------------------------------------------------------------------------
+
+function invitationEmailHtml(params: SendInvitationEmailParams): string {
+  const { inviterName, orgName, role, acceptUrl, expiresAt } = params
+  const roleLabel = role === 'admin' ? 'Admin' : 'Team member'
+  const expiry = new Date(expiresAt).toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'long', year: 'numeric'
+  })
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Expired quotes</title>
+  <title>You've been invited to join ${orgName} on Lustre</title>
 </head>
 <body style="margin:0;padding:0;background:#f9f8f5;font-family:Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f8f5;padding:40px 20px;">
@@ -513,6 +534,7 @@ function expiredQuotesHtml(orgName: string, quotes: ExpiredQuote[]): string {
             <td style="padding-bottom:24px;">
               <p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:#4a5c4e;">
                 ${orgName}
+                Lustre
               </p>
             </td>
           </tr>
@@ -535,17 +557,51 @@ function expiredQuotesHtml(orgName: string, quotes: ExpiredQuote[]): string {
                     <a href="${quotes[0].dashboardUrl.replace(/\/quotes\/[^/]+$/, '/quotes')}"
                        style="display:inline-block;background:#4a5c4e;color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:14px 32px;border-radius:100px;">
                       View all quotes
+              <p style="margin:0 0 16px;font-size:16px;color:#0c0c0b;">
+                You've been invited to join <strong>${orgName}</strong>
+              </p>
+              <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">
+                ${inviterName} has invited you to join their team on Lustre as a <strong>${roleLabel}</strong>.
+              </p>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f8f5;border-radius:8px;margin-bottom:24px;">
+                <tr>
+                  <td style="padding:20px 24px;">
+                    <p style="margin:0 0 4px;font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#9ca3af;">
+                      Organisation
+                    </p>
+                    <p style="margin:0 0 12px;font-size:16px;font-weight:600;color:#0c0c0b;">
+                      ${orgName}
+                    </p>
+                    <p style="margin:0;font-size:13px;color:#6b7280;">
+                      Role: ${roleLabel}
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+                <tr>
+                  <td align="center">
+                    <a href="${acceptUrl}"
+                       style="display:inline-block;background:#4a5c4e;color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:14px 32px;border-radius:100px;">
+                      Accept invitation
                     </a>
                   </td>
                 </tr>
               </table>
 
+              <p style="margin:0;font-size:13px;color:#9ca3af;text-align:center;line-height:1.5;">
+                This invitation expires on ${expiry}.<br>
+                If you weren't expecting this, you can safely ignore it.
+              </p>
             </td>
           </tr>
 
           <tr>
             <td style="padding-top:24px;text-align:center;">
               <p style="margin:0;color:#d1d5db;font-size:11px;">Lustre · quote notifications</p>
+              <p style="margin:0;color:#d1d5db;font-size:11px;">Powered by Lustre</p>
             </td>
           </tr>
 
@@ -630,6 +686,104 @@ function followUpDigestHtml(orgName: string, followUps: DueFollowUp[], dashboard
   const heading = count === 1
     ? '1 follow-up is due'
     : `${count} follow-ups are due`
+function invitationEmailText(params: SendInvitationEmailParams): string {
+  const { inviterName, orgName, role, acceptUrl, expiresAt } = params
+  const roleLabel = role === 'admin' ? 'Admin' : 'Team member'
+  const expiry = new Date(expiresAt).toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'long', year: 'numeric'
+  })
+  return [
+    `You've been invited to join ${orgName} on Lustre`,
+    '',
+    `${inviterName} has invited you to join their team as a ${roleLabel}.`,
+    '',
+    `Accept your invitation here:`,
+    acceptUrl,
+    '',
+    `This invitation expires on ${expiry}.`,
+    `If you weren't expecting this, you can safely ignore it.`,
+  ].join('\n')
+}
+
+export async function sendInvitationEmail(
+  params: SendInvitationEmailParams
+): Promise<{ error?: string }> {
+  const { inviteeEmail, orgName } = params
+  const cleanOrgName = orgName.replace(/[\r\n]/g, ' ').trim()
+
+  try {
+    const { error } = await resend.emails.send({
+      from:    `Lustre <hello@simplylustre.com>`,
+      to:      inviteeEmail,
+      subject: `You've been invited to join ${cleanOrgName} on Lustre`,
+      html:    invitationEmailHtml({ ...params, orgName: cleanOrgName }),
+      text:    invitationEmailText({ ...params, orgName: cleanOrgName }),
+    })
+
+    if (error) {
+      console.error('Resend error (invitation):', error)
+      return { error: 'Failed to send invitation email.' }
+    }
+
+    return {}
+  } catch (err) {
+    console.error('Invitation email exception:', err)
+    return { error: 'Failed to send invitation email.' }
+  }
+}
+
+
+// =============================================================================
+// Trial nurture email sequence
+// 5 emails sent over the 14-day trial: Day 1, 7, 10, 13, 14.
+// Day 1 is triggered on onboarding completion; Days 7–14 via a daily cron job.
+// =============================================================================
+
+export type TrialEmailKey = 'day1' | 'day7' | 'day10' | 'day13' | 'day14'
+
+export interface SendTrialEmailParams {
+  to:      string   // admin email
+  orgName: string
+  key:     TrialEmailKey
+  upgradeUrl: string
+}
+
+const TRIAL_EMAIL_CONFIG: Record<TrialEmailKey, { subject: string; heading: string; body: string; cta: string }> = {
+  day1: {
+    subject: 'Your 14-day Lustre trial has started',
+    heading: 'Welcome to Lustre',
+    body:    'Your 14-day free trial is live. Here\'s what you can do right now: send your first professional quote, track your clients and jobs, and see how much time you save on admin.',
+    cta:     'Go to your dashboard',
+  },
+  day7: {
+    subject: 'Halfway through your Lustre trial — 7 days left',
+    heading: '7 days in',
+    body:    'You\'re halfway through your trial. If you haven\'t sent your first quote yet, now\'s the time. It takes less than 3 minutes and looks better than anything you\'ve sent before.',
+    cta:     'Send your first quote',
+  },
+  day10: {
+    subject: '4 days left on your Lustre trial',
+    heading: '4 days remaining',
+    body:    'Your trial ends in 4 days. Starter plans start at £39/month — that\'s less than the admin time you\'ll save on a single job. No credit card required until you\'re ready.',
+    cta:     'Choose a plan',
+  },
+  day13: {
+    subject: 'Last chance — your Lustre trial ends tomorrow',
+    heading: 'Trial ends tomorrow',
+    body:    'Your free trial expires tomorrow. Upgrade now to keep access to all your clients, quotes, and jobs. Your data is safe — it\'ll be right where you left it.',
+    cta:     'Upgrade now',
+  },
+  day14: {
+    subject: 'Your Lustre trial has ended',
+    heading: 'Your trial has ended',
+    body:    'Your 14-day free trial has come to an end. Your account and all your data are still here — choose a plan to get back in and pick up where you left off.',
+    cta:     'Reactivate your account',
+  },
+}
+
+function trialEmailHtml(params: SendTrialEmailParams): string {
+  const { orgName, key, upgradeUrl } = params
+  const cfg = TRIAL_EMAIL_CONFIG[key]
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -637,6 +791,7 @@ function followUpDigestHtml(orgName: string, followUps: DueFollowUp[], dashboard
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Follow-ups due</title>
+  <title>${cfg.subject}</title>
 </head>
 <body style="margin:0;padding:0;background:#f9f8f5;font-family:Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f8f5;padding:40px 20px;">
@@ -648,6 +803,7 @@ function followUpDigestHtml(orgName: string, followUps: DueFollowUp[], dashboard
             <td style="padding-bottom:24px;">
               <p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:#4a5c4e;">
                 ${orgName}
+                Lustre
               </p>
             </td>
           </tr>
@@ -667,6 +823,22 @@ function followUpDigestHtml(orgName: string, followUps: DueFollowUp[], dashboard
                     <a href="${dashboardUrl}"
                        style="display:inline-block;background:#4a5c4e;color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:14px 32px;border-radius:100px;">
                       Open dashboard
+              <p style="margin:0 0 8px;font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#9ca3af;">
+                ${orgName}
+              </p>
+              <h1 style="margin:0 0 16px;font-size:22px;font-weight:300;color:#0c0c0b;">
+                ${cfg.heading}
+              </h1>
+              <p style="margin:0 0 28px;font-size:15px;color:#374151;line-height:1.65;">
+                ${cfg.body}
+              </p>
+
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="left">
+                    <a href="${upgradeUrl}"
+                       style="display:inline-block;background:#4a5c4e;color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:14px 32px;border-radius:100px;">
+                      ${cfg.cta}
                     </a>
                   </td>
                 </tr>
@@ -678,6 +850,11 @@ function followUpDigestHtml(orgName: string, followUps: DueFollowUp[], dashboard
           <tr>
             <td style="padding-top:24px;text-align:center;">
               <p style="margin:0;color:#d1d5db;font-size:11px;">Lustre · follow-up reminders</p>
+              <p style="margin:0;color:#d1d5db;font-size:11px;">
+                Powered by Lustre &nbsp;·&nbsp;
+                <a href="${upgradeUrl.replace(/\/dashboard.*/, '/auth/signout')}"
+                   style="color:#d1d5db;text-decoration:none;">Unsubscribe</a>
+              </p>
             </td>
           </tr>
 
@@ -716,5 +893,40 @@ export async function sendFollowUpDigest(
     })
   } catch (err) {
     console.error('Follow-up digest failed:', err)
+function trialEmailText(params: SendTrialEmailParams): string {
+  const { orgName, key, upgradeUrl } = params
+  const cfg = TRIAL_EMAIL_CONFIG[key]
+  return [
+    `${cfg.heading} — ${orgName}`,
+    '',
+    cfg.body,
+    '',
+    `${cfg.cta}:`,
+    upgradeUrl,
+  ].join('\n')
+}
+
+export async function sendTrialEmail(params: SendTrialEmailParams): Promise<{ error?: string }> {
+  const { to, key } = params
+  const cfg = TRIAL_EMAIL_CONFIG[key]
+
+  try {
+    const { error } = await resend.emails.send({
+      from:    `Lustre <hello@simplylustre.com>`,
+      to,
+      subject: cfg.subject,
+      html:    trialEmailHtml(params),
+      text:    trialEmailText(params),
+    })
+
+    if (error) {
+      console.error(`Resend error (trial ${key}):`, error)
+      return { error: `Failed to send trial email (${key}).` }
+    }
+
+    return {}
+  } catch (err) {
+    console.error(`Trial email exception (${key}):`, err)
+    return { error: `Failed to send trial email (${key}).` }
   }
 }
