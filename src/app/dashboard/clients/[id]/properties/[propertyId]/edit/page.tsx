@@ -177,7 +177,7 @@ export default function EditPropertyPage() {
                         type="radio"
                         name="key_held"
                         value={opt.value}
-                        defaultChecked={opt.value === 'true' ? property?.key_held : !property?.key_held}
+                        defaultChecked={opt.value === 'true' ? !!property?.key_held : !property?.key_held}
                         className="accent-[#4a5c4e]"
                       />
                       <span className="text-sm text-zinc-600">{opt.label}</span>

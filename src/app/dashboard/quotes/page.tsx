@@ -14,7 +14,7 @@ type QuoteRow = {
   status: string
   valid_until: string | null
   created_at: string
-  clients?: { first_name: string; last_name: string } | null
+  clients?: { first_name: string; last_name: string }[] | null
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -113,7 +113,7 @@ export default async function QuotesPage({ searchParams }: QuotesPageProps) {
                       <p className="font-medium text-zinc-900">{quote.quote_number}</p>
                       <p className="mt-0.5 truncate text-xs text-zinc-400">{quote.title}</p>
                       <p className="mt-1 text-sm text-zinc-600">
-                        {quote.clients?.first_name} {quote.clients?.last_name}
+                        {quote.clients?.[0]?.first_name} {quote.clients?.[0]?.last_name}
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-1.5 shrink-0">
@@ -150,7 +150,7 @@ export default async function QuotesPage({ searchParams }: QuotesPageProps) {
                         <p className="mt-0.5 text-xs text-zinc-400 truncate max-w-[180px]">{quote.title}</p>
                       </td>
                       <td className="px-4 py-3 text-zinc-600">
-                        {quote.clients?.first_name} {quote.clients?.last_name}
+                        {quote.clients?.[0]?.first_name} {quote.clients?.[0]?.last_name}
                       </td>
                       <td className="px-4 py-3 font-medium text-[#0c0c0b]">
                         {formatCurrency(quote.total)}

@@ -37,7 +37,20 @@ function formatTime(time: string) {
   return `${hour % 12 || 12}:${m}${ampm}`
 }
 
-type JobDetail = Record<string, unknown>
+type JobDetail = {
+  id: string
+  status: string
+  service_type: string | null
+  scheduled_date: string | null
+  scheduled_time: string | null
+  duration_hours: number | null
+  price: number | null
+  notes: string | null
+  internal_notes: string | null
+  created_at: string
+  clients?: { id: string; first_name: string; last_name: string; email: string | null; phone: string | null } | null
+  properties?: { id: string; address_line1: string; address_line2: string | null; town: string | null; postcode: string | null; access_instructions: string | null; alarm_instructions: string | null; parking_instructions: string | null; pets: string | null; specialist_surfaces: string | null; key_held: boolean | null } | null
+}
 
 export default function JobDetailPage() {
   const params = useParams()
@@ -137,7 +150,7 @@ export default function JobDetailPage() {
             </Link>
             <div className="flex items-center gap-3 mt-3">
               <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-zinc-900">
-                {serviceLabels[job.service_type] ?? 'Job'}
+                {serviceLabels[job.service_type ?? ''] ?? 'Job'}
               </h1>
               <span className={`text-xs px-3 py-1.5 rounded-full font-medium tracking-wide border ${statusColour[job.status]}`}>
                 {job.status.replace('_', ' ')}
@@ -203,7 +216,7 @@ export default function JobDetailPage() {
               </div>
               <div className="px-5 py-2 divide-y divide-zinc-50">
                 {[
-                  { label: 'Service', value: serviceLabels[job.service_type] },
+                  { label: 'Service', value: serviceLabels[job.service_type ?? ''] },
                   { label: 'Date', value: job.scheduled_date ? formatDate(job.scheduled_date) : null },
                   { label: 'Time', value: job.scheduled_time ? formatTime(job.scheduled_time) : null },
                   { label: 'Duration', value: job.duration_hours ? `${job.duration_hours} hrs` : null },
