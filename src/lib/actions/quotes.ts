@@ -480,7 +480,10 @@ export async function respondToQuote(
   const { data, error } = await supabase
     .rpc('public_respond_to_quote', { p_token: token, p_response: response })
 
-  if (error) return { error: 'Failed to record your response. Please try again.' }
+  if (error) {
+    console.error('[respondToQuote] RPC error:', error)
+    return { error: 'Failed to record your response. Please try again.' }
+  }
 
   const result = data as { success?: boolean; error?: string }
   if (result.error) return { error: result.error }
