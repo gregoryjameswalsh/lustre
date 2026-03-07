@@ -46,7 +46,11 @@ export async function createClientAction(formData: FormData) {
   })
 
   revalidatePath('/dashboard/clients')
-  redirect('/dashboard/clients')
+  if (status === 'lead') revalidatePath('/dashboard/pipeline')
+
+  const returnTo = (formData.get('return_to') as string | null) ?? ''
+  const safePath = returnTo.startsWith('/dashboard/') ? returnTo : '/dashboard/clients'
+  redirect(safePath)
 }
 
 export async function updateClientAction(id: string, formData: FormData) {
