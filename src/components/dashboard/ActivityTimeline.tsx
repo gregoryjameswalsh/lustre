@@ -17,8 +17,11 @@ const typeConfig: Record<ActivityType, { label: string; icon: string; colour: st
   follow_up:        { label: 'Follow Up',        icon: '🔔', colour: 'bg-amber-50 text-amber-600' },
   review_requested: { label: 'Review Requested', icon: '⭐', colour: 'bg-amber-50 text-amber-600' },
   complaint:        { label: 'Complaint',        icon: '⚠️',  colour: 'bg-red-50 text-red-500' },
-  other:            { label: 'Other',            icon: '💬', colour: 'bg-zinc-100 text-zinc-600' },
-  quote_viewed:     { label: 'Quote Viewed',     icon: '👁️',  colour: 'bg-blue-50 text-blue-500' },
+  other:                  { label: 'Other',            icon: '💬', colour: 'bg-zinc-100 text-zinc-600' },
+  quote_viewed:           { label: 'Quote Viewed',     icon: '👁️',  colour: 'bg-blue-50 text-blue-500' },
+  pipeline_stage_changed: { label: 'Stage Changed',    icon: '→',  colour: 'bg-zinc-100 text-zinc-600' },
+  pipeline_won:           { label: 'Won',              icon: '🏆', colour: 'bg-emerald-50 text-emerald-600' },
+  pipeline_lost:          { label: 'Lost',             icon: '✗',  colour: 'bg-zinc-100 text-zinc-400' },
 }
 
 const priorityColour: Record<string, string> = {
