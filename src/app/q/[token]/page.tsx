@@ -20,8 +20,8 @@ function formatDate(date: string | null) {
   return new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-export default async function PublicQuotePage({ params }: { params: { token: string } }) {
-  const { token } = params
+export default async function PublicQuotePage({ params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params
   const supabase  = createAnonClient()
 
   const { data: quote, error } = await supabase
