@@ -35,6 +35,12 @@ export type AuditAction =
   | 'deactivate_job_type'
   | 'reactivate_job_type'
   | 'delete_job_type'
+  | 'create_checklist_template'
+  | 'update_checklist_template'
+  | 'deactivate_checklist_template'
+  | 'reactivate_checklist_template'
+  | 'delete_checklist_template'
+  | 'duplicate_checklist_template'
 
 export async function logAuditEvent(
   supabase: SupabaseClient,

@@ -132,6 +132,36 @@ export interface JobType {
 export type ServiceType = 'regular' | 'deep_clean' | 'move_in' | 'move_out' | 'post_event' | 'other'
 
 // -----------------------------------------------------------------------------
+// Checklist Templates
+// -----------------------------------------------------------------------------
+
+export interface ChecklistTemplate {
+  id: string
+  organisation_id: string
+  name: string
+  description: string | null
+  is_active: boolean
+  created_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ChecklistTemplateItem {
+  id: string
+  organisation_id: string
+  template_id: string
+  title: string
+  guidance: string | null
+  sort_order: number
+  created_at: string
+}
+
+export interface ChecklistTemplateWithRelations extends ChecklistTemplate {
+  checklist_template_items: ChecklistTemplateItem[]
+  checklist_template_job_types: { job_type_id: string; job_types: { id: string; name: string } }[]
+}
+
+// -----------------------------------------------------------------------------
 // Job
 // -----------------------------------------------------------------------------
 
