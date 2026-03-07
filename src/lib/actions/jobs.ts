@@ -8,10 +8,10 @@ import { logAuditEvent } from '@/lib/audit'
 export async function deleteJobAction(jobId: string): Promise<{ error?: string }> {
   const { supabase, orgId, userId } = await requireAdmin()
 
-  // Snapshot service type + date before deletion for the audit log
+  // Snapshot job type + date before deletion for the audit log
   const { data: job } = await supabase
     .from('jobs')
-    .select('service_type, scheduled_date')
+    .select('job_type_id, scheduled_date, job_types(name)')
     .eq('id', jobId)
     .eq('organisation_id', orgId)
     .single()
@@ -29,7 +29,7 @@ export async function deleteJobAction(jobId: string): Promise<{ error?: string }
     action: 'delete_job',
     resourceType: 'job',
     resourceId: jobId,
-    metadata: job ? { service_type: job.service_type, scheduled_date: job.scheduled_date } : undefined,
+    metadata: job ? { job_type: (job as { job_types?: { name: string } | null }).job_types?.name, scheduled_date: job.scheduled_date } : undefined,
   })
 
   revalidatePath('/dashboard/jobs')

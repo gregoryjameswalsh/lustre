@@ -113,10 +113,28 @@ export interface Property {
 }
 
 // -----------------------------------------------------------------------------
+// Job Type (dynamic, per-org — replaces hardcoded ServiceType enum)
+// -----------------------------------------------------------------------------
+
+export interface JobType {
+  id: string
+  organisation_id: string
+  name: string
+  description: string | null
+  is_active: boolean
+  sort_order: number
+  created_at: string
+  updated_at: string
+}
+
+// Retained for shadow-column period (service_type still exists on jobs in DB).
+// Remove once the shadow column is dropped in a future migration.
+export type ServiceType = 'regular' | 'deep_clean' | 'move_in' | 'move_out' | 'post_event' | 'other'
+
+// -----------------------------------------------------------------------------
 // Job
 // -----------------------------------------------------------------------------
 
-export type ServiceType = 'regular' | 'deep_clean' | 'move_in' | 'move_out' | 'post_event' | 'other'
 export type JobStatus = 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
 
 export interface Job {
@@ -125,7 +143,8 @@ export interface Job {
   client_id: string
   property_id: string | null
   assigned_to: string | null
-  service_type: ServiceType
+  job_type_id: string
+  service_type: ServiceType  // shadow column — kept for transition period
   status: JobStatus
   scheduled_date: string
   scheduled_time: string | null
@@ -217,5 +236,8 @@ export interface JobWithRelations extends Job {
     address_line1: string | null
     town: string | null
     postcode: string | null
+  } | null
+  job_types?: {
+    name: string
   } | null
 }

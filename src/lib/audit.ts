@@ -30,6 +30,11 @@ export type AuditAction =
   | 'revoke_invitation'
   | 'remove_member'
   | 'update_member_role'
+  | 'create_job_type'
+  | 'update_job_type'
+  | 'deactivate_job_type'
+  | 'reactivate_job_type'
+  | 'delete_job_type'
 
 export async function logAuditEvent(
   supabase: SupabaseClient,

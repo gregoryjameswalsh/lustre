@@ -6,15 +6,6 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { deleteJobAction } from '@/lib/actions/jobs'
 
-const serviceLabels: Record<string, string> = {
-  regular: 'Regular Clean',
-  deep_clean: 'Deep Clean',
-  move_in: 'Move In',
-  move_out: 'Move Out',
-  post_event: 'Post Event',
-  other: 'Other',
-}
-
 const statusFlow = ['scheduled', 'in_progress', 'completed', 'cancelled']
 
 const statusColour: Record<string, string> = {
@@ -40,7 +31,7 @@ function formatTime(time: string) {
 type JobDetail = {
   id: string
   status: string
-  service_type: string | null
+  job_type_id: string | null
   scheduled_date: string | null
   scheduled_time: string | null
   duration_hours: number | null
@@ -50,6 +41,7 @@ type JobDetail = {
   created_at: string
   clients?: { id: string; first_name: string; last_name: string; email: string | null; phone: string | null } | null
   properties?: { id: string; address_line1: string; address_line2: string | null; town: string | null; postcode: string | null; access_instructions: string | null; alarm_instructions: string | null; parking_instructions: string | null; pets: string | null; specialist_surfaces: string | null; key_held: boolean | null } | null
+  job_types?: { name: string } | null
 }
 
 export default function JobDetailPage() {
@@ -70,7 +62,8 @@ export default function JobDetailPage() {
           .select(`
             *,
             clients (id, first_name, last_name, email, phone),
-            properties (id, address_line1, address_line2, town, postcode, access_instructions, alarm_instructions, parking_instructions, pets, specialist_surfaces, key_held)
+            properties (id, address_line1, address_line2, town, postcode, access_instructions, alarm_instructions, parking_instructions, pets, specialist_surfaces, key_held),
+            job_types (name)
           `)
           .eq('id', jobId)
           .single(),
@@ -150,7 +143,7 @@ export default function JobDetailPage() {
             </Link>
             <div className="flex items-center gap-3 mt-3">
               <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-zinc-900">
-                {serviceLabels[job.service_type ?? ''] ?? 'Job'}
+                {job.job_types?.name ?? 'Job'}
               </h1>
               <span className={`text-xs px-3 py-1.5 rounded-full font-medium tracking-wide border ${statusColour[job.status]}`}>
                 {job.status.replace('_', ' ')}
@@ -216,7 +209,7 @@ export default function JobDetailPage() {
               </div>
               <div className="px-5 py-2 divide-y divide-zinc-50">
                 {[
-                  { label: 'Service', value: serviceLabels[job.service_type ?? ''] },
+                  { label: 'Job Type', value: job.job_types?.name ?? null },
                   { label: 'Date', value: job.scheduled_date ? formatDate(job.scheduled_date) : null },
                   { label: 'Time', value: job.scheduled_time ? formatTime(job.scheduled_time) : null },
                   { label: 'Duration', value: job.duration_hours ? `${job.duration_hours} hrs` : null },

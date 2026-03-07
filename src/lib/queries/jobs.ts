@@ -25,7 +25,8 @@ export async function getJobs(): Promise<JobWithRelations[]> {
     .select(`
       *,
       clients (first_name, last_name),
-      properties (address_line1, town)
+      properties (address_line1, town),
+      job_types (name)
     `)
     .eq('organisation_id', orgId)
     .order('scheduled_date', { ascending: false })
@@ -43,7 +44,8 @@ export async function getJob(id: string) {
     .select(`
       *,
       clients (id, first_name, last_name, email, phone),
-      properties (id, address_line1, address_line2, town, postcode)
+      properties (id, address_line1, address_line2, town, postcode),
+      job_types (id, name)
     `)
     .eq('id', id)
     .eq('organisation_id', orgId)

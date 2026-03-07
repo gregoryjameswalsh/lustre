@@ -13,11 +13,13 @@ function NewJobForm() {
 
   type ClientOption = { id: string; first_name: string; last_name: string }
   type PropertyOption = { id: string; address_line1: string; town: string }
+  type JobTypeOption = { id: string; name: string }
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [clients, setClients] = useState<ClientOption[]>([])
   const [properties, setProperties] = useState<PropertyOption[]>([])
+  const [jobTypes, setJobTypes] = useState<JobTypeOption[]>([])
   const [selectedClientId, setSelectedClientId] = useState(preselectedClientId)
 
   useEffect(() => {
@@ -30,7 +32,17 @@ function NewJobForm() {
         .order('last_name')
       setClients(data ?? [])
     }
+    async function loadJobTypes() {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('job_types')
+        .select('id, name')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true })
+      setJobTypes(data ?? [])
+    }
     loadClients()
+    loadJobTypes()
   }, [])
 
   useEffect(() => {
@@ -77,11 +89,13 @@ function NewJobForm() {
       return
     }
 
+    const jobTypeId = formData.get('job_type_id') as string | null
+
     const { data: job, error: insertError } = await supabase.from('jobs').insert({
       organisation_id: profile.organisation_id,
       client_id: clientId,
       property_id: propertyId,
-      service_type: formData.get('service_type') || null,
+      job_type_id: jobTypeId || null,
       status: 'scheduled',
       scheduled_date: formData.get('scheduled_date') || null,
       scheduled_time: formData.get('scheduled_time') || null,
@@ -168,15 +182,12 @@ function NewJobForm() {
           </div>
           <div className="px-6 py-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>Service Type</label>
-              <select name="service_type" className={inputClass}>
+              <label className={labelClass}>Job Type</label>
+              <select name="job_type_id" className={inputClass}>
                 <option value="">— Select —</option>
-                <option value="regular">Regular Clean</option>
-                <option value="deep_clean">Deep Clean</option>
-                <option value="move_in">Move In</option>
-                <option value="move_out">Move Out</option>
-                <option value="post_event">Post Event</option>
-                <option value="other">Other</option>
+                {jobTypes.map(jt => (
+                  <option key={jt.id} value={jt.id}>{jt.name}</option>
+                ))}
               </select>
             </div>
             <div>
