@@ -8,6 +8,8 @@
 -- exactly once, rather than on every page load.
 -- =============================================================================
 
+DROP FUNCTION IF EXISTS public_mark_quote_viewed(TEXT);
+
 CREATE OR REPLACE FUNCTION public_mark_quote_viewed(p_token TEXT)
 RETURNS boolean
 LANGUAGE plpgsql
