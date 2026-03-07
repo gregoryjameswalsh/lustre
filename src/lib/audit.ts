@@ -38,6 +38,9 @@ export type AuditAction =
   // Pipeline
   | 'move_deal'
   | 'delete_deal'
+  | 'pipeline_move_client'
+  | 'pipeline_win_client'
+  | 'pipeline_lose_client'
   // GDPR
   | 'gdpr_export'
   | 'gdpr_erase'
