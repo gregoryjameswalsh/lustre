@@ -95,6 +95,7 @@ export default function JobDetailPage() {
         supabase.auth.getUser(),
       ])
       setJob(data)
+      let currentOrgId: string | null = null
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
@@ -102,7 +103,10 @@ export default function JobDetailPage() {
           .eq('id', user.id)
           .single()
         setIsAdmin(profile?.role === 'admin')
-        if (profile?.organisation_id) setOrgId(profile.organisation_id)
+        if (profile?.organisation_id) {
+          setOrgId(profile.organisation_id)
+          currentOrgId = profile.organisation_id
+        }
       }
       setLoading(false)
 
@@ -113,12 +117,12 @@ export default function JobDetailPage() {
         setChecklistLoaded(true)
 
         // For scheduled jobs, look up which template will be applied on start
-        if (data && data.job_type_id && profile?.organisation_id) {
+        if (data && data.job_type_id && currentOrgId) {
           const { data: junction } = await supabase
             .from('checklist_template_job_types')
             .select('checklist_template_id')
             .eq('job_type_id', data.job_type_id)
-            .eq('organisation_id', profile.organisation_id)
+            .eq('organisation_id', currentOrgId)
 
           const linkedIds = (junction ?? []).map((j: { checklist_template_id: string }) => j.checklist_template_id)
 
@@ -128,7 +132,7 @@ export default function JobDetailPage() {
               .select('id, name, checklist_template_items(id, title, guidance, sort_order)')
               .in('id', linkedIds)
               .eq('is_active', true)
-              .eq('organisation_id', profile.organisation_id)
+              .eq('organisation_id', currentOrgId)
               .order('sort_order', { referencedTable: 'checklist_template_items', ascending: true })
 
             if (activeTemplates?.length === 1) {
