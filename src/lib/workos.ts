@@ -11,7 +11,7 @@
 //   const factors = await workos.mfa.listFactors({ userId })
 // =============================================================================
 
-import WorkOS from '@workos-inc/node'
+import { WorkOS } from '@workos-inc/node'
 
 if (!process.env.WORKOS_API_KEY) {
   // Warn at startup — not a hard crash so dev builds without WorkOS still work.
