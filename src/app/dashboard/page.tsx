@@ -14,10 +14,13 @@ export default async function DashboardPage() {
   const { count: clientCount } = await supabase
     .from('clients')
     .select('*', { count: 'exact', head: true })
+    .eq('status', 'active')
 
-  const { count: jobCount } = await supabase
-    .from('jobs')
+  const { count: pipelineCount } = await supabase
+    .from('clients')
     .select('*', { count: 'exact', head: true })
+    .eq('status', 'lead')
+    .not('pipeline_stage_id', 'is', null)
 
   const { count: scheduledCount } = await supabase
     .from('jobs')
@@ -93,12 +96,14 @@ function getGreeting() {
             </span>
           </div>
           <div className="bg-white px-4 py-5 sm:px-8 sm:py-6">
-            <span className="text-2xl sm:text-3xl font-light tracking-tight text-zinc-900 block mb-1">
-              {jobCount ?? 0}
-            </span>
-            <span className="text-xs font-medium tracking-[0.2em] uppercase text-zinc-400">
-              Total Jobs
-            </span>
+            <Link href="/dashboard/pipeline" className="block">
+              <span className="text-2xl sm:text-3xl font-light tracking-tight text-zinc-900 block mb-1">
+                {pipelineCount ?? 0}
+              </span>
+              <span className="text-xs font-medium tracking-[0.2em] uppercase text-zinc-400">
+                In Pipeline
+              </span>
+            </Link>
           </div>
         </div>
 

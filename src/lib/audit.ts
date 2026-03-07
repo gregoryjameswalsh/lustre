@@ -41,6 +41,21 @@ export type AuditAction =
   | 'reactivate_checklist_template'
   | 'delete_checklist_template'
   | 'duplicate_checklist_template'
+  // RBAC
+  | 'create_role'
+  | 'update_role'
+  | 'delete_role'
+  | 'assign_member_role'
+  // Pipeline
+  | 'move_deal'
+  | 'delete_deal'
+  | 'pipeline_move_client'
+  | 'pipeline_win_client'
+  | 'pipeline_lose_client'
+  // GDPR
+  | 'gdpr_export'
+  | 'gdpr_erase'
+  | 'gdpr_set_consent'
 
 export async function logAuditEvent(
   supabase: SupabaseClient,

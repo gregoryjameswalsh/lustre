@@ -11,16 +11,27 @@ import { captureServerEvent } from '@/lib/posthog'
 export async function createClientAction(formData: FormData) {
   const { supabase, orgId, userId } = await getOrgAndUser()
 
+  const status = formData.get('status') as ClientStatus ?? 'active'
+  const pipelineStageId = status === 'lead' ? str(formData, 'pipeline_stage_id', 36) : null
+  const estimatedValueRaw = formData.get('estimated_monthly_value') as string | null
+  const estimatedMonthlyValue =
+    status === 'lead' && estimatedValueRaw
+      ? parseFloat(estimatedValueRaw) || null
+      : null
+
   const { error } = await supabase.from('clients').insert({
-    organisation_id:  orgId,
-    first_name:       requiredStr(formData, 'first_name', 100),
-    last_name:        requiredStr(formData, 'last_name', 100),
-    email:            str(formData, 'email', 254),
-    phone:            str(formData, 'phone', 30),
-    secondary_phone:  str(formData, 'secondary_phone', 30),
-    notes:            str(formData, 'notes', 5000),
-    status:           formData.get('status') as ClientStatus ?? 'active',
-    source:           str(formData, 'source', 50),
+    organisation_id:         orgId,
+    first_name:              requiredStr(formData, 'first_name', 100),
+    last_name:               requiredStr(formData, 'last_name', 100),
+    email:                   str(formData, 'email', 254),
+    phone:                   str(formData, 'phone', 30),
+    secondary_phone:         str(formData, 'secondary_phone', 30),
+    notes:                   str(formData, 'notes', 5000),
+    status,
+    source:                  str(formData, 'source', 50),
+    pipeline_stage_id:       pipelineStageId,
+    estimated_monthly_value: estimatedMonthlyValue,
+    pipeline_entered_at:     pipelineStageId ? new Date().toISOString() : null,
   })
 
   if (error) throw new Error('Failed to create client. Please try again.')
@@ -35,7 +46,11 @@ export async function createClientAction(formData: FormData) {
   })
 
   revalidatePath('/dashboard/clients')
-  redirect('/dashboard/clients')
+  if (status === 'lead') revalidatePath('/dashboard/pipeline')
+
+  const returnTo = (formData.get('return_to') as string | null) ?? ''
+  const safePath = returnTo.startsWith('/dashboard/') ? returnTo : '/dashboard/clients'
+  redirect(safePath)
 }
 
 export async function updateClientAction(id: string, formData: FormData) {

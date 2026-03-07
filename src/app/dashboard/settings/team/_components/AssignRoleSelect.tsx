@@ -1,29 +1,33 @@
 'use client'
 
-// src/app/dashboard/settings/team/_components/RoleSelect.tsx
+// src/app/dashboard/settings/team/_components/AssignRoleSelect.tsx
+// Dropdown that assigns a custom role to a team member.
 
-import { useState } from 'react'
-import { updateMemberRole } from '@/lib/actions/team'
-import { useRouter } from 'next/navigation'
+import { useState }         from 'react'
+import { useRouter }        from 'next/navigation'
+import { assignMemberRoleAction } from '@/lib/actions/rbac'
+import type { RoleWithPermissions } from '@/lib/types'
 
-export default function RoleSelect({
+export default function AssignRoleSelect({
   profileId,
-  currentRole,
+  currentRoleId,
+  roles,
 }: {
-  profileId: string
-  currentRole: string
+  profileId:     string
+  currentRoleId: string | null
+  roles:         RoleWithPermissions[]
 }) {
-  const [selected, setSelected] = useState(currentRole)
+  const [selected, setSelected] = useState(currentRoleId ?? '')
   const [pending, setPending]   = useState(false)
   const [error, setError]       = useState<string | null>(null)
   const router = useRouter()
 
-  const dirty = selected !== currentRole
+  const dirty = selected !== (currentRoleId ?? '')
 
   async function handleSave() {
     setPending(true)
     setError(null)
-    const result = await updateMemberRole(profileId, selected)
+    const result = await assignMemberRoleAction(profileId, selected)
     setPending(false)
     if (result.error) {
       setError(result.error)
@@ -39,10 +43,11 @@ export default function RoleSelect({
           value={selected}
           onChange={e => { setSelected(e.target.value); setError(null) }}
           disabled={pending}
-          className="rounded-full border border-zinc-200 bg-white px-2.5 py-0.5 text-xs text-zinc-600 outline-none focus:border-[#4a5c4e] disabled:opacity-50 cursor-pointer"
+          className="rounded-full border border-zinc-200 bg-white px-2.5 py-0.5 text-xs text-zinc-600 outline-none focus:border-[#4a5c4e] disabled:opacity-50 cursor-pointer max-w-[160px]"
         >
-          <option value="team_member">Team member</option>
-          <option value="admin">Admin</option>
+          {roles.map(role => (
+            <option key={role.id} value={role.id}>{role.name}</option>
+          ))}
         </select>
         {dirty && (
           <button

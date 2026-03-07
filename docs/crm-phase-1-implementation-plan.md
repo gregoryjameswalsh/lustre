@@ -658,8 +658,8 @@ Settings
   ├── Saved Views  ← new (M04)
   ├── Automation   ← new (M12)
   ├── Security
-  │   ├── SSO      ← new (M07)
-  │   └── MFA      ← new (M08)
+  │   ├── MFA      ← new (M08; WorkOS SDK wired up, SSO UI deferred)
+  │   └── SSO      ← deferred (WorkOS installed; feature unlocked when revenue permits)
   ├── GDPR         ← new (M09)
   └── Audit Log    ← enhanced (M11)
 ```
@@ -697,27 +697,29 @@ Settings
 
 ### Phase 1b — Months 3–4 (Enterprise Compliance & Intelligence)
 - M11 Enhanced Audit Log (quick win — start here)
-- M07 SSO / WorkOS
-- M08 MFA Enforcement
+- M08 MFA Enforcement (WorkOS SDK; Supabase TOTP for now, WorkOS MFA when needed)
 - M09 GDPR Tooling
 - M10 Analytics Dashboard
 - M12 Automation Rules Engine
 
+> **M07 SSO — deferred.** WorkOS SDK is installed and wired into the app as part of M08.
+> The SSO connection manager UI and SAML/OIDC flows are built only once revenue
+> from the enterprise tier justifies the WorkOS production plan cost.
+
 ---
 
-## Open Decisions Required Before Development Starts
+## Decisions — Resolved (March 2026)
 
-| Decision | Owner | Deadline | Options |
-|----------|-------|----------|---------|
-| SSO provider | CTO | Week 2 | WorkOS (recommended) vs. Auth0 |
-| Custom fields data model | Lead Architect | Week 2 | EAV (recommended, in this plan) vs. JSONB |
-| Automation execution layer | Lead Architect | Week 3 | Supabase Edge Functions vs. external queue (e.g. Inngest) |
-| Chart library | Lead Frontend | Week 2 | Recharts vs. Tremor vs. Chart.js |
-| Drag-and-drop library for Kanban | Lead Frontend | Week 2 | @dnd-kit (recommended) vs. react-beautiful-dnd |
-| WorkOS plan/pricing sign-off | CEO | Week 3 | — |
+| Decision | Resolution |
+|----------|-----------|
+| SSO provider | **WorkOS** — SDK installed for MFA; SSO UI deferred until revenue permits |
+| Custom fields data model | **EAV** (`custom_fields` + `custom_field_values`) |
+| Automation execution layer | **Supabase Edge Functions** |
+| Chart library | **Recharts** |
+| Drag-and-drop (Kanban) | **@dnd-kit/core** |
 
 ---
 
 *Plan prepared by: Solutions Architect*
 *For engineering review — not for external distribution*
-*Version 1.0 — March 2026*
+*Version 1.1 — March 2026 (decisions recorded)*
