@@ -174,6 +174,18 @@ export interface JobChecklist {
   created_at: string
 }
 
+export interface JobChecklistPhoto {
+  id: string
+  organisation_id: string
+  job_checklist_item_id: string
+  storage_path: string
+  file_name: string
+  file_size_bytes: number | null
+  mime_type: string | null
+  uploaded_by: string | null
+  uploaded_at: string
+}
+
 export interface JobChecklistItem {
   id: string
   organisation_id: string
@@ -186,6 +198,7 @@ export interface JobChecklistItem {
   completed_by: string | null
   completed_at: string | null
   completed_by_profile?: { full_name: string | null } | null
+  photos?: JobChecklistPhoto[]
   created_at: string
 }
 

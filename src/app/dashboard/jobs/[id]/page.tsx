@@ -55,6 +55,7 @@ export default function JobDetailPage() {
   const [loading, setLoading]                 = useState(true)
   const [updating, setUpdating]               = useState(false)
   const [isAdmin, setIsAdmin]                 = useState(false)
+  const [orgId, setOrgId]                     = useState<string>('')
 
   // Checklist
   const [checklist, setChecklist]             = useState<JobChecklistWithItems | null>(null)
@@ -90,10 +91,11 @@ export default function JobDetailPage() {
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('role')
+          .select('role, organisation_id')
           .eq('id', user.id)
           .single()
         setIsAdmin(profile?.role === 'admin')
+        if (profile?.organisation_id) setOrgId(profile.organisation_id)
       }
       setLoading(false)
 
@@ -117,7 +119,12 @@ export default function JobDetailPage() {
           id, organisation_id, job_checklist_id, template_item_id,
           title, guidance, sort_order,
           is_completed, completed_by, completed_at, created_at,
-          completed_by_profile:profiles!completed_by (full_name)
+          completed_by_profile:profiles!completed_by (full_name),
+          photos:job_checklist_photos (
+            id, organisation_id, job_checklist_item_id,
+            storage_path, file_name, file_size_bytes, mime_type,
+            uploaded_by, uploaded_at
+          )
         )
       `)
       .eq('job_id', jobId)
@@ -362,8 +369,8 @@ export default function JobDetailPage() {
         </div>
 
         {/* Checklist section — shown below header when a checklist exists */}
-        {checklistLoaded && checklist && (
-          <ChecklistSection checklist={checklist} jobStatus={job.status} />
+        {checklistLoaded && checklist && orgId && (
+          <ChecklistSection checklist={checklist} jobStatus={job.status} orgId={orgId} />
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
