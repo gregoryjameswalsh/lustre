@@ -414,6 +414,7 @@ async function createJobFromQuote(quoteId: string, supabase: SupabaseClient): Pr
       property_id:     quote.property_id,
       service_type:    'other',
       status:          'scheduled',
+      scheduled_date:  new Date().toISOString().split('T')[0],
       price:           quote.total,
       notes:           `From quote ${quote.quote_number}: ${quote.title}`,
     })
