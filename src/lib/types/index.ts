@@ -192,10 +192,103 @@ export interface Property {
 }
 
 // -----------------------------------------------------------------------------
+// Job Type (dynamic, per-org — replaces hardcoded ServiceType enum)
+// -----------------------------------------------------------------------------
+
+export interface JobType {
+  id: string
+  organisation_id: string
+  name: string
+  description: string | null
+  is_active: boolean
+  sort_order: number
+  created_at: string
+  updated_at: string
+}
+
+// Retained for shadow-column period (service_type still exists on jobs in DB).
+// Remove once the shadow column is dropped in a future migration.
+export type ServiceType = 'regular' | 'deep_clean' | 'move_in' | 'move_out' | 'post_event' | 'other'
+
+// -----------------------------------------------------------------------------
+// Checklist Templates
+// -----------------------------------------------------------------------------
+
+export interface ChecklistTemplate {
+  id: string
+  organisation_id: string
+  name: string
+  description: string | null
+  is_active: boolean
+  created_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ChecklistTemplateItem {
+  id: string
+  organisation_id: string
+  template_id: string
+  title: string
+  guidance: string | null
+  sort_order: number
+  created_at: string
+}
+
+export interface ChecklistTemplateWithRelations extends ChecklistTemplate {
+  checklist_template_items: ChecklistTemplateItem[]
+  checklist_template_job_types: { job_type_id: string; job_types: { id: string; name: string } }[]
+}
+
+// -----------------------------------------------------------------------------
+// Job Checklist (instantiated from a template when a job starts)
+// -----------------------------------------------------------------------------
+
+export interface JobChecklist {
+  id: string
+  organisation_id: string
+  job_id: string
+  template_id: string | null
+  template_name: string
+  created_at: string
+}
+
+export interface JobChecklistPhoto {
+  id: string
+  organisation_id: string
+  job_checklist_item_id: string
+  storage_path: string
+  file_name: string
+  file_size_bytes: number | null
+  mime_type: string | null
+  uploaded_by: string | null
+  uploaded_at: string
+}
+
+export interface JobChecklistItem {
+  id: string
+  organisation_id: string
+  job_checklist_id: string
+  template_item_id: string | null
+  title: string
+  guidance: string | null
+  sort_order: number
+  is_completed: boolean
+  completed_by: string | null
+  completed_at: string | null
+  completed_by_profile?: { full_name: string | null } | null
+  photos?: JobChecklistPhoto[]
+  created_at: string
+}
+
+export interface JobChecklistWithItems extends JobChecklist {
+  items: JobChecklistItem[]
+}
+
+// -----------------------------------------------------------------------------
 // Job
 // -----------------------------------------------------------------------------
 
-export type ServiceType = 'regular' | 'deep_clean' | 'move_in' | 'move_out' | 'post_event' | 'other'
 export type JobStatus = 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
 
 export interface Job {
@@ -204,7 +297,8 @@ export interface Job {
   client_id: string
   property_id: string | null
   assigned_to: string | null
-  service_type: ServiceType
+  job_type_id: string
+  service_type: ServiceType  // shadow column — kept for transition period
   status: JobStatus
   scheduled_date: string
   scheduled_time: string | null
@@ -333,5 +427,8 @@ export interface JobWithRelations extends Job {
     address_line1: string | null
     town: string | null
     postcode: string | null
+  } | null
+  job_types?: {
+    name: string
   } | null
 }

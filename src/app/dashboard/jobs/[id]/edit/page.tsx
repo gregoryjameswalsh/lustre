@@ -5,9 +5,10 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
 import { deleteJobAction } from '@/lib/actions/jobs'
 
-type JobData = { id: string; client_id: string; property_id: string | null; service_type: string | null; status: string; scheduled_date: string | null; scheduled_time: string | null; duration_hours: number | null; price: number | null; notes: string | null; internal_notes: string | null }
+type JobData = { id: string; client_id: string; property_id: string | null; job_type_id: string | null; status: string; scheduled_date: string | null; scheduled_time: string | null; duration_hours: number | null; price: number | null; notes: string | null; internal_notes: string | null }
 type ClientOption = { id: string; first_name: string; last_name: string }
 type PropertyOption = { id: string; address_line1: string; town: string }
+type JobTypeOption = { id: string; name: string }
 
 export default function EditJobPage() {
   const router = useRouter()
@@ -21,19 +22,22 @@ export default function EditJobPage() {
   const [job, setJob] = useState<JobData | null>(null)
   const [clients, setClients] = useState<ClientOption[]>([])
   const [properties, setProperties] = useState<PropertyOption[]>([])
+  const [jobTypes, setJobTypes] = useState<JobTypeOption[]>([])
   const [selectedClientId, setSelectedClientId] = useState('')
   const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     async function load() {
       const supabase = createClient()
-      const [{ data: jobData }, { data: clientData }, { data: { user } }] = await Promise.all([
+      const [{ data: jobData }, { data: clientData }, { data: jobTypeData }, { data: { user } }] = await Promise.all([
         supabase.from('jobs').select('*, clients(id, first_name, last_name), properties(id, address_line1, town)').eq('id', jobId).single(),
         supabase.from('clients').select('id, first_name, last_name').neq('status', 'inactive').order('last_name'),
+        supabase.from('job_types').select('id, name').eq('is_active', true).order('sort_order', { ascending: true }),
         supabase.auth.getUser(),
       ])
       setJob(jobData)
       setClients(clientData ?? [])
+      setJobTypes(jobTypeData ?? [])
       setSelectedClientId(jobData?.client_id ?? '')
       if (user) {
         const { data: profile } = await supabase
@@ -72,7 +76,7 @@ export default function EditJobPage() {
     const { error } = await supabase.from('jobs').update({
       client_id: formData.get('client_id') as string,
       property_id: formData.get('property_id') as string,
-      service_type: formData.get('service_type') || null,
+      job_type_id: formData.get('job_type_id') as string || null,
       status: formData.get('status') as string,
       scheduled_date: formData.get('scheduled_date') || null,
       scheduled_time: formData.get('scheduled_time') || null,
@@ -167,15 +171,12 @@ export default function EditJobPage() {
             </div>
             <div className="px-6 py-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className={labelClass}>Service Type</label>
-                <select name="service_type" defaultValue={job?.service_type ?? ''} className={inputClass}>
+                <label className={labelClass}>Job Type</label>
+                <select name="job_type_id" defaultValue={job?.job_type_id ?? ''} className={inputClass}>
                   <option value="">— Select —</option>
-                  <option value="regular">Regular Clean</option>
-                  <option value="deep_clean">Deep Clean</option>
-                  <option value="move_in">Move In</option>
-                  <option value="move_out">Move Out</option>
-                  <option value="post_event">Post Event</option>
-                  <option value="other">Other</option>
+                  {jobTypes.map(jt => (
+                    <option key={jt.id} value={jt.id}>{jt.name}</option>
+                  ))}
                 </select>
               </div>
               <div>

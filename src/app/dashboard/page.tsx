@@ -40,7 +40,8 @@ export default async function DashboardPage() {
     .select(`
       *,
       clients (first_name, last_name),
-      properties (address_line1, town)
+      properties (address_line1, town),
+      job_types (name)
     `)
     .eq('status', 'scheduled')
     .order('scheduled_date', { ascending: true })
@@ -59,15 +60,6 @@ function getGreeting() {
   if (hour < 17) return 'Good afternoon'
   return 'Good evening'
 }
-
-  const serviceLabels: Record<string, string> = {
-    regular: 'Regular Clean',
-    deep_clean: 'Deep Clean',
-    move_in: 'Move In',
-    move_out: 'Move Out',
-    post_event: 'Post Event',
-    other: 'Other'
-  }
 
   const allFollowUps = await getAllOpenFollowUps()
 
@@ -149,7 +141,7 @@ function getGreeting() {
                         {job.scheduled_date ? formatDate(job.scheduled_date) : '—'}
                       </p>
                       <p className="text-xs text-zinc-400 mt-0.5">
-                        {serviceLabels[job.service_type] ?? job.service_type}
+                        {(job as JobWithRelations).job_types?.name ?? '—'}
                       </p>
                     </div>
                   </div>

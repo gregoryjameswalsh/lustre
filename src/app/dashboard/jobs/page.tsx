@@ -4,15 +4,6 @@ import Link from 'next/link'
 import { getJobs } from '@/lib/queries/jobs'
 import type { JobWithRelations } from '@/lib/types'
 
-const serviceLabels: Record<string, string> = {
-  regular: 'Regular Clean',
-  deep_clean: 'Deep Clean',
-  move_in: 'Move In',
-  move_out: 'Move Out',
-  post_event: 'Post Event',
-  other: 'Other',
-}
-
 const statusColour: Record<string, string> = {
   scheduled:   'bg-blue-50 text-blue-600',
   in_progress: 'bg-amber-50 text-amber-600',
@@ -109,7 +100,7 @@ export default async function JobsPage() {
                         {job.clients?.first_name} {job.clients?.last_name}
                       </p>
                       <p className="text-xs text-zinc-400 mt-0.5">
-                        {serviceLabels[job.service_type] ?? '—'} · {job.scheduled_date ? formatDate(job.scheduled_date) : 'No date'}
+                        {job.job_types?.name ?? '—'} · {job.scheduled_date ? formatDate(job.scheduled_date) : 'No date'}
                       </p>
                     </div>
                     <span className={`text-xs px-2.5 py-1 rounded-full font-medium tracking-wide flex-shrink-0 ${statusColour[job.status]}`}>
@@ -127,7 +118,7 @@ export default async function JobsPage() {
                       </span>
                     </div>
                     <span className="text-sm text-zinc-500">
-                      {serviceLabels[job.service_type] ?? '—'}
+                      {job.job_types?.name ?? '—'}
                     </span>
                     <span className="text-sm text-zinc-500">
                       {job.scheduled_date ? formatDate(job.scheduled_date) : '—'}
