@@ -4,12 +4,33 @@
 -- The deals table is left in place (inert) for potential Phase 3 enterprise use.
 -- =============================================================================
 
--- 1. Extend activity_type enum
---    (ALTER TYPE ADD VALUE cannot run inside a transaction in PG < 12;
---     Supabase runs on PG 15 so this is safe in-transaction.)
-ALTER TYPE activity_type ADD VALUE IF NOT EXISTS 'pipeline_stage_changed';
-ALTER TYPE activity_type ADD VALUE IF NOT EXISTS 'pipeline_won';
-ALTER TYPE activity_type ADD VALUE IF NOT EXISTS 'pipeline_lost';
+-- 1. Create or extend activity_type enum
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'activity_type') THEN
+    CREATE TYPE activity_type AS ENUM (
+      'pipeline_stage_changed',
+      'pipeline_won',
+      'pipeline_lost'
+    );
+  ELSE
+    -- ALTER TYPE ADD VALUE cannot run inside a transaction in PG < 12;
+    -- Supabase runs on PG 15 so this is safe in-transaction.
+    IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'pipeline_stage_changed'
+                   AND enumtypid = 'activity_type'::regtype) THEN
+      ALTER TYPE activity_type ADD VALUE 'pipeline_stage_changed';
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'pipeline_won'
+                   AND enumtypid = 'activity_type'::regtype) THEN
+      ALTER TYPE activity_type ADD VALUE 'pipeline_won';
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'pipeline_lost'
+                   AND enumtypid = 'activity_type'::regtype) THEN
+      ALTER TYPE activity_type ADD VALUE 'pipeline_lost';
+    END IF;
+  END IF;
+END;
+$$;
 
 -- 2. Add pipeline columns to clients
 ALTER TABLE clients
