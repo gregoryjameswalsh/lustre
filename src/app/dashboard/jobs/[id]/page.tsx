@@ -135,7 +135,7 @@ export default function JobDetailPage() {
       setChecklist({
         ...data,
         items: data.job_checklist_items ?? [],
-      } as JobChecklistWithItems)
+      } as unknown as JobChecklistWithItems)
     }
     setChecklistLoaded(true)
   }
