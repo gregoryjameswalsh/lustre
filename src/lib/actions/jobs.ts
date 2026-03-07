@@ -29,7 +29,7 @@ export async function deleteJobAction(jobId: string): Promise<{ error?: string }
     action: 'delete_job',
     resourceType: 'job',
     resourceId: jobId,
-    metadata: job ? { job_type: (job as { job_types?: { name: string } | null }).job_types?.name, scheduled_date: job.scheduled_date } : undefined,
+    metadata: job ? { job_type: (job as unknown as { job_types?: { name: string } | null }).job_types?.name, scheduled_date: job.scheduled_date } : undefined,
   })
 
   revalidatePath('/dashboard/jobs')
