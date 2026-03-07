@@ -162,6 +162,38 @@ export interface ChecklistTemplateWithRelations extends ChecklistTemplate {
 }
 
 // -----------------------------------------------------------------------------
+// Job Checklist (instantiated from a template when a job starts)
+// -----------------------------------------------------------------------------
+
+export interface JobChecklist {
+  id: string
+  organisation_id: string
+  job_id: string
+  template_id: string | null
+  template_name: string
+  created_at: string
+}
+
+export interface JobChecklistItem {
+  id: string
+  organisation_id: string
+  job_checklist_id: string
+  template_item_id: string | null
+  title: string
+  guidance: string | null
+  sort_order: number
+  is_completed: boolean
+  completed_by: string | null
+  completed_at: string | null
+  completed_by_profile?: { full_name: string | null } | null
+  created_at: string
+}
+
+export interface JobChecklistWithItems extends JobChecklist {
+  items: JobChecklistItem[]
+}
+
+// -----------------------------------------------------------------------------
 // Job
 // -----------------------------------------------------------------------------
 

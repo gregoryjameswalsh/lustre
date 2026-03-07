@@ -189,7 +189,16 @@ export async function deleteChecklistTemplateAction(id: string): Promise<{ error
     .single()
 
   // Guard: check for job checklist instances that reference this template
-  // (job_checklists table added in Phase 3 — for now a hard delete is always safe)
+  const { count } = await supabase
+    .from('job_checklists')
+    .select('id', { count: 'exact', head: true })
+    .eq('template_id', id)
+    .eq('organisation_id', orgId)
+
+  if ((count ?? 0) > 0) {
+    return { error: 'This template has been used on jobs and cannot be deleted. Deactivate it instead.' }
+  }
+
   const { error } = await supabase
     .from('checklist_templates')
     .delete()
