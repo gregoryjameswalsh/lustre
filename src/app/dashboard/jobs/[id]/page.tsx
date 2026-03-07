@@ -61,6 +61,13 @@ export default function JobDetailPage() {
   const [checklist, setChecklist]             = useState<JobChecklistWithItems | null>(null)
   const [checklistLoaded, setChecklistLoaded] = useState(false)
 
+  // Pending checklist preview (for scheduled jobs)
+  const [pendingTemplate, setPendingTemplate] = useState<{
+    name: string
+    items: { id: string; title: string; guidance: string | null; sort_order: number }[]
+  } | null>(null)
+  const [multiplePendingTemplates, setMultiplePendingTemplates] = useState(false)
+
   // Template selection modal (when multiple templates match a job type)
   const [templateChoices, setTemplateChoices] = useState<TemplateChoice[]>([])
   const [showTemplateModal, setShowTemplateModal] = useState(false)
@@ -104,6 +111,36 @@ export default function JobDetailPage() {
         await loadChecklist()
       } else {
         setChecklistLoaded(true)
+
+        // For scheduled jobs, look up which template will be applied on start
+        if (data && data.job_type_id && profile?.organisation_id) {
+          const { data: junction } = await supabase
+            .from('checklist_template_job_types')
+            .select('checklist_template_id')
+            .eq('job_type_id', data.job_type_id)
+            .eq('organisation_id', profile.organisation_id)
+
+          const linkedIds = (junction ?? []).map((j: { checklist_template_id: string }) => j.checklist_template_id)
+
+          if (linkedIds.length > 0) {
+            const { data: activeTemplates } = await supabase
+              .from('checklist_templates')
+              .select('id, name, checklist_template_items(id, title, guidance, sort_order)')
+              .in('id', linkedIds)
+              .eq('is_active', true)
+              .eq('organisation_id', profile.organisation_id)
+              .order('sort_order', { referencedTable: 'checklist_template_items', ascending: true })
+
+            if (activeTemplates?.length === 1) {
+              setPendingTemplate({
+                name: activeTemplates[0].name,
+                items: (activeTemplates[0].checklist_template_items as { id: string; title: string; guidance: string | null; sort_order: number }[]) ?? [],
+              })
+            } else if ((activeTemplates?.length ?? 0) > 1) {
+              setMultiplePendingTemplates(true)
+            }
+          }
+        }
       }
     }
     loadJob()
@@ -371,6 +408,47 @@ export default function JobDetailPage() {
         {/* Checklist section — shown below header when a checklist exists */}
         {checklistLoaded && checklist && orgId && (
           <ChecklistSection checklist={checklist} jobStatus={job.status} orgId={orgId} />
+        )}
+
+        {/* Pending checklist preview — shown while job is still scheduled */}
+        {job.status === 'scheduled' && pendingTemplate && (
+          <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden mb-6 md:mb-8 opacity-60">
+            <div className="px-5 py-4 border-b border-zinc-100 flex items-center justify-between">
+              <div>
+                <h2 className="text-xs font-medium tracking-[0.2em] uppercase text-zinc-500">Checklist</h2>
+                <p className="text-xs text-zinc-400 mt-0.5">{pendingTemplate.name}</p>
+              </div>
+              <span className="text-xs font-medium px-3 py-1 rounded-full bg-blue-50 text-blue-500">
+                Starts when in progress
+              </span>
+            </div>
+            <div className="divide-y divide-zinc-50">
+              {pendingTemplate.items.map(item => (
+                <div key={item.id} className="px-5 py-4 flex items-start gap-4">
+                  <div className="flex-shrink-0 mt-0.5 w-5 h-5 rounded border-2 border-zinc-200" />
+                  <div>
+                    <p className="text-sm font-medium text-zinc-400">{item.title}</p>
+                    {item.guidance && (
+                      <p className="text-xs text-zinc-300 mt-0.5">{item.guidance}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="px-5 py-3 border-t border-zinc-50 bg-zinc-50/50">
+              <p className="text-xs text-zinc-400">
+                Mark this job as <span className="font-medium">In Progress</span> to begin completing the checklist.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {job.status === 'scheduled' && multiplePendingTemplates && (
+          <div className="bg-blue-50 border border-blue-100 rounded-lg px-5 py-4 mb-6 md:mb-8">
+            <p className="text-xs text-blue-600">
+              Multiple checklist templates match this job type. You&apos;ll be asked to choose one when you mark the job as in progress.
+            </p>
+          </div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
