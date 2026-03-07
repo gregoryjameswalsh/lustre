@@ -4,6 +4,94 @@
 // =============================================================================
 
 // -----------------------------------------------------------------------------
+// RBAC — Permissions & Roles
+// -----------------------------------------------------------------------------
+
+export const PERMISSIONS = {
+  // Clients
+  'clients:read':              'View clients',
+  'clients:write':             'Create & edit clients',
+  'clients:delete':            'Delete clients',
+  // Jobs
+  'jobs:read':                 'View jobs',
+  'jobs:write':                'Create & edit jobs',
+  'jobs:delete':               'Delete jobs',
+  // Quotes
+  'quotes:read':               'View quotes',
+  'quotes:write':              'Create & edit quotes',
+  'quotes:delete':             'Delete quotes',
+  // Pipeline
+  'pipeline:read':             'View pipeline',
+  'pipeline:write':            'Create & edit deals',
+  'pipeline:delete':           'Delete deals',
+  // Reports
+  'reports:read':              'View reports & analytics',
+  // Settings
+  'settings:read':             'View settings',
+  'settings:write':            'Edit general settings',
+  'settings:manage_team':      'Manage team members',
+  'settings:manage_roles':     'Manage roles & permissions',
+  'settings:manage_billing':   'Manage billing',
+  // GDPR
+  'gdpr:export':               'Export client data (DSAR)',
+  'gdpr:erase':                'Erase client data',
+} as const
+
+export type Permission = keyof typeof PERMISSIONS
+
+export interface Role {
+  id:              string
+  organisation_id: string
+  name:            string
+  description:     string | null
+  is_system:       boolean
+  created_at:      string
+}
+
+export interface RoleWithPermissions extends Role {
+  permissions: Permission[]
+}
+
+// -----------------------------------------------------------------------------
+// Pipeline
+// -----------------------------------------------------------------------------
+
+export interface PipelineStage {
+  id:              string
+  organisation_id: string
+  name:            string
+  position:        number
+  colour:          string | null
+  is_won:          boolean
+  is_lost:         boolean
+  created_at:      string
+}
+
+export interface Deal {
+  id:              string
+  organisation_id: string
+  client_id:       string
+  stage_id:        string
+  title:           string
+  value:           number | null
+  currency:        string
+  expected_close:  string | null
+  assigned_to:     string | null
+  notes:           string | null
+  won_at:          string | null
+  lost_at:         string | null
+  lost_reason:     string | null
+  created_at:      string
+  updated_at:      string
+}
+
+export interface DealWithRelations extends Deal {
+  clients?: { first_name: string; last_name: string } | null
+  pipeline_stages?: { name: string; colour: string | null; is_won: boolean; is_lost: boolean } | null
+  profiles?: { full_name: string | null } | null
+}
+
+// -----------------------------------------------------------------------------
 // Organisation (Tenant)
 // -----------------------------------------------------------------------------
 

@@ -10,7 +10,9 @@ import InviteForm from './_components/InviteForm'
 import RevokeButton from './_components/RevokeButton'
 import RemoveMemberButton from './_components/RemoveMemberButton'
 import RoleSelect from './_components/RoleSelect'
+import AssignRoleSelect from './_components/AssignRoleSelect'
 import { PLANS } from '@/lib/stripe/plans'
+import { getRoles } from '@/lib/queries/rbac'
 import type { Plan } from '@/lib/types'
 
 const SEAT_LIMITS: Record<Plan, number> = {
@@ -40,10 +42,11 @@ async function getTeamData() {
     { data: members },
     { data: pendingInvitations },
     { data: org },
+    roles,
   ] = await Promise.all([
     supabase
       .from('profiles')
-      .select('id, full_name, email, role')
+      .select('id, full_name, email, role, custom_role_id')
       .eq('organisation_id', profile.organisation_id)
       .order('full_name'),
     supabase
@@ -58,6 +61,7 @@ async function getTeamData() {
       .select('plan')
       .eq('id', profile.organisation_id)
       .single(),
+    getRoles(profile.organisation_id),
   ])
 
   const plan = (org?.plan ?? 'free') as Plan
@@ -66,6 +70,7 @@ async function getTeamData() {
   return {
     members:            members ?? [],
     pendingInvitations: pendingInvitations ?? [],
+    roles,
     isAdmin,
     currentUserId:      user.id,
     plan,
@@ -74,7 +79,7 @@ async function getTeamData() {
 }
 
 export default async function TeamPage() {
-  const { members, pendingInvitations, isAdmin, currentUserId, plan, seatLimit } = await getTeamData()
+  const { members, pendingInvitations, roles, isAdmin, currentUserId, plan, seatLimit } = await getTeamData()
 
   const totalOccupied = members.length + pendingInvitations.length
   const atLimit       = totalOccupied >= seatLimit
@@ -132,12 +137,21 @@ export default async function TeamPage() {
                     <div className="flex flex-shrink-0 items-center gap-3">
                       {isAdmin && !isCurrentUser ? (
                         <>
-                          <RoleSelect profileId={member.id} currentRole={member.role} />
+                          {roles.length > 0 ? (
+                            <AssignRoleSelect
+                              profileId={member.id}
+                              currentRoleId={member.custom_role_id ?? null}
+                              roles={roles}
+                            />
+                          ) : (
+                            <RoleSelect profileId={member.id} currentRole={member.role} />
+                          )}
                           <RemoveMemberButton profileId={member.id} />
                         </>
                       ) : (
                         <span className="rounded-full border border-zinc-200 px-2.5 py-0.5 text-xs text-zinc-500">
-                          {member.role === 'team_member' ? 'Team member' : 'Admin'}
+                          {roles.find(r => r.id === member.custom_role_id)?.name
+                            ?? (member.role === 'team_member' ? 'Team member' : 'Admin')}
                         </span>
                       )}
                     </div>
