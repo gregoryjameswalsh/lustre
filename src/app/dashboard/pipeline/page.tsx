@@ -1,12 +1,12 @@
 // src/app/dashboard/pipeline/page.tsx
 // =============================================================================
-// LUSTRE — Pipeline Kanban (default view)
+// LUSTRE — Pipeline Kanban (client-centric model)
 // =============================================================================
 
 import { createClient }  from '@/lib/supabase/server'
 import { redirect }      from 'next/navigation'
 import Link              from 'next/link'
-import { getStages, getDealsByStage } from '@/lib/queries/pipeline'
+import { getActiveStages, getClientsByStage } from '@/lib/queries/pipeline'
 import KanbanBoard       from './_components/KanbanBoard'
 
 async function checkAccess() {
@@ -19,18 +19,14 @@ async function checkAccess() {
 export default async function PipelinePage() {
   await checkAccess()
 
-  const [stages, dealsByStage] = await Promise.all([
-    getStages(),
-    getDealsByStage(),
+  const [stages, clientsByStage] = await Promise.all([
+    getActiveStages(),
+    getClientsByStage(),
   ])
 
-  // Total open pipeline value
-  const totalValue = Object.values(dealsByStage)
-    .flat()
-    .filter(d => !d.won_at && !d.lost_at && d.value != null)
-    .reduce((sum, d) => sum + (d.value ?? 0), 0)
-
-  const totalDeals = Object.values(dealsByStage).flat().filter(d => !d.lost_at).length
+  const allClients = Object.values(clientsByStage).flat()
+  const totalLeads = allClients.length
+  const totalValue = allClients.reduce((sum, c) => sum + (c.estimated_monthly_value ?? 0), 0)
 
   return (
     <div className="min-h-screen bg-[#f9f8f5]">
@@ -41,20 +37,20 @@ export default async function PipelinePage() {
           <div>
             <h1 className="text-2xl font-light tracking-tight text-zinc-900 sm:text-3xl">Pipeline</h1>
             <p className="mt-1 text-sm text-zinc-400">
-              {totalDeals} active deal{totalDeals !== 1 ? 's' : ''}
+              {totalLeads} active lead{totalLeads !== 1 ? 's' : ''}
               {totalValue > 0 && (
                 <span>
                   {' · '}
-                  {new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 }).format(totalValue)} open value
+                  {new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 }).format(totalValue)}/mo estimated
                 </span>
               )}
             </p>
           </div>
           <Link
-            href="/dashboard/pipeline/new"
+            href="/dashboard/clients/new?status=lead"
             className="mt-1 rounded-full bg-zinc-900 px-4 py-2 text-xs font-medium tracking-[0.15em] uppercase text-white hover:bg-zinc-700 transition-colors"
           >
-            New deal
+            Add lead
           </Link>
         </div>
 
@@ -65,7 +61,7 @@ export default async function PipelinePage() {
               <p className="text-sm text-zinc-400">No pipeline stages configured.</p>
             </div>
           ) : (
-            <KanbanBoard stages={stages} initialDealsByStage={dealsByStage} />
+            <KanbanBoard stages={stages} initialClientsByStage={clientsByStage} />
           )}
         </div>
 

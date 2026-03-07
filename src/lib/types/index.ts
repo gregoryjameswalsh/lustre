@@ -22,8 +22,8 @@ export const PERMISSIONS = {
   'quotes:delete':             'Delete quotes',
   // Pipeline
   'pipeline:read':             'View pipeline',
-  'pipeline:write':            'Create & edit deals',
-  'pipeline:delete':           'Delete deals',
+  'pipeline:write':            'Move & manage leads in the pipeline',
+  'pipeline:delete':           'Remove leads from the pipeline',
   // Reports
   'reports:read':              'View reports & analytics',
   // Settings
@@ -65,30 +65,6 @@ export interface PipelineStage {
   is_won:          boolean
   is_lost:         boolean
   created_at:      string
-}
-
-export interface Deal {
-  id:              string
-  organisation_id: string
-  client_id:       string
-  stage_id:        string
-  title:           string
-  value:           number | null
-  currency:        string
-  expected_close:  string | null
-  assigned_to:     string | null
-  notes:           string | null
-  won_at:          string | null
-  lost_at:         string | null
-  lost_reason:     string | null
-  created_at:      string
-  updated_at:      string
-}
-
-export interface DealWithRelations extends Deal {
-  clients?: { first_name: string; last_name: string } | null
-  pipeline_stages?: { name: string; colour: string | null; is_won: boolean; is_lost: boolean } | null
-  profiles?: { full_name: string | null } | null
 }
 
 // -----------------------------------------------------------------------------
@@ -174,6 +150,21 @@ export interface Client {
   status: ClientStatus
   source: string | null
   created_at: string
+  // Pipeline fields (null when client is not in / no longer in the pipeline)
+  pipeline_stage_id:       string | null
+  pipeline_assigned_to:    string | null
+  estimated_monthly_value: number | null
+  pipeline_notes:          string | null
+  pipeline_entered_at:     string | null
+  won_at:                  string | null
+  lost_at:                 string | null
+  lost_reason:             string | null
+}
+
+/** Client enriched with joined pipeline stage + assigned team member — used by the Kanban board. */
+export interface ClientInPipeline extends Client {
+  pipeline_stages?: { name: string; colour: string | null; is_won: boolean; is_lost: boolean } | null
+  pipeline_assigned_profile?: { full_name: string | null } | null
 }
 
 // -----------------------------------------------------------------------------
@@ -233,6 +224,7 @@ export type ActivityType =
   | 'quote_sent' | 'quote_viewed' | 'quote_accepted' | 'quote_declined'
   | 'job_scheduled' | 'job_completed' | 'job_cancelled'
   | 'follow_up' | 'review_requested' | 'complaint' | 'other'
+  | 'pipeline_stage_changed' | 'pipeline_won' | 'pipeline_lost'
 
 export interface Activity {
   id: string

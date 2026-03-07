@@ -1,10 +1,11 @@
 // src/lib/queries/pipeline.ts
 // =============================================================================
-// LUSTRE — Pipeline queries
+// LUSTRE — Pipeline queries (client-centric model)
+// The pipeline tracks clients (leads) moving through acquisition stages.
 // =============================================================================
 
-import { createClient }            from '@/lib/supabase/server'
-import type { PipelineStage, DealWithRelations } from '@/lib/types'
+import { createClient }              from '@/lib/supabase/server'
+import type { PipelineStage, ClientInPipeline } from '@/lib/types'
 
 async function getOrgId(): Promise<string> {
   const supabase = await createClient()
@@ -39,62 +40,47 @@ export async function getStages(): Promise<PipelineStage[]> {
   return data ?? []
 }
 
+/** Returns only non-terminal (non-won, non-lost) stages — used for the Kanban columns. */
+export async function getActiveStages(): Promise<PipelineStage[]> {
+  const stages = await getStages()
+  return stages.filter(s => !s.is_won && !s.is_lost)
+}
+
 // ---------------------------------------------------------------------------
-// Deals
+// Pipeline clients
 // ---------------------------------------------------------------------------
 
-const DEAL_SELECT = `
+const CLIENT_PIPELINE_SELECT = `
   *,
-  clients (first_name, last_name),
   pipeline_stages (name, colour, is_won, is_lost),
-  profiles!deals_assigned_to_fkey (full_name)
+  pipeline_assigned_profile:profiles!clients_pipeline_assigned_to_fkey (full_name)
 ` as const
 
-export async function getDeals(filters?: {
-  stageId?:   string
-  assignedTo?: string
-  search?:    string
-}): Promise<DealWithRelations[]> {
+/** All clients currently in the pipeline (status=lead, pipeline_stage_id set). */
+export async function getPipelineClients(): Promise<ClientInPipeline[]> {
   const supabase = await createClient()
   const orgId = await getOrgId()
 
-  let query = supabase
-    .from('deals')
-    .select(DEAL_SELECT)
+  const { data, error } = await supabase
+    .from('clients')
+    .select(CLIENT_PIPELINE_SELECT)
     .eq('organisation_id', orgId)
-    .order('created_at', { ascending: false })
+    .eq('status', 'lead')
+    .not('pipeline_stage_id', 'is', null)
+    .order('pipeline_entered_at', { ascending: true })
 
-  if (filters?.stageId)    query = query.eq('stage_id', filters.stageId)
-  if (filters?.assignedTo) query = query.eq('assigned_to', filters.assignedTo)
-  if (filters?.search) {
-    query = query.ilike('title', `%${filters.search}%`)
-  }
-
-  const { data, error } = await query
-  if (error) throw new Error('Failed to fetch deals.')
-  return (data ?? []) as DealWithRelations[]
+  if (error) throw new Error('Failed to fetch pipeline clients.')
+  return (data ?? []) as ClientInPipeline[]
 }
 
-export async function getDealsByStage(): Promise<Record<string, DealWithRelations[]>> {
-  const deals = await getDeals()
-  const byStage: Record<string, DealWithRelations[]> = {}
-  for (const deal of deals) {
-    if (!byStage[deal.stage_id]) byStage[deal.stage_id] = []
-    byStage[deal.stage_id].push(deal)
+/** Pipeline clients grouped by stage_id — used to populate the Kanban board. */
+export async function getClientsByStage(): Promise<Record<string, ClientInPipeline[]>> {
+  const clients = await getPipelineClients()
+  const byStage: Record<string, ClientInPipeline[]> = {}
+  for (const client of clients) {
+    if (!client.pipeline_stage_id) continue
+    if (!byStage[client.pipeline_stage_id]) byStage[client.pipeline_stage_id] = []
+    byStage[client.pipeline_stage_id].push(client)
   }
   return byStage
-}
-
-export async function getDeal(id: string): Promise<DealWithRelations | null> {
-  const supabase = await createClient()
-  const orgId = await getOrgId()
-
-  const { data } = await supabase
-    .from('deals')
-    .select(DEAL_SELECT)
-    .eq('id', id)
-    .eq('organisation_id', orgId)
-    .single()
-
-  return data as DealWithRelations | null
 }
