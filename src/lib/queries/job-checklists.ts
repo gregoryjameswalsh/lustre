@@ -33,6 +33,6 @@ export async function getJobChecklist(jobId: string): Promise<JobChecklistWithIt
 
   return {
     ...data,
-    items: (data.job_checklist_items ?? []) as JobChecklistWithItems['items'],
+    items: (data.job_checklist_items ?? []) as unknown as JobChecklistWithItems['items'],
   }
 }
