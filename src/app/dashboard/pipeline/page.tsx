@@ -47,7 +47,7 @@ export default async function PipelinePage() {
             </p>
           </div>
           <Link
-            href="/dashboard/clients/new?status=lead"
+            href={`/dashboard/clients/new?status=lead&from=pipeline${stages[0]?.id ? `&stage_id=${stages[0].id}` : ''}`}
             className="mt-1 rounded-full bg-zinc-900 px-4 py-2 text-xs font-medium tracking-[0.15em] uppercase text-white hover:bg-zinc-700 transition-colors"
           >
             Add lead
