@@ -4,7 +4,8 @@ import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import ActivityTimeline from '@/components/dashboard/ActivityTimeline'
 import { getClientActivities, getOpenFollowUps } from '@/lib/queries/activities'
-import type { Property, JobWithRelations } from '@/lib/types'
+import DataPrivacySection from './_components/DataPrivacySection'
+import type { Property, JobWithRelations, ConsentRecord } from '@/lib/types'
 
 
 const serviceLabels: Record<string, string> = {
@@ -49,11 +50,15 @@ export default async function ClientProfilePage({
   const client = await getClientWithProperties(id)
   if (!client) notFound()
 
-  const activities = await getClientActivities(id)
-  const followUps = await getOpenFollowUps(id)
+  const [activities, followUps, { data: consentsData }] = await Promise.all([
+    getClientActivities(id),
+    getOpenFollowUps(id),
+    supabase.from('consent_records').select('*').eq('client_id', id),
+  ])
 
   const properties = client.properties ?? []
-  const jobs = client.jobs ?? []
+  const jobs       = client.jobs ?? []
+  const consents   = (consentsData ?? []) as ConsentRecord[]
 
   return (
     <div className="min-h-screen bg-[#f9f8f5]">
@@ -168,6 +173,9 @@ export default async function ClientProfilePage({
                 </div>
               </div>
             </div>
+
+            {/* Data & Privacy */}
+            <DataPrivacySection clientId={id} consents={consents} />
 
           </div>
 

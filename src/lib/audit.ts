@@ -38,6 +38,10 @@ export type AuditAction =
   // Pipeline
   | 'move_deal'
   | 'delete_deal'
+  // GDPR
+  | 'gdpr_export'
+  | 'gdpr_erase'
+  | 'gdpr_set_consent'
 
 export async function logAuditEvent(
   supabase: SupabaseClient,

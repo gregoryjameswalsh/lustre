@@ -293,6 +293,42 @@ export interface OnboardingServiceData {
 }
 
 // -----------------------------------------------------------------------------
+// GDPR
+// -----------------------------------------------------------------------------
+
+export type ConsentType       = 'marketing_email' | 'sms' | 'data_processing'
+export type GdprRequestType   = 'dsar' | 'erasure' | 'rectification'
+export type GdprRequestStatus = 'pending' | 'in_progress' | 'completed'
+
+export interface ConsentRecord {
+  id:              string
+  organisation_id: string
+  client_id:       string
+  consent_type:    ConsentType
+  granted:         boolean
+  granted_at:      string | null
+  withdrawn_at:    string | null
+  source:          'manual' | 'import' | 'form' | null
+  created_at:      string
+}
+
+export interface GdprRequest {
+  id:              string
+  organisation_id: string
+  client_id:       string | null
+  request_type:    GdprRequestType
+  status:          GdprRequestStatus
+  requested_at:    string
+  completed_at:    string | null
+  notes:           string | null
+  export_url:      string | null
+}
+
+export interface GdprRequestWithClient extends GdprRequest {
+  clients?: { first_name: string; last_name: string } | null
+}
+
+// -----------------------------------------------------------------------------
 // Joined / relational types
 // -----------------------------------------------------------------------------
 

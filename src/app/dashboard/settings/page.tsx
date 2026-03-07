@@ -138,6 +138,26 @@ export default async function SettingsPage() {
             </div>
           )}
 
+          {/* Data & Privacy — admin only */}
+          {isAdmin && (
+            <div className="rounded-xl border border-zinc-200 bg-white">
+              <div className="border-b border-zinc-100 px-5 py-4">
+                <h2 className="text-sm font-medium text-zinc-900">Data &amp; Privacy</h2>
+                <p className="mt-0.5 text-xs text-zinc-400">
+                  GDPR requests — data exports, erasures, and consent records.
+                </p>
+              </div>
+              <div className="p-5">
+                <Link
+                  href="/dashboard/settings/gdpr"
+                  className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-5 py-2.5 rounded-full hover:border-zinc-400 hover:text-zinc-700 transition-colors inline-block"
+                >
+                  View GDPR requests
+                </Link>
+              </div>
+            </div>
+          )}
+
           {/* Billing — admin only */}
           {isAdmin && (
             <div className="rounded-xl border border-zinc-200 bg-white">
