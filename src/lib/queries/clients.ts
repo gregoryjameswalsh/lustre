@@ -53,6 +53,8 @@ export async function getClientWithProperties(id: string) {
     .from('clients')
     .select(`
       *,
+      pipeline_stages (name, colour, is_won, is_lost),
+      pipeline_assigned_profile:profiles!clients_pipeline_assigned_to_fkey (full_name),
       properties (*),
       jobs (
         *,

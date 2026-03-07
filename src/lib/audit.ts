@@ -30,6 +30,21 @@ export type AuditAction =
   | 'revoke_invitation'
   | 'remove_member'
   | 'update_member_role'
+  // RBAC
+  | 'create_role'
+  | 'update_role'
+  | 'delete_role'
+  | 'assign_member_role'
+  // Pipeline
+  | 'move_deal'
+  | 'delete_deal'
+  | 'pipeline_move_client'
+  | 'pipeline_win_client'
+  | 'pipeline_lose_client'
+  // GDPR
+  | 'gdpr_export'
+  | 'gdpr_erase'
+  | 'gdpr_set_consent'
 
 export async function logAuditEvent(
   supabase: SupabaseClient,

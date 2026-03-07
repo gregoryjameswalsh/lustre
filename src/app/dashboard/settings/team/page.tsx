@@ -10,7 +10,9 @@ import InviteForm from './_components/InviteForm'
 import RevokeButton from './_components/RevokeButton'
 import RemoveMemberButton from './_components/RemoveMemberButton'
 import RoleSelect from './_components/RoleSelect'
+import AssignRoleSelect from './_components/AssignRoleSelect'
 import { PLANS } from '@/lib/stripe/plans'
+import { getRoles } from '@/lib/queries/rbac'
 import type { Plan } from '@/lib/types'
 
 const SEAT_LIMITS: Record<Plan, number> = {
@@ -40,10 +42,11 @@ async function getTeamData() {
     { data: members },
     { data: pendingInvitations },
     { data: org },
+    roles,
   ] = await Promise.all([
     supabase
       .from('profiles')
-      .select('id, full_name, email, role')
+      .select('id, full_name, email, role, custom_role_id')
       .eq('organisation_id', profile.organisation_id)
       .order('full_name'),
     supabase
@@ -58,6 +61,7 @@ async function getTeamData() {
       .select('plan')
       .eq('id', profile.organisation_id)
       .single(),
+    getRoles(profile.organisation_id),
   ])
 
   const plan = (org?.plan ?? 'free') as Plan
@@ -66,6 +70,7 @@ async function getTeamData() {
   return {
     members:            members ?? [],
     pendingInvitations: pendingInvitations ?? [],
+    roles,
     isAdmin,
     currentUserId:      user.id,
     plan,
@@ -74,7 +79,7 @@ async function getTeamData() {
 }
 
 export default async function TeamPage() {
-  const { members, pendingInvitations, isAdmin, currentUserId, plan, seatLimit } = await getTeamData()
+  const { members, pendingInvitations, roles, isAdmin, currentUserId, plan, seatLimit } = await getTeamData()
 
   const totalOccupied = members.length + pendingInvitations.length
   const atLimit       = totalOccupied >= seatLimit
@@ -85,6 +90,15 @@ export default async function TeamPage() {
       <main className="mx-auto max-w-2xl px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
 
         <div className="mb-8">
+          <Link
+            href="/dashboard/settings"
+            className="mb-4 inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-700 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5">
+              <path fillRule="evenodd" d="M9.78 4.22a.75.75 0 0 1 0 1.06L7.06 8l2.72 2.72a.75.75 0 1 1-1.06 1.06L5.47 8.53a.75.75 0 0 1 0-1.06l3.25-3.25a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
+            </svg>
+            Settings
+          </Link>
           <h1 className="text-2xl font-light tracking-tight text-zinc-900 sm:text-3xl">Team</h1>
           <p className="mt-1 text-sm text-zinc-400">
             Manage who has access to your organisation.
@@ -132,12 +146,21 @@ export default async function TeamPage() {
                     <div className="flex flex-shrink-0 items-center gap-3">
                       {isAdmin && !isCurrentUser ? (
                         <>
-                          <RoleSelect profileId={member.id} currentRole={member.role} />
+                          {roles.length > 0 ? (
+                            <AssignRoleSelect
+                              profileId={member.id}
+                              currentRoleId={member.custom_role_id ?? null}
+                              roles={roles}
+                            />
+                          ) : (
+                            <RoleSelect profileId={member.id} currentRole={member.role} />
+                          )}
                           <RemoveMemberButton profileId={member.id} />
                         </>
                       ) : (
                         <span className="rounded-full border border-zinc-200 px-2.5 py-0.5 text-xs text-zinc-500">
-                          {member.role === 'team_member' ? 'Team member' : 'Admin'}
+                          {roles.find(r => r.id === member.custom_role_id)?.name
+                            ?? (member.role === 'team_member' ? 'Team member' : 'Admin')}
                         </span>
                       )}
                     </div>

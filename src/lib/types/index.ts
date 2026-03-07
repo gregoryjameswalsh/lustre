@@ -4,6 +4,70 @@
 // =============================================================================
 
 // -----------------------------------------------------------------------------
+// RBAC — Permissions & Roles
+// -----------------------------------------------------------------------------
+
+export const PERMISSIONS = {
+  // Clients
+  'clients:read':              'View clients',
+  'clients:write':             'Create & edit clients',
+  'clients:delete':            'Delete clients',
+  // Jobs
+  'jobs:read':                 'View jobs',
+  'jobs:write':                'Create & edit jobs',
+  'jobs:delete':               'Delete jobs',
+  // Quotes
+  'quotes:read':               'View quotes',
+  'quotes:write':              'Create & edit quotes',
+  'quotes:delete':             'Delete quotes',
+  // Pipeline
+  'pipeline:read':             'View pipeline',
+  'pipeline:write':            'Move & manage leads in the pipeline',
+  'pipeline:delete':           'Remove leads from the pipeline',
+  // Reports
+  'reports:read':              'View reports & analytics',
+  // Settings
+  'settings:read':             'View settings',
+  'settings:write':            'Edit general settings',
+  'settings:manage_team':      'Manage team members',
+  'settings:manage_roles':     'Manage roles & permissions',
+  'settings:manage_billing':   'Manage billing',
+  // GDPR
+  'gdpr:export':               'Export client data (DSAR)',
+  'gdpr:erase':                'Erase client data',
+} as const
+
+export type Permission = keyof typeof PERMISSIONS
+
+export interface Role {
+  id:              string
+  organisation_id: string
+  name:            string
+  description:     string | null
+  is_system:       boolean
+  created_at:      string
+}
+
+export interface RoleWithPermissions extends Role {
+  permissions: Permission[]
+}
+
+// -----------------------------------------------------------------------------
+// Pipeline
+// -----------------------------------------------------------------------------
+
+export interface PipelineStage {
+  id:              string
+  organisation_id: string
+  name:            string
+  position:        number
+  colour:          string | null
+  is_won:          boolean
+  is_lost:         boolean
+  created_at:      string
+}
+
+// -----------------------------------------------------------------------------
 // Organisation (Tenant)
 // -----------------------------------------------------------------------------
 
@@ -86,6 +150,21 @@ export interface Client {
   status: ClientStatus
   source: string | null
   created_at: string
+  // Pipeline fields (null when client is not in / no longer in the pipeline)
+  pipeline_stage_id:       string | null
+  pipeline_assigned_to:    string | null
+  estimated_monthly_value: number | null
+  pipeline_notes:          string | null
+  pipeline_entered_at:     string | null
+  won_at:                  string | null
+  lost_at:                 string | null
+  lost_reason:             string | null
+}
+
+/** Client enriched with joined pipeline stage + assigned team member — used by the Kanban board. */
+export interface ClientInPipeline extends Client {
+  pipeline_stages?: { name: string; colour: string | null; is_won: boolean; is_lost: boolean } | null
+  pipeline_assigned_profile?: { full_name: string | null } | null
 }
 
 // -----------------------------------------------------------------------------
@@ -145,6 +224,7 @@ export type ActivityType =
   | 'quote_sent' | 'quote_viewed' | 'quote_accepted' | 'quote_declined'
   | 'job_scheduled' | 'job_completed' | 'job_cancelled'
   | 'follow_up' | 'review_requested' | 'complaint' | 'other'
+  | 'pipeline_stage_changed' | 'pipeline_won' | 'pipeline_lost'
 
 export interface Activity {
   id: string
@@ -202,6 +282,42 @@ export interface OnboardingBusinessProfileData {
 
 export interface OnboardingServiceData {
   service_types: ServiceType[]
+}
+
+// -----------------------------------------------------------------------------
+// GDPR
+// -----------------------------------------------------------------------------
+
+export type ConsentType       = 'marketing_email' | 'sms' | 'data_processing'
+export type GdprRequestType   = 'dsar' | 'erasure' | 'rectification'
+export type GdprRequestStatus = 'pending' | 'in_progress' | 'completed'
+
+export interface ConsentRecord {
+  id:              string
+  organisation_id: string
+  client_id:       string
+  consent_type:    ConsentType
+  granted:         boolean
+  granted_at:      string | null
+  withdrawn_at:    string | null
+  source:          'manual' | 'import' | 'form' | null
+  created_at:      string
+}
+
+export interface GdprRequest {
+  id:              string
+  organisation_id: string
+  client_id:       string | null
+  request_type:    GdprRequestType
+  status:          GdprRequestStatus
+  requested_at:    string
+  completed_at:    string | null
+  notes:           string | null
+  export_url:      string | null
+}
+
+export interface GdprRequestWithClient extends GdprRequest {
+  clients?: { first_name: string; last_name: string } | null
 }
 
 // -----------------------------------------------------------------------------

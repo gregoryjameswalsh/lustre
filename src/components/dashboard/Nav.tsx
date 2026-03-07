@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, ClipboardList, FileText, Settings2, LogOut } from 'lucide-react'
+import { LayoutDashboard, Users, ClipboardList, FileText, Settings2, LogOut, Kanban } from 'lucide-react'
 
 interface NavProps {
   orgName?: string
@@ -30,14 +30,16 @@ function Avatar({ name }: { name: string }) {
 }
 
 const navLinks = [
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/dashboard/clients', label: 'Clients' },
-  { href: '/dashboard/jobs', label: 'Jobs' },
-  { href: '/dashboard/quotes', label: 'Quotes' },
+  { href: '/dashboard',          label: 'Dashboard' },
+  { href: '/dashboard/pipeline', label: 'Pipeline' },
+  { href: '/dashboard/clients',  label: 'Clients' },
+  { href: '/dashboard/jobs',     label: 'Jobs' },
+  { href: '/dashboard/quotes',   label: 'Quotes' },
 ]
 
 const tabs = [
-  { href: '/dashboard', label: 'Dashboard', Icon: LayoutDashboard },
+  { href: '/dashboard',          label: 'Dashboard', Icon: LayoutDashboard },
+  { href: '/dashboard/pipeline', label: 'Pipeline',  Icon: Kanban },
   { href: '/dashboard/clients', label: 'Clients', Icon: Users },
   { href: '/dashboard/jobs', label: 'Jobs', Icon: ClipboardList },
   { href: '/dashboard/quotes', label: 'Quotes', Icon: FileText },
@@ -89,19 +91,22 @@ export default function Nav({ orgName, userName }: NavProps) {
               </span>
             </a>
             <span className="text-zinc-200">|</span>
-            {navLinks.map(link => (
-              <a
-                key={link.href}
-                href={link.href}
-                className={`text-xs tracking-wide transition-colors ${
-                  path === link.href
-                    ? 'text-zinc-900 font-medium'
-                    : 'text-zinc-400 hover:text-zinc-900'
-                }`}
-              >
-                {link.label}
-              </a>
-            ))}
+            {navLinks.map(link => {
+              const active = link.href === '/dashboard'
+                ? path === '/dashboard'
+                : path.startsWith(link.href)
+              return (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className={`text-xs tracking-wide transition-colors ${
+                    active ? 'text-zinc-900 font-medium' : 'text-zinc-400 hover:text-zinc-900'
+                  }`}
+                >
+                  {link.label}
+                </a>
+              )
+            })}
           </div>
 
           <div className="flex items-center gap-4">
