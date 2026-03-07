@@ -147,6 +147,62 @@ export async function startJobAction(
 }
 
 /**
+ * Manually apply a checklist template to an already in-progress job.
+ * Used when no template was auto-applied at job start (e.g. job had no job
+ * type, or no template was linked to its job type at the time).
+ */
+export async function applyChecklistAction(
+  jobId: string,
+  templateId: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const { supabase, orgId } = await getOrgAndUser()
+
+  const { data: job } = await supabase
+    .from('jobs')
+    .select('id, status')
+    .eq('id', jobId)
+    .eq('organisation_id', orgId)
+    .single()
+
+  if (!job) return { ok: false, error: 'Job not found.' }
+  if (job.status !== 'in_progress') return { ok: false, error: 'Job must be in progress to apply a checklist.' }
+
+  const { data: template } = await supabase
+    .from('checklist_templates')
+    .select(`id, name, checklist_template_items (id, title, guidance, sort_order)`)
+    .eq('id', templateId)
+    .eq('organisation_id', orgId)
+    .order('sort_order', { referencedTable: 'checklist_template_items', ascending: true })
+    .single()
+
+  if (!template) return { ok: false, error: 'Template not found.' }
+
+  const { data: checklist, error: clErr } = await supabase
+    .from('job_checklists')
+    .insert({ organisation_id: orgId, job_id: jobId, template_id: template.id, template_name: template.name })
+    .select('id')
+    .single()
+
+  if (clErr) return { ok: false, error: 'A checklist already exists for this job.' }
+
+  if (checklist && (template.checklist_template_items as { id: string; title: string; guidance: string | null; sort_order: number }[])?.length > 0) {
+    await supabase.from('job_checklist_items').insert(
+      (template.checklist_template_items as { id: string; title: string; guidance: string | null; sort_order: number }[]).map(item => ({
+        organisation_id:  orgId,
+        job_checklist_id: checklist.id,
+        template_item_id: item.id,
+        title:            item.title,
+        guidance:         item.guidance ?? null,
+        sort_order:       item.sort_order,
+      }))
+    )
+  }
+
+  revalidatePath(`/dashboard/jobs/${jobId}`)
+  return { ok: true }
+}
+
+/**
  * Check or uncheck a single checklist item.
  * Available to all authenticated org members (team members included).
  * Only takes effect while the job is in_progress (enforced in the UI;

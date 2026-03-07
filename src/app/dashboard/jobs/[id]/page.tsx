@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { deleteJobAction } from '@/lib/actions/jobs'
-import { startJobAction, type TemplateChoice } from '@/lib/actions/checklist-completion'
+import { startJobAction, applyChecklistAction, type TemplateChoice } from '@/lib/actions/checklist-completion'
 import ChecklistSection from './_components/ChecklistSection'
 import type { JobChecklistWithItems } from '@/lib/types'
 
@@ -71,6 +71,11 @@ export default function JobDetailPage() {
   // Template selection modal (when multiple templates match a job type)
   const [templateChoices, setTemplateChoices] = useState<TemplateChoice[]>([])
   const [showTemplateModal, setShowTemplateModal] = useState(false)
+
+  // Manual checklist apply (in_progress job with no checklist)
+  const [availableTemplates, setAvailableTemplates] = useState<TemplateChoice[]>([])
+  const [showApplyModal, setShowApplyModal] = useState(false)
+  const [applyError, setApplyError] = useState<string | null>(null)
 
   // Incomplete items warning before marking completed
   const [showIncompleteWarning, setShowIncompleteWarning] = useState(false)
@@ -187,6 +192,32 @@ export default function JobDetailPage() {
     setUpdating(true)
     await supabase.from('jobs').update({ status: newStatus }).eq('id', jobId)
     setJob(prev => prev ? { ...prev, status: newStatus } : prev)
+    setUpdating(false)
+  }
+
+  // Open manual apply modal for in_progress jobs with no checklist
+  async function handleOpenApplyModal() {
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('checklist_templates')
+      .select('id, name')
+      .eq('organisation_id', orgId)
+      .eq('is_active', true)
+      .order('name', { ascending: true })
+    setAvailableTemplates(data ?? [])
+    setApplyError(null)
+    setShowApplyModal(true)
+  }
+
+  async function handleApplyChecklist(templateId: string) {
+    setUpdating(true)
+    setShowApplyModal(false)
+    const result = await applyChecklistAction(jobId, templateId)
+    if (!result.ok) {
+      setApplyError(result.error)
+    } else {
+      await loadChecklist()
+    }
     setUpdating(false)
   }
 
@@ -308,6 +339,40 @@ export default function JobDetailPage() {
         </div>
       )}
 
+      {/* Manual checklist apply modal */}
+      {showApplyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6">
+            <h2 className="text-sm font-medium text-zinc-900 mb-1">Apply a checklist</h2>
+            <p className="text-xs text-zinc-400 mb-4">
+              Choose a checklist template to attach to this job.
+            </p>
+            {availableTemplates.length === 0 ? (
+              <p className="text-xs text-zinc-400 mb-4">No active templates found. Create one in Settings → Checklists.</p>
+            ) : (
+              <div className="space-y-2 mb-4">
+                {availableTemplates.map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => handleApplyChecklist(t.id)}
+                    disabled={updating}
+                    className="w-full text-left text-sm text-zinc-900 border border-zinc-200 rounded-lg px-4 py-3 hover:bg-zinc-50 hover:border-zinc-400 transition-colors disabled:opacity-50"
+                  >
+                    {t.name}
+                  </button>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => setShowApplyModal(false)}
+              className="w-full text-xs text-zinc-300 hover:text-zinc-500 transition-colors py-1"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Incomplete checklist warning */}
       {showIncompleteWarning && checklist && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
@@ -412,6 +477,26 @@ export default function JobDetailPage() {
         {/* Checklist section — shown below header when a checklist exists */}
         {checklistLoaded && checklist && orgId && (
           <ChecklistSection checklist={checklist} jobStatus={job.status} orgId={orgId} />
+        )}
+
+        {/* No checklist — in_progress job where none was auto-applied */}
+        {checklistLoaded && !checklist && job.status === 'in_progress' && (
+          <div className="bg-white border border-zinc-200 rounded-lg px-5 py-6 mb-6 md:mb-8 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium text-zinc-900">No checklist attached</p>
+              <p className="text-xs text-zinc-400 mt-0.5">
+                No checklist template was applied when this job started. You can attach one now.
+              </p>
+              {applyError && <p className="text-xs text-red-500 mt-1">{applyError}</p>}
+            </div>
+            <button
+              onClick={handleOpenApplyModal}
+              disabled={updating}
+              className="flex-shrink-0 text-xs font-medium tracking-[0.12em] uppercase border border-zinc-200 text-zinc-600 px-4 py-2 rounded-full hover:border-zinc-400 transition-colors disabled:opacity-50"
+            >
+              Apply checklist
+            </button>
+          </div>
         )}
 
         {/* Pending checklist preview — shown while job is still scheduled */}
