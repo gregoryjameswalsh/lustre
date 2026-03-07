@@ -1,11 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
 import { getClientWithProperties } from '@/lib/queries/clients'
+import { getStages } from '@/lib/queries/pipeline'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import ActivityTimeline from '@/components/dashboard/ActivityTimeline'
 import { getClientActivities, getOpenFollowUps } from '@/lib/queries/activities'
 import DataPrivacySection from './_components/DataPrivacySection'
-import type { Property, JobWithRelations, ConsentRecord } from '@/lib/types'
+import PipelineCard from './_components/PipelineCard'
+import type { Property, JobWithRelations, ConsentRecord, ClientInPipeline, PipelineStage } from '@/lib/types'
 
 
 const serviceLabels: Record<string, string> = {
@@ -50,9 +52,10 @@ export default async function ClientProfilePage({
   const client = await getClientWithProperties(id)
   if (!client) notFound()
 
-  const [activities, followUps, { data: consentsData }] = await Promise.all([
+  const [activities, followUps, pipelineStages, { data: consentsData }] = await Promise.all([
     getClientActivities(id),
     getOpenFollowUps(id),
+    getStages(),
     supabase.from('consent_records').select('*').eq('client_id', id),
   ])
 
@@ -138,6 +141,14 @@ export default async function ClientProfilePage({
                 </div>
               </div>
             </div>
+
+            {/* Pipeline (shown only for leads in the pipeline) */}
+            {client.status === 'lead' && client.pipeline_stage_id && (
+              <PipelineCard
+                client={client as unknown as ClientInPipeline & { pipeline_stages?: { name: string; colour: string | null } | null; pipeline_assigned_profile?: { full_name: string | null } | null }}
+                allStages={pipelineStages as PipelineStage[]}
+              />
+            )}
 
             {/* Notes */}
             {client.notes && (
