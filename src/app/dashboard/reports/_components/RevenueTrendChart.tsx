@@ -1,20 +1,26 @@
 'use client'
 
 import { useState } from 'react'
-import type { DailyRevenue, RevenueBasis } from '@/lib/queries/analytics'
+import type { TrendPoint, RevenueBasis } from '@/lib/queries/analytics'
 
-const gbp = new Intl.NumberFormat('en-GB', {
-  style: 'currency',
-  currency: 'GBP',
-  maximumFractionDigits: 0,
-})
+const gbp = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })
 
 interface Props {
-  data: DailyRevenue[]
+  data: TrendPoint[]
   basis: RevenueBasis
+  groupBy?: 'day' | 'week'
+  days: number
 }
 
-export default function RevenueTrendChart({ data, basis }: Props) {
+function formatDateLabel(iso: string, groupBy: 'day' | 'week'): string {
+  const d = new Date(iso + 'T00:00:00')
+  if (groupBy === 'week') {
+    return `w/c ${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
+  }
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+}
+
+export default function RevenueTrendChart({ data, basis, groupBy = 'day', days }: Props) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
   const hasRevenue = data.some(d => d.revenue > 0)
@@ -24,7 +30,7 @@ export default function RevenueTrendChart({ data, basis }: Props) {
       <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
         <div className="px-6 py-4 border-b border-zinc-100">
           <h2 className="text-sm font-medium tracking-tight text-zinc-900">
-            Revenue — Last 30 Days
+            Revenue — Last {days} Days
           </h2>
         </div>
         <div className="flex flex-col items-center justify-center py-16 px-6">
@@ -40,13 +46,7 @@ export default function RevenueTrendChart({ data, basis }: Props) {
 
   const maxRevenue = Math.max(...data.map(d => d.revenue), 1)
   const totalRevenue = data.reduce((s, d) => s + d.revenue, 0)
-
-  // Chart dimensions
   const CHART_H = 120
-  const BAR_GAP = 2
-  // We'll use percentage widths via flex, so no fixed widths needed
-
-  // Y-axis labels: 0, mid, max
   const yMid = maxRevenue / 2
 
   function formatShort(v: number) {
@@ -54,15 +54,11 @@ export default function RevenueTrendChart({ data, basis }: Props) {
     return `£${Math.round(v)}`
   }
 
-  function formatDateLabel(iso: string) {
-    const d = new Date(iso + 'T00:00:00')
-    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-  }
-
-  // Show date labels every 7 days to avoid crowding
+  // Show date labels at sensible intervals
   const labelIndices = new Set<number>()
   labelIndices.add(0)
-  for (let i = 6; i < data.length; i += 7) labelIndices.add(i)
+  const step = groupBy === 'week' ? 4 : 7
+  for (let i = step; i < data.length; i += step) labelIndices.add(i)
   labelIndices.add(data.length - 1)
 
   const hovered = hoveredIndex !== null ? data[hoveredIndex] : null
@@ -72,23 +68,23 @@ export default function RevenueTrendChart({ data, basis }: Props) {
       <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
         <div>
           <h2 className="text-sm font-medium tracking-tight text-zinc-900">
-            Revenue — Last 30 Days
+            Revenue — Last {days} Days
           </h2>
           {hovered ? (
             <p className="text-xs text-zinc-400 mt-0.5">
-              {formatDateLabel(hovered.date)}{' '}
+              {formatDateLabel(hovered.date, groupBy)}{' '}
               <span className="text-zinc-900 font-medium">{gbp.format(hovered.revenue)}</span>
             </p>
           ) : (
             <p className="text-xs text-zinc-400 mt-0.5">
               Total: <span className="text-zinc-900 font-medium">{gbp.format(totalRevenue)}</span>
+              {groupBy === 'week' && <span className="ml-1 text-zinc-300">· weekly</span>}
             </p>
           )}
         </div>
       </div>
 
       <div className="px-6 pt-4 pb-2">
-        {/* Y-axis + bars */}
         <div className="flex gap-3">
           {/* Y-axis labels */}
           <div
@@ -102,18 +98,14 @@ export default function RevenueTrendChart({ data, basis }: Props) {
 
           {/* Bars */}
           <div className="flex-1 relative">
-            {/* Horizontal grid lines */}
+            {/* Grid lines */}
             <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
               <div className="border-t border-zinc-100 w-full" />
               <div className="border-t border-zinc-100 w-full" />
               <div className="border-t border-zinc-100 w-full" />
             </div>
 
-            {/* Bar group */}
-            <div
-              className="relative flex items-end gap-px"
-              style={{ height: CHART_H }}
-            >
+            <div className="relative flex items-end gap-px" style={{ height: CHART_H }}>
               {data.map((d, i) => {
                 const heightPct = maxRevenue > 0 ? (d.revenue / maxRevenue) * 100 : 0
                 const isHovered = hoveredIndex === i
@@ -145,7 +137,7 @@ export default function RevenueTrendChart({ data, basis }: Props) {
           </div>
         </div>
 
-        {/* X-axis date labels */}
+        {/* X-axis labels */}
         <div className="flex mt-1 pl-10">
           {data.map((d, i) => (
             <div key={d.date} className="flex-1 relative">
@@ -154,7 +146,7 @@ export default function RevenueTrendChart({ data, basis }: Props) {
                   className="absolute text-[9px] text-zinc-300 whitespace-nowrap"
                   style={{ transform: 'translateX(-50%)', left: '50%' }}
                 >
-                  {formatDateLabel(d.date)}
+                  {formatDateLabel(d.date, groupBy)}
                 </span>
               )}
             </div>
