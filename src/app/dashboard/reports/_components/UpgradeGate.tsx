@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import type { Plan } from '@/lib/types'
-import { planAtLeast } from '@/lib/queries/analytics'
+import { planAtLeast } from '@/lib/utils/plan'
 
 interface Props {
   plan: Plan

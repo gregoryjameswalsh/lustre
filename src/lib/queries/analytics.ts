@@ -6,6 +6,9 @@
 import { createClient } from '@/lib/supabase/server'
 import type { Plan } from '@/lib/types'
 
+// Re-export client-safe plan utilities so callers can import from one place.
+export { planAtLeast } from '@/lib/utils/plan'
+
 export type RevenueBasis = 'earned' | 'committed'
 
 // 'earned'    = completed jobs (money in / realised revenue)
@@ -36,20 +39,6 @@ async function getOrgContext(): Promise<OrgContext> {
     orgId: profile.organisation_id,
     plan: org?.plan ?? 'starter',
   }
-}
-
-// ── Plan utilities ────────────────────────────────────────────────────────────
-
-const PLAN_ORDER: Record<Plan, number> = {
-  free: 0,
-  starter: 1,
-  professional: 2,
-  business: 3,
-  enterprise: 4,
-}
-
-export function planAtLeast(current: Plan, required: Plan): boolean {
-  return PLAN_ORDER[current] >= PLAN_ORDER[required]
 }
 
 // ── KPI Data ──────────────────────────────────────────────────────────────────
