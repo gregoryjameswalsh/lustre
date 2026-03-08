@@ -53,7 +53,7 @@ export default async function GdprPage() {
   const { requests } = await getData()
 
   return (
-    <div className="min-h-screen bg-[#f9f8f5]">
+    <div className="min-h-screen bg-[#F9FAFB]">
       <main className="mx-auto max-w-2xl px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
 
         <div className="mb-8">
@@ -108,7 +108,7 @@ export default async function GdprPage() {
                         href={req.export_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-shrink-0 text-xs text-[#4a5c4e] hover:underline"
+                        className="flex-shrink-0 text-xs text-[#3D7A5F] hover:underline"
                       >
                         Download ↓
                       </a>

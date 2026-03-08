@@ -15,7 +15,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="rounded-full bg-[#4a5c4e] px-5 py-2.5 text-xs font-medium uppercase tracking-widest text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+      className="rounded-lg bg-[#1A3329] px-5 py-2.5 text-xs font-medium uppercase tracking-widest text-white transition-opacity hover:opacity-90 disabled:opacity-50"
     >
       {pending ? 'Saving…' : 'Update name'}
     </button>
@@ -58,7 +58,7 @@ export default function NameForm({ currentName }: { currentName: string }) {
           autoComplete="name"
           required
           defaultValue={currentName}
-          className="w-full max-w-sm rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm text-[#0c0c0b] placeholder-zinc-300 outline-none transition focus:border-[#4a5c4e] focus:ring-2 focus:ring-[#4a5c4e]/10"
+          className="w-full max-w-sm rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm text-[#0c0c0b] placeholder-zinc-300 outline-none transition focus:border-[#1A3329] focus:ring-2 focus:ring-[#4a5c4e]/10"
         />
       </div>
 

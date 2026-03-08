@@ -37,7 +37,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
   const addonItems = quote.quote_line_items.filter(i => i.is_addon).sort((a, b) => a.sort_order - b.sort_order)
 
   return (
-    <div className="min-h-screen bg-[#f9f8f5]">
+    <div className="min-h-screen bg-[#F9FAFB]">
       <main className="mx-auto max-w-3xl px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
 
         {/* Back */}

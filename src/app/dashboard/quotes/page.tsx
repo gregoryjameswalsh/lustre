@@ -50,7 +50,7 @@ export default async function QuotesPage({ searchParams }: QuotesPageProps) {
   const quotes = await getQuotes(statusFilter)
 
   return (
-    <div className="min-h-screen bg-[#f9f8f5]">
+    <div className="min-h-screen bg-[#F9FAFB]">
       <div className="mx-auto max-w-6xl px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
 
         {/* Header */}
@@ -61,7 +61,7 @@ export default async function QuotesPage({ searchParams }: QuotesPageProps) {
           </div>
           <Link
             href="/dashboard/quotes/new"
-            className="self-start rounded-full bg-[#4a5c4e] px-5 py-2.5 text-xs font-medium uppercase tracking-widest text-white transition-opacity hover:opacity-90"
+            className="self-start rounded-lg bg-[#1A3329] px-5 py-2.5 text-xs font-medium uppercase tracking-widest text-white transition-opacity hover:opacity-90"
           >
             + New quote
           </Link>
@@ -75,9 +75,9 @@ export default async function QuotesPage({ searchParams }: QuotesPageProps) {
               <Link
                 key={s}
                 href={`/dashboard/quotes?status=${s}`}
-                className={`rounded-full px-3 py-1.5 text-xs font-medium capitalize whitespace-nowrap transition-colors ${
+                className={`rounded-lg px-3 py-1.5 text-xs font-medium capitalize whitespace-nowrap transition-colors ${
                   active
-                    ? 'bg-[#4a5c4e] text-white'
+                    ? 'bg-[#1A3329] text-white'
                     : 'bg-white text-zinc-500 hover:bg-zinc-100'
                 }`}
               >
@@ -93,7 +93,7 @@ export default async function QuotesPage({ searchParams }: QuotesPageProps) {
             <p className="text-sm text-zinc-400">No quotes yet.</p>
             <Link
               href="/dashboard/quotes/new"
-              className="mt-3 inline-block text-sm text-[#4a5c4e] hover:underline"
+              className="mt-3 inline-block text-sm text-[#3D7A5F] hover:underline"
             >
               Create your first quote
             </Link>
@@ -169,7 +169,7 @@ export default async function QuotesPage({ searchParams }: QuotesPageProps) {
                       <td className="px-4 py-3 text-right">
                         <Link
                           href={`/dashboard/quotes/${quote.id}`}
-                          className="text-xs text-[#4a5c4e] hover:underline"
+                          className="text-xs text-[#3D7A5F] hover:underline"
                         >
                           View
                         </Link>

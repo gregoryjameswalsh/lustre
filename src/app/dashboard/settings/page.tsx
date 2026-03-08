@@ -50,7 +50,7 @@ export default async function SettingsPage() {
   if (!org) redirect('/login')
 
   return (
-    <div className="min-h-screen bg-[#f9f8f5]">
+    <div className="min-h-screen bg-[#F9FAFB]">
       <main className="mx-auto max-w-2xl px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
 
         <div className="mb-8">
@@ -112,7 +112,7 @@ export default async function SettingsPage() {
               <div className="p-5">
                 <Link
                   href="/dashboard/settings/job-types"
-                  className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-5 py-2.5 rounded-full hover:border-zinc-400 hover:text-zinc-700 transition-colors inline-block"
+                  className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-5 py-2.5 rounded-lg hover:border-zinc-400 hover:text-zinc-700 transition-colors inline-block"
                 >
                   Manage job types
                 </Link>
@@ -134,7 +134,7 @@ export default async function SettingsPage() {
               <div className="p-5">
                 <Link
                   href="/dashboard/settings/checklists"
-                  className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-5 py-2.5 rounded-full hover:border-zinc-400 hover:text-zinc-700 transition-colors inline-block"
+                  className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-5 py-2.5 rounded-lg hover:border-zinc-400 hover:text-zinc-700 transition-colors inline-block"
                 >
                   Manage checklists
                 </Link>
@@ -156,7 +156,7 @@ export default async function SettingsPage() {
             <div className="p-5">
               <Link
                 href="/dashboard/settings/team"
-                className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-5 py-2.5 rounded-full hover:border-zinc-400 hover:text-zinc-700 transition-colors inline-block"
+                className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-5 py-2.5 rounded-lg hover:border-zinc-400 hover:text-zinc-700 transition-colors inline-block"
               >
                 Manage team
               </Link>
@@ -175,7 +175,7 @@ export default async function SettingsPage() {
               <div className="p-5">
                 <Link
                   href="/dashboard/settings/roles"
-                  className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-5 py-2.5 rounded-full hover:border-zinc-400 hover:text-zinc-700 transition-colors inline-block"
+                  className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-5 py-2.5 rounded-lg hover:border-zinc-400 hover:text-zinc-700 transition-colors inline-block"
                 >
                   Manage roles
                 </Link>
@@ -195,7 +195,7 @@ export default async function SettingsPage() {
               <div className="p-5">
                 <Link
                   href="/dashboard/settings/gdpr"
-                  className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-5 py-2.5 rounded-full hover:border-zinc-400 hover:text-zinc-700 transition-colors inline-block"
+                  className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-5 py-2.5 rounded-lg hover:border-zinc-400 hover:text-zinc-700 transition-colors inline-block"
                 >
                   View GDPR requests
                 </Link>
@@ -224,7 +224,7 @@ export default async function SettingsPage() {
               <div className="p-5">
                 <Link
                   href="/dashboard/settings/billing"
-                  className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-5 py-2.5 rounded-full hover:border-zinc-400 hover:text-zinc-700 transition-colors inline-block"
+                  className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-5 py-2.5 rounded-lg hover:border-zinc-400 hover:text-zinc-700 transition-colors inline-block"
                 >
                   Manage billing
                 </Link>
@@ -257,7 +257,7 @@ export default async function SettingsPage() {
                 <form action="/auth/signout" method="post">
                   <button
                     type="submit"
-                    className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-5 py-2.5 rounded-full hover:border-zinc-400 hover:text-zinc-700 transition-colors"
+                    className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-5 py-2.5 rounded-lg hover:border-zinc-400 hover:text-zinc-700 transition-colors"
                   >
                     Sign out
                   </button>
@@ -287,7 +287,7 @@ export default async function SettingsPage() {
                   <Link
                     key={href}
                     href={href}
-                    className="text-xs font-medium tracking-[0.12em] uppercase border border-zinc-200 text-zinc-500 px-4 py-2 rounded-full hover:border-zinc-400 hover:text-zinc-700 transition-colors"
+                    className="text-xs font-medium tracking-[0.12em] uppercase border border-zinc-200 text-zinc-500 px-4 py-2 rounded-lg hover:border-zinc-400 hover:text-zinc-700 transition-colors"
                   >
                     {label}
                   </Link>

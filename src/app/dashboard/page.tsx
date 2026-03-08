@@ -64,12 +64,12 @@ function getGreeting() {
   const allFollowUps = await getAllOpenFollowUps()
 
   return (
-    <div className="min-h-screen bg-[#f9f8f5]">
+    <div className="min-h-screen bg-[#F9FAFB]">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-4 md:pt-24 md:pb-16">
 
         {/* Header */}
         <div className="mb-6 md:mb-10">
-          <p className="text-xs font-medium tracking-[0.3em] uppercase text-[#4a5c4e] mb-2">
+          <p className="text-xs font-medium tracking-[0.3em] uppercase text-[#3D7A5F] mb-2">
             Overview
           </p>
           <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-zinc-900">
@@ -121,7 +121,7 @@ function getGreeting() {
               {!upcomingJobs || upcomingJobs.length === 0 ? (
                 <div className="px-6 py-8 text-center">
                   <p className="text-xs text-zinc-300 tracking-wide">No upcoming jobs</p>
-                  <Link href="/dashboard/jobs/new" className="text-xs text-[#4a5c4e] mt-2 inline-block hover:underline">
+                  <Link href="/dashboard/jobs/new" className="text-xs text-[#3D7A5F] mt-2 inline-block hover:underline">
                     Schedule one →
                   </Link>
                 </div>
@@ -162,7 +162,7 @@ function getGreeting() {
               {!recentClients || recentClients.length === 0 ? (
                 <div className="px-6 py-8 text-center">
                   <p className="text-xs text-zinc-300 tracking-wide">No clients yet</p>
-                  <Link href="/dashboard/clients/new" className="text-xs text-[#4a5c4e] mt-2 inline-block hover:underline">
+                  <Link href="/dashboard/clients/new" className="text-xs text-[#3D7A5F] mt-2 inline-block hover:underline">
                     Add your first →
                   </Link>
                 </div>
@@ -174,7 +174,7 @@ function getGreeting() {
                     className="px-6 py-4 flex items-center justify-between hover:bg-zinc-50 transition-colors block"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-xs font-medium text-zinc-600">
+                      <div className="w-8 h-8 rounded-full bg-[#C8F5D7] flex items-center justify-center text-xs font-medium text-[#1A3329]">
                         {client.first_name[0]}{client.last_name[0]}
                       </div>
                       <div>
@@ -258,13 +258,13 @@ function getGreeting() {
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
             href="/dashboard/clients/new"
-            className="text-xs font-medium tracking-[0.15em] uppercase bg-zinc-900 text-[#f9f8f5] px-5 py-3 rounded-full hover:bg-[#4a5c4e] transition-colors"
+            className="text-xs font-medium tracking-[0.15em] uppercase bg-[#1A3329] text-white px-5 py-3 rounded-lg hover:bg-[#3D7A5F] transition-colors"
           >
             + Add Client
           </Link>
           <Link
             href="/dashboard/jobs/new"
-            className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-600 px-5 py-3 rounded-full hover:border-zinc-400 transition-colors"
+            className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-600 px-5 py-3 rounded-lg hover:border-zinc-400 transition-colors"
           >
             + Schedule Job
           </Link>

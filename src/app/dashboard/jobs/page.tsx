@@ -30,14 +30,14 @@ export default async function JobsPage() {
   const cancelled  = jobs.filter(j => j.status === 'cancelled')
 
   return (
-    <div className="min-h-screen bg-[#f9f8f5]">
+    <div className="min-h-screen bg-[#F9FAFB]">
 
       <main className="max-w-7xl mx-auto px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
 
         {/* Header */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-6 md:mb-8">
           <div>
-            <p className="text-xs font-medium tracking-[0.3em] uppercase text-[#4a5c4e] mb-2">Operations</p>
+            <p className="text-xs font-medium tracking-[0.3em] uppercase text-[#3D7A5F] mb-2">Operations</p>
             <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-zinc-900">
               Jobs
               <span className="text-zinc-300 ml-3 text-xl sm:text-2xl">{jobs.length}</span>
@@ -45,7 +45,7 @@ export default async function JobsPage() {
           </div>
           <Link
             href="/dashboard/jobs/new"
-            className="self-start sm:self-auto text-xs font-medium tracking-[0.15em] uppercase bg-zinc-900 text-[#f9f8f5] px-5 py-3 rounded-full hover:bg-[#4a5c4e] transition-colors"
+            className="self-start sm:self-auto text-xs font-medium tracking-[0.15em] uppercase bg-[#1A3329] text-white px-5 py-3 rounded-lg hover:bg-[#3D7A5F] transition-colors"
           >
             + Schedule Job
           </Link>
@@ -74,7 +74,7 @@ export default async function JobsPage() {
         {jobs.length === 0 ? (
           <div className="bg-white border border-zinc-200 rounded-lg px-8 py-16 text-center">
             <p className="text-sm text-zinc-300 tracking-wide mb-3">No jobs yet</p>
-            <Link href="/dashboard/jobs/new" className="text-xs text-[#4a5c4e] hover:underline">
+            <Link href="/dashboard/jobs/new" className="text-xs text-[#3D7A5F] hover:underline">
               Schedule the first →
             </Link>
           </div>

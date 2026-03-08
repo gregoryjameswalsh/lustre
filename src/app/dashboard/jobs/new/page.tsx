@@ -259,13 +259,13 @@ function NewJobForm() {
           <button
             type="submit"
             disabled={loading}
-            className="text-xs font-medium tracking-[0.15em] uppercase bg-zinc-900 text-[#f9f8f5] px-6 py-3 rounded-full hover:bg-[#4a5c4e] transition-colors disabled:opacity-50"
+            className="text-xs font-medium tracking-[0.15em] uppercase bg-[#1A3329] text-white px-6 py-3 rounded-lg hover:bg-[#3D7A5F] transition-colors disabled:opacity-50"
           >
             {loading ? 'Saving…' : 'Schedule Job'}
           </button>
           <Link
             href="/dashboard/jobs"
-            className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-6 py-3 rounded-full hover:border-zinc-400 transition-colors"
+            className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-6 py-3 rounded-lg hover:border-zinc-400 transition-colors"
           >
             Cancel
           </Link>
@@ -278,7 +278,7 @@ function NewJobForm() {
 
 export default function NewJobPage() {
   return (
-    <div className="min-h-screen bg-[#f9f8f5]">
+    <div className="min-h-screen bg-[#F9FAFB]">
       <Suspense fallback={
         <main className="max-w-3xl mx-auto px-4 pt-8 sm:px-6 md:pt-24">
           <div className="text-sm text-zinc-300">Loading…</div>

@@ -15,7 +15,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="rounded-full bg-[#4a5c4e] px-5 py-2.5 text-xs font-medium uppercase tracking-widest text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+      className="rounded-lg bg-[#1A3329] px-5 py-2.5 text-xs font-medium uppercase tracking-widest text-white transition-opacity hover:opacity-90 disabled:opacity-50"
     >
       {pending ? 'Saving…' : 'Save'}
     </button>
@@ -65,7 +65,7 @@ export default function VatSettingsForm({ vatRegistered, vatRate, vatNumber, isA
           onClick={() => isAdmin && setIsRegistered(!isRegistered)}
           disabled={!isAdmin}
           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-            isRegistered ? 'bg-[#4a5c4e]' : 'bg-zinc-200'
+            isRegistered ? 'bg-[#1A3329]' : 'bg-zinc-200'
           } ${!isAdmin ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
@@ -89,7 +89,7 @@ export default function VatSettingsForm({ vatRegistered, vatRate, vatNumber, isA
               step="0.1"
               defaultValue={vatRate}
               disabled={!isAdmin}
-              className="w-32 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-[#0c0c0b] outline-none focus:border-[#4a5c4e] focus:ring-2 focus:ring-[#4a5c4e]/10 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-32 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-[#0c0c0b] outline-none focus:border-[#1A3329] focus:ring-2 focus:ring-[#4a5c4e]/10 disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
           <div>
@@ -100,7 +100,7 @@ export default function VatSettingsForm({ vatRegistered, vatRate, vatNumber, isA
               defaultValue={vatNumber}
               placeholder="GB123456789"
               disabled={!isAdmin}
-              className="w-full max-w-xs rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-[#0c0c0b] placeholder-zinc-300 outline-none focus:border-[#4a5c4e] focus:ring-2 focus:ring-[#4a5c4e]/10 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full max-w-xs rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-[#0c0c0b] placeholder-zinc-300 outline-none focus:border-[#1A3329] focus:ring-2 focus:ring-[#4a5c4e]/10 disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <p className="mt-1 text-xs text-zinc-400">Format: GB followed by 9 digits</p>
           </div>

@@ -35,7 +35,7 @@ export default async function EditRolePage({ params }: { params: Promise<{ id: s
   }
 
   return (
-    <div className="min-h-screen bg-[#f9f8f5]">
+    <div className="min-h-screen bg-[#F9FAFB]">
       <main className="mx-auto max-w-2xl px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
 
         <div className="mb-8">

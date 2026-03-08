@@ -30,7 +30,7 @@ function SubmitButton({ label, pendingLabel }: { label: string; pendingLabel: st
     <button
       type="submit"
       disabled={pending}
-      className="rounded-full bg-[#4a5c4e] px-5 py-2.5 text-xs font-medium uppercase tracking-widest text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+      className="rounded-lg bg-[#1A3329] px-5 py-2.5 text-xs font-medium uppercase tracking-widest text-white transition-opacity hover:opacity-90 disabled:opacity-50"
     >
       {pending ? pendingLabel : label}
     </button>
@@ -43,7 +43,7 @@ function DestructiveButton({ label, pendingLabel }: { label: string; pendingLabe
     <button
       type="submit"
       disabled={pending}
-      className="rounded-full border border-red-200 px-5 py-2.5 text-xs font-medium uppercase tracking-widest text-red-600 transition-colors hover:border-red-400 hover:text-red-700 disabled:opacity-50"
+      className="rounded-lg border border-red-200 px-5 py-2.5 text-xs font-medium uppercase tracking-widest text-red-600 transition-colors hover:border-red-400 hover:text-red-700 disabled:opacity-50"
     >
       {pending ? pendingLabel : label}
     </button>
@@ -132,7 +132,7 @@ function NoneState({ isAdmin }: { isAdmin: boolean }) {
               placeholder="quotes@yourcompany.co.uk"
               maxLength={254}
               required
-              className="w-full max-w-sm rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-[#0c0c0b] placeholder-zinc-300 outline-none focus:border-[#4a5c4e] focus:ring-2 focus:ring-[#4a5c4e]/10"
+              className="w-full max-w-sm rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-[#0c0c0b] placeholder-zinc-300 outline-none focus:border-[#1A3329] focus:ring-2 focus:ring-[#4a5c4e]/10"
             />
             <p className="mt-1 text-xs text-zinc-400">
               You&apos;ll need to add a few DNS records to verify ownership of this domain.

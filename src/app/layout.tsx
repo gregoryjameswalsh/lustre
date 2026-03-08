@@ -1,22 +1,28 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import { createClient } from "@/lib/supabase/server";
 import { PostHogProvider } from "@/components/PostHogProvider";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-instrument-serif",
+  weight: "400",
+  subsets: ["latin"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
   title: "Lustre",
-  description: "Cleaning business management",
+  description: "The CRM built for UK cleaning and property maintenance businesses",
 };
 
 export const viewport: Viewport = {
@@ -34,9 +40,9 @@ export default async function RootLayout({
   const { data: { user } } = await supabase.auth.getUser()
 
   return (
-    <html lang="en">
+    <html lang="en-GB">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable} antialiased`}
       >
         <PostHogProvider userId={user?.id} email={user?.email}>
           {children}

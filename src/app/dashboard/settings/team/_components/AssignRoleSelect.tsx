@@ -43,7 +43,7 @@ export default function AssignRoleSelect({
           value={selected}
           onChange={e => { setSelected(e.target.value); setError(null) }}
           disabled={pending}
-          className="rounded-full border border-zinc-200 bg-white px-2.5 py-0.5 text-xs text-zinc-600 outline-none focus:border-[#4a5c4e] disabled:opacity-50 cursor-pointer max-w-[160px]"
+          className="rounded-lg border border-zinc-200 bg-white px-2.5 py-0.5 text-xs text-zinc-600 outline-none focus:border-[#1A3329] disabled:opacity-50 cursor-pointer max-w-[160px]"
         >
           {roles.map(role => (
             <option key={role.id} value={role.id}>{role.name}</option>
@@ -53,7 +53,7 @@ export default function AssignRoleSelect({
           <button
             onClick={handleSave}
             disabled={pending}
-            className="rounded-full bg-zinc-900 px-2.5 py-0.5 text-xs font-medium text-white hover:bg-zinc-700 transition-colors disabled:opacity-50"
+            className="rounded-lg bg-[#1A3329] px-2.5 py-0.5 text-xs font-medium text-white hover:bg-zinc-700 transition-colors disabled:opacity-50"
           >
             {pending ? 'Saving…' : 'Save'}
           </button>

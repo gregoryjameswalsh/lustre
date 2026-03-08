@@ -235,13 +235,13 @@ export default function ActivityTimeline({ clientId, initialActivities, initialF
       <div className="flex items-center gap-2">
         <button
           onClick={() => { setShowForm(!showForm); setShowFollowUpForm(false) }}
-          className="text-xs font-medium tracking-[0.12em] uppercase bg-zinc-900 text-[#f9f8f5] px-4 py-2.5 rounded-full hover:bg-[#4a5c4e] transition-colors"
+          className="text-xs font-medium tracking-[0.12em] uppercase bg-[#1A3329] text-white px-4 py-2.5 rounded-lg hover:bg-[#3D7A5F] transition-colors"
         >
           + Log Activity
         </button>
         <button
           onClick={() => { setShowFollowUpForm(!showFollowUpForm); setShowForm(false) }}
-          className="text-xs font-medium tracking-[0.12em] uppercase border border-zinc-200 text-zinc-600 px-4 py-2.5 rounded-full hover:border-zinc-400 transition-colors"
+          className="text-xs font-medium tracking-[0.12em] uppercase border border-zinc-200 text-zinc-600 px-4 py-2.5 rounded-lg hover:border-zinc-400 transition-colors"
         >
           + Follow-up
         </button>
@@ -262,9 +262,9 @@ export default function ActivityTimeline({ clientId, initialActivities, initialF
                     key={t}
                     type="button"
                     onClick={() => setLogType(t)}
-                    className={`text-xs px-3 py-1.5 rounded-full font-medium tracking-wide transition-colors border ${
+                    className={`text-xs px-3 py-1.5 rounded-lg font-medium tracking-wide transition-colors border ${
                       logType === t
-                        ? 'bg-zinc-900 text-white border-zinc-900'
+                        ? 'bg-[#1A3329] text-white border-zinc-900'
                         : 'bg-white text-zinc-500 border-zinc-200 hover:border-zinc-400'
                     }`}
                   >
@@ -295,7 +295,7 @@ export default function ActivityTimeline({ clientId, initialActivities, initialF
             </div>
 
             <div className="flex items-center gap-2">
-              <input type="checkbox" name="pinned" id="pinned" className="accent-[#4a5c4e]" />
+              <input type="checkbox" name="pinned" id="pinned" className="accent-[#1A3329]" />
               <label htmlFor="pinned" className="text-xs text-zinc-500 cursor-pointer">
                 Pin to top of timeline
               </label>
@@ -304,7 +304,7 @@ export default function ActivityTimeline({ clientId, initialActivities, initialF
             <div className="border-t border-zinc-100 pt-4">
               <div className="flex items-center gap-2 mb-3">
                 <input type="checkbox" name="add_follow_up" id="add_follow_up"
-                  className="accent-[#4a5c4e]"
+                  className="accent-[#1A3329]"
                   onChange={e => {
                     const el = document.getElementById('follow_up_fields')
                     if (el) el.style.display = e.target.checked ? 'block' : 'none'
@@ -339,7 +339,7 @@ export default function ActivityTimeline({ clientId, initialActivities, initialF
               <button
                 type="submit"
                 disabled={saving}
-                className="text-xs font-medium tracking-[0.12em] uppercase bg-zinc-900 text-[#f9f8f5] px-5 py-2.5 rounded-full hover:bg-[#4a5c4e] transition-colors disabled:opacity-50"
+                className="text-xs font-medium tracking-[0.12em] uppercase bg-[#1A3329] text-white px-5 py-2.5 rounded-lg hover:bg-[#3D7A5F] transition-colors disabled:opacity-50"
               >
                 {saving ? 'Saving…' : 'Save'}
               </button>
@@ -389,7 +389,7 @@ export default function ActivityTimeline({ clientId, initialActivities, initialF
               <button
                 type="submit"
                 disabled={saving}
-                className="text-xs font-medium tracking-[0.12em] uppercase bg-zinc-900 text-[#f9f8f5] px-5 py-2.5 rounded-full hover:bg-[#4a5c4e] transition-colors disabled:opacity-50"
+                className="text-xs font-medium tracking-[0.12em] uppercase bg-[#1A3329] text-white px-5 py-2.5 rounded-lg hover:bg-[#3D7A5F] transition-colors disabled:opacity-50"
               >
                 {saving ? 'Saving…' : 'Add Follow-up'}
               </button>
@@ -428,11 +428,11 @@ export default function ActivityTimeline({ clientId, initialActivities, initialF
                 <div
                   key={activity.id}
                   className={`relative bg-white border rounded-lg overflow-hidden transition-all ${
-                    activity.pinned ? 'border-[#4a5c4e]' : 'border-zinc-200'
+                    activity.pinned ? 'border-[#1A3329]' : 'border-zinc-200'
                   }`}
                 >
                   {activity.pinned && (
-                    <div className="absolute top-0 left-0 right-0 h-0.5 bg-[#4a5c4e]" />
+                    <div className="absolute top-0 left-0 right-0 h-0.5 bg-[#1A3329]" />
                   )}
                   <div
                     className="px-5 py-4 flex items-start gap-4 cursor-pointer hover:bg-zinc-50 transition-colors"
@@ -449,7 +449,7 @@ export default function ActivityTimeline({ clientId, initialActivities, initialF
                           {config.label}
                         </span>
                         {activity.pinned && (
-                          <span className="text-xs text-[#4a5c4e] font-medium">📌 Pinned</span>
+                          <span className="text-xs text-[#3D7A5F] font-medium">📌 Pinned</span>
                         )}
                       </div>
                       {activity.title && (
@@ -500,7 +500,7 @@ export default function ActivityTimeline({ clientId, initialActivities, initialF
                     <div className="px-5 pb-3 flex items-center gap-4 border-t border-zinc-50">
                       <button
                         onClick={() => togglePin(activity)}
-                        className="text-xs text-zinc-400 hover:text-[#4a5c4e] transition-colors mt-2"
+                        className="text-xs text-zinc-400 hover:text-[#3D7A5F] transition-colors mt-2"
                       >
                         {activity.pinned ? 'Unpin' : 'Pin to top'}
                       </button>

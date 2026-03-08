@@ -18,14 +18,14 @@ export default async function ClientsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f9f8f5]">
+    <div className="min-h-screen bg-[#F9FAFB]">
 
       <main className="max-w-7xl mx-auto px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
 
         {/* Header */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-6 md:mb-8">
           <div>
-            <p className="text-xs font-medium tracking-[0.3em] uppercase text-[#4a5c4e] mb-2">
+            <p className="text-xs font-medium tracking-[0.3em] uppercase text-[#3D7A5F] mb-2">
               CRM
             </p>
             <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-zinc-900">
@@ -35,7 +35,7 @@ export default async function ClientsPage() {
           </div>
           <Link
             href="/dashboard/clients/new"
-            className="self-start sm:self-auto text-xs font-medium tracking-[0.15em] uppercase bg-zinc-900 text-[#f9f8f5] px-5 py-3 rounded-full hover:bg-[#4a5c4e] transition-colors"
+            className="self-start sm:self-auto text-xs font-medium tracking-[0.15em] uppercase bg-[#1A3329] text-white px-5 py-3 rounded-lg hover:bg-[#3D7A5F] transition-colors"
           >
             + Add Client
           </Link>
@@ -45,7 +45,7 @@ export default async function ClientsPage() {
         {clients.length === 0 ? (
           <div className="bg-white border border-zinc-200 rounded-lg px-8 py-16 text-center">
             <p className="text-sm text-zinc-300 tracking-wide mb-3">No clients yet</p>
-            <Link href="/dashboard/clients/new" className="text-xs text-[#4a5c4e] hover:underline">
+            <Link href="/dashboard/clients/new" className="text-xs text-[#3D7A5F] hover:underline">
               Add your first client →
             </Link>
           </div>
@@ -70,7 +70,7 @@ export default async function ClientsPage() {
                   {/* Mobile card */}
                   <div className="sm:hidden flex items-center justify-between px-4 py-4 gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 rounded-full bg-zinc-100 flex items-center justify-center text-xs font-medium text-zinc-600 flex-shrink-0">
+                      <div className="w-9 h-9 rounded-full bg-[#C8F5D7] flex items-center justify-center text-xs font-medium text-[#1A3329] flex-shrink-0">
                         {client.first_name[0]}{client.last_name[0]}
                       </div>
                       <div className="min-w-0">
@@ -87,7 +87,7 @@ export default async function ClientsPage() {
                   {/* Desktop row */}
                   <div className="hidden sm:grid grid-cols-[1fr_1fr_120px_80px] gap-4 px-6 py-4 items-center">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-xs font-medium text-zinc-600 flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-[#C8F5D7] flex items-center justify-center text-xs font-medium text-[#1A3329] flex-shrink-0">
                         {client.first_name[0]}{client.last_name[0]}
                       </div>
                       <span className="text-sm font-medium text-zinc-900">
