@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import {
   getRevenueKpis, getRevenueTrend, getTopClients,
   getQuoteFunnel, getPipelineHealth, getRevenueByServiceType,
+  getClientLifetimeValues, getTeamPerformance, getWinLossTrend,
 } from '@/lib/queries/analytics'
 import type { RevenueBasis, ClientRevenueSummary, TrendPoint } from '@/lib/queries/analytics'
 import { planAtLeast } from '@/lib/utils/plan'
@@ -17,6 +18,9 @@ import PipelineMetricCards from './_components/PipelineMetricCards'
 import UpgradeGate from './_components/UpgradeGate'
 import LockedPipelinePreview from './_components/LockedPipelinePreview'
 import LockedClientsPreview from './_components/LockedClientsPreview'
+import ClientLifetimeTable from './_components/ClientLifetimeTable'
+import TeamPerformanceChart from './_components/TeamPerformanceChart'
+import WinLossTrend from './_components/WinLossTrend'
 import CsvExportButton from './_components/CsvExportButton'
 
 export const metadata = { title: 'Reports — Lustre' }
@@ -42,7 +46,12 @@ export default async function ReportsPage({ searchParams }: PageProps) {
   // Cap days to plan entitlement
   const requestedDays = Number(params.days) || 30
   const isPro = planAtLeast(plan, 'professional')
-  const effectiveDays = isPro ? Math.min(requestedDays, 90) : 30
+  const isBusiness = planAtLeast(plan, 'business')
+  const effectiveDays = isBusiness
+    ? Math.min(requestedDays, 365)
+    : isPro
+    ? Math.min(requestedDays, 90)
+    : 30
 
   const groupBy = effectiveDays > 31 ? 'week' : 'day'
 
@@ -195,7 +204,28 @@ export default async function ReportsPage({ searchParams }: PageProps) {
     )
   }
 
-  // ── Clients & Team tab (Phase 3 — still locked) ───────────────────────────
+  // ── Clients & Team tab ────────────────────────────────────────────────────
+
+  const canViewClients = planAtLeast(plan, 'business')
+
+  const [clients, team, winLoss] = canViewClients
+    ? await Promise.all([
+        getClientLifetimeValues(),
+        getTeamPerformance(effectiveDays),
+        getWinLossTrend(12),
+      ])
+    : [[], [], []]
+
+  // CSV data for client LTV
+  const clientLtvCsvData = clients.map(c => ({
+    'Client': c.name,
+    'Total Revenue': c.totalRevenue,
+    'Jobs': c.jobCount,
+    'Avg Job Value': c.avgJobValue,
+    'First Job': c.firstJobDate ?? '',
+    'Last Job': c.lastJobDate ?? '',
+    'Churn Risk': c.churnRisk,
+  }))
 
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
@@ -211,6 +241,22 @@ export default async function ReportsPage({ searchParams }: PageProps) {
         >
           <LockedClientsPreview />
         </UpgradeGate>
+
+        {canViewClients && (
+          <>
+            {/* Client LTV table with optional CSV export */}
+            <div className="space-y-2">
+              <div className="flex justify-end">
+                <CsvExportButton data={clientLtvCsvData} filename="client-lifetime-value" label="Export clients" />
+              </div>
+              <ClientLifetimeTable clients={clients} />
+            </div>
+
+            <TeamPerformanceChart members={team} days={effectiveDays} />
+
+            <WinLossTrend data={winLoss} />
+          </>
+        )}
       </main>
     </div>
   )

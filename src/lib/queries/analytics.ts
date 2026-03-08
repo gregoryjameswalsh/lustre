@@ -526,3 +526,196 @@ export async function getRevenueByServiceType(
     }))
     .sort((a, b) => b.totalRevenue - a.totalRevenue)
 }
+
+// ── Client Lifetime Value (Business+) ─────────────────────────────────────────
+
+export type ChurnRisk = 'none' | 'at_risk' | 'high_risk'
+
+export interface ClientLifetimeValue {
+  clientId: string
+  name: string
+  email: string | null
+  totalRevenue: number
+  jobCount: number
+  avgJobValue: number
+  firstJobDate: string | null
+  lastJobDate: string | null
+  churnRisk: ChurnRisk  // at_risk = 61–90d, high_risk = 90d+, none otherwise
+}
+
+export async function getClientLifetimeValues(): Promise<ClientLifetimeValue[]> {
+  const supabase = await createClient()
+  const { orgId } = await getOrgContext()
+
+  const [{ data: clients }, { data: jobs }] = await Promise.all([
+    supabase
+      .from('clients')
+      .select('id, first_name, last_name, email')
+      .eq('organisation_id', orgId)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('jobs')
+      .select('client_id, price, completed_at')
+      .eq('organisation_id', orgId)
+      .eq('status', 'completed')
+      .not('price', 'is', null),
+  ])
+
+  // Build revenue map from jobs
+  type JobMap = Record<string, { total: number; count: number; first: string | null; last: string | null }>
+  const jobMap: JobMap = {}
+  for (const job of jobs ?? []) {
+    const cid = job.client_id as string
+    const d = job.completed_at as string | null
+    if (!jobMap[cid]) jobMap[cid] = { total: 0, count: 0, first: null, last: null }
+    jobMap[cid].total += job.price ?? 0
+    jobMap[cid].count += 1
+    if (d) {
+      if (!jobMap[cid].first || d < jobMap[cid].first!) jobMap[cid].first = d
+      if (!jobMap[cid].last  || d > jobMap[cid].last!)  jobMap[cid].last  = d
+    }
+  }
+
+  const now = Date.now()
+  const DAY = 86400000
+
+  return (clients ?? []).map(c => {
+    const stats = jobMap[c.id as string]
+    const lastJobDate = stats?.last ?? null
+    const daysSinceLast = lastJobDate
+      ? Math.floor((now - new Date(lastJobDate).getTime()) / DAY)
+      : null
+
+    let churnRisk: ChurnRisk = 'none'
+    if (daysSinceLast !== null && stats && stats.count > 0) {
+      if (daysSinceLast > 90) churnRisk = 'high_risk'
+      else if (daysSinceLast > 60) churnRisk = 'at_risk'
+    }
+
+    const jobCount = stats?.count ?? 0
+    const totalRevenue = stats?.total ?? 0
+
+    return {
+      clientId: c.id as string,
+      name: `${c.first_name} ${c.last_name}`,
+      email: (c.email as string | null),
+      totalRevenue,
+      jobCount,
+      avgJobValue: jobCount > 0 ? totalRevenue / jobCount : 0,
+      firstJobDate: stats?.first ?? null,
+      lastJobDate,
+      churnRisk,
+    }
+  }).sort((a, b) => b.totalRevenue - a.totalRevenue)
+}
+
+// ── Team Performance (Business+) ─────────────────────────────────────────────
+
+export interface TeamMemberPerformance {
+  profileId: string
+  name: string
+  jobCount: number
+  totalRevenue: number
+  avgJobValue: number
+}
+
+export async function getTeamPerformance(days: number = 365): Promise<TeamMemberPerformance[]> {
+  const supabase = await createClient()
+  const { orgId } = await getOrgContext()
+
+  const since = new Date(Date.now() - days * 86400000).toISOString()
+
+  const [{ data: jobs }, { data: profiles }] = await Promise.all([
+    supabase
+      .from('jobs')
+      .select('assigned_to, price, completed_at')
+      .eq('organisation_id', orgId)
+      .eq('status', 'completed')
+      .gte('completed_at', since)
+      .not('price', 'is', null)
+      .not('assigned_to', 'is', null),
+    supabase
+      .from('profiles')
+      .select('id, full_name')
+      .eq('organisation_id', orgId),
+  ])
+
+  const profileMap: Record<string, string> = {}
+  for (const p of profiles ?? []) {
+    profileMap[p.id as string] = (p.full_name as string) || 'Unknown'
+  }
+
+  type PerfMap = Record<string, { total: number; count: number }>
+  const map: PerfMap = {}
+  for (const job of jobs ?? []) {
+    const pid = job.assigned_to as string
+    if (!map[pid]) map[pid] = { total: 0, count: 0 }
+    map[pid].total += job.price ?? 0
+    map[pid].count += 1
+  }
+
+  return Object.entries(map)
+    .map(([profileId, v]) => ({
+      profileId,
+      name: profileMap[profileId] ?? 'Unknown',
+      jobCount: v.count,
+      totalRevenue: v.total,
+      avgJobValue: v.count > 0 ? v.total / v.count : 0,
+    }))
+    .sort((a, b) => b.totalRevenue - a.totalRevenue)
+}
+
+// ── Win / Loss Trend (Business+ — always trailing 12 months) ─────────────────
+
+export interface MonthlyWinRate {
+  month: string        // YYYY-MM label
+  accepted: number
+  declined: number
+  winRate: number | null  // null when no decided quotes that month
+}
+
+export async function getWinLossTrend(months: number = 12): Promise<MonthlyWinRate[]> {
+  const supabase = await createClient()
+  const { orgId } = await getOrgContext()
+
+  const since = new Date()
+  since.setMonth(since.getMonth() - months)
+  since.setDate(1)
+  since.setHours(0, 0, 0, 0)
+
+  const { data: quotes } = await supabase
+    .from('quotes')
+    .select('status, responded_at')
+    .eq('organisation_id', orgId)
+    .in('status', ['accepted', 'declined'])
+    .gte('responded_at', since.toISOString())
+    .not('responded_at', 'is', null)
+
+  // Seed all months in range
+  const monthMap: Record<string, { accepted: number; declined: number }> = {}
+  for (let i = months - 1; i >= 0; i--) {
+    const d = new Date()
+    d.setMonth(d.getMonth() - i)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    monthMap[key] = { accepted: 0, declined: 0 }
+  }
+
+  for (const q of quotes ?? []) {
+    const key = (q.responded_at as string).slice(0, 7)
+    if (key in monthMap) {
+      if (q.status === 'accepted') monthMap[key].accepted += 1
+      else monthMap[key].declined += 1
+    }
+  }
+
+  return Object.entries(monthMap).map(([month, v]) => {
+    const total = v.accepted + v.declined
+    return {
+      month,
+      accepted: v.accepted,
+      declined: v.declined,
+      winRate: total > 0 ? v.accepted / total : null,
+    }
+  })
+}

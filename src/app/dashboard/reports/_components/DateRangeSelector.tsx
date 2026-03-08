@@ -14,6 +14,7 @@ interface Option {
 const OPTIONS: Option[] = [
   { days: 30, label: '30 days', required: 'starter' },
   { days: 90, label: '90 days', required: 'professional' },
+  { days: 365, label: '12 months', required: 'business' },
 ]
 
 interface Props {
@@ -58,11 +59,11 @@ export default function DateRangeSelector({ activeDays, plan }: Props) {
           key={o.days}
           href="/dashboard/settings/billing"
           className="text-xs font-medium px-3 py-1.5 rounded-md text-zinc-300 cursor-pointer hover:text-zinc-400 transition-colors tracking-wide flex items-center gap-1"
-          title={`Upgrade to Professional to unlock ${o.label} view`}
+          title={`Upgrade to unlock ${o.label} view`}
         >
           {o.label}
           <span className="text-[9px] font-semibold tracking-[0.1em] uppercase text-[#3D7A5F] bg-[#C8F5D7] px-1 py-0.5 rounded-full">
-            Pro
+            {o.required === 'business' ? 'Biz' : 'Pro'}
           </span>
         </Link>
       ))}
