@@ -52,6 +52,9 @@ export type AuditAction =
   | 'pipeline_move_client'
   | 'pipeline_win_client'
   | 'pipeline_lose_client'
+  // Property photos
+  | 'upload_property_photo'
+  | 'delete_property_photo'
   // GDPR
   | 'gdpr_export'
   | 'gdpr_erase'

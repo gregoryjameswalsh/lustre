@@ -1,5 +1,7 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect, notFound } from 'next/navigation'
+import { createClient }          from '@/lib/supabase/server'
+import { redirect, notFound }    from 'next/navigation'
+import PropertyPhotosSection     from './_components/PropertyPhotosSection'
+import type { PropertyPhoto }    from '@/lib/types'
 
 function Row({ label, value }: { label: string; value?: string | number | boolean | null }) {
   if (!value && value !== false) return null
@@ -30,11 +32,19 @@ export default async function PropertyPage({
 
   if (!property) notFound()
 
-  const { data: client } = await supabase
-    .from('clients')
-    .select('first_name, last_name')
-    .eq('id', clientId)
-    .single()
+  const [{ data: client }, { data: photos }] = await Promise.all([
+    supabase
+      .from('clients')
+      .select('first_name, last_name')
+      .eq('id', clientId)
+      .single(),
+    supabase
+      .from('property_photos')
+      .select('*')
+      .eq('property_id', propertyId)
+      .order('display_order', { ascending: true })
+      .order('uploaded_at',   { ascending: true }),
+  ])
 
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
@@ -90,6 +100,15 @@ export default async function PropertyPage({
             </div>
           </div>
 
+        </div>
+
+        {/* Photos */}
+        <div className="mt-4 sm:mt-6">
+          <PropertyPhotosSection
+            propertyId={propertyId}
+            orgId={property.organisation_id}
+            initialPhotos={(photos ?? []) as PropertyPhoto[]}
+          />
         </div>
 
         {/* Schedule job CTA */}
