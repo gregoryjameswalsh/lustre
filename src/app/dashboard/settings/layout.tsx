@@ -26,25 +26,23 @@ export default async function SettingsLayout({ children }: { children: React.Rea
   const isAdmin = await getIsAdmin()
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB]">
-      <div className="mx-auto flex max-w-5xl">
+    <div className="flex min-h-screen bg-[#F9FAFB]">
 
-        {/* Sidebar — hidden on mobile, sticky on desktop */}
-        <aside className="hidden md:block md:w-52 md:shrink-0">
-          <div className="sticky top-0 px-4 pt-10 pb-8">
-            <p className="mb-3 px-3 text-[10px] font-medium uppercase tracking-widest text-zinc-400">
-              Settings
-            </p>
-            <SettingsSidebarNav isAdmin={isAdmin} />
-          </div>
-        </aside>
-
-        {/* Page content */}
-        <div className="min-w-0 flex-1">
-          {children}
+      {/* Sidebar — hidden on mobile, full-height white panel on desktop */}
+      <aside className="hidden md:flex md:w-56 md:shrink-0 md:flex-col md:border-r md:border-zinc-200 md:bg-white">
+        <div className="sticky top-0 px-5 pt-10 pb-8">
+          <p className="mb-3 px-2 text-[10px] font-medium uppercase tracking-widest text-zinc-400">
+            Settings
+          </p>
+          <SettingsSidebarNav isAdmin={isAdmin} />
         </div>
+      </aside>
 
+      {/* Page content — fills remaining viewport, content is left-anchored */}
+      <div className="min-w-0 flex-1">
+        {children}
       </div>
+
     </div>
   )
 }

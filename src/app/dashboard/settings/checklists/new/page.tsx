@@ -94,7 +94,7 @@ export default function NewChecklistTemplatePage() {
   const isBusy = pending || savingItems
 
   return (
-    <main className="max-w-3xl mx-auto px-4 pt-8 pb-4 sm:px-6 md:pt-16 md:pb-16">
+    <main className="max-w-3xl px-4 pt-8 pb-8 sm:px-6 md:px-10 md:pt-12 md:pb-12">
 
         <div className="mb-8">
           <Link href="/dashboard/settings/checklists" className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors tracking-wide">
