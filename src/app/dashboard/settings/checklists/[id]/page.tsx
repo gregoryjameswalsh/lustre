@@ -36,7 +36,7 @@ export default async function EditChecklistTemplatePage({
   if (!template) notFound()
 
   return (
-    <main className="max-w-3xl mx-auto px-4 pt-8 pb-4 sm:px-6 md:pt-16 md:pb-16">
+    <main className="max-w-3xl px-4 pt-8 pb-8 sm:px-6 md:px-10 md:pt-12 md:pb-12">
         <EditChecklistTemplateClient template={template} jobTypes={jobTypes} />
     </main>
   )

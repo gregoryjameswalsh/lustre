@@ -86,7 +86,7 @@ export default async function TeamPage() {
   const planLabel     = plan === 'free' ? 'Free trial' : plan.charAt(0).toUpperCase() + plan.slice(1)
 
   return (
-    <main className="mx-auto max-w-2xl px-4 pt-8 pb-4 sm:px-6 md:pt-16 md:pb-16">
+    <main className="max-w-3xl px-4 pt-8 pb-8 sm:px-6 md:px-10 md:pt-12 md:pb-12">
 
         <div className="mb-8">
           <Link

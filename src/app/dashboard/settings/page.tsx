@@ -119,7 +119,7 @@ export default async function SettingsPage() {
     planLabel
 
   return (
-    <main className="mx-auto max-w-2xl px-4 pt-8 pb-4 sm:px-6 md:pt-16 md:pb-16">
+    <main className="max-w-3xl px-4 pt-8 pb-8 sm:px-6 md:px-10 md:pt-12 md:pb-12">
 
       <div className="mb-8">
         <h1 className="text-2xl font-light tracking-tight text-zinc-900 sm:text-3xl">Settings</h1>
@@ -167,40 +167,43 @@ export default async function SettingsPage() {
           </div>
         </div>
 
-        {/* ── Team ────────────────────────────────────────────────────── */}
-        <Link
-          href="/dashboard/settings/team"
-          className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-5 py-4 transition-colors hover:bg-zinc-50"
-        >
-          <div>
-            <h2 className="text-sm font-medium text-zinc-900">Team</h2>
-            <p className="mt-0.5 text-xs text-zinc-400">
-              {memberCount} {memberCount === 1 ? 'member' : 'members'} · Manage access and invitations
-            </p>
-          </div>
-          <Chevron />
-        </Link>
+        {/* ── Team + Billing — 2-col on desktop ───────────────────────── */}
+        <div className={`grid grid-cols-1 gap-4 ${isAdmin ? 'md:grid-cols-2' : ''}`}>
 
-        {/* ── Billing — admin only ─────────────────────────────────────── */}
-        {isAdmin && (
           <Link
-            href="/dashboard/settings/billing"
-            className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-5 py-4 transition-colors hover:bg-zinc-50"
+            href="/dashboard/settings/team"
+            className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-5 py-5 transition-colors hover:bg-zinc-50"
           >
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm font-medium text-zinc-900">Billing</h2>
-                {org.subscription_status === 'past_due' && (
-                  <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
-                    Action required
-                  </span>
-                )}
-              </div>
-              <p className="mt-0.5 text-xs text-zinc-400">{billingSubtitle}</p>
+              <h2 className="text-sm font-medium text-zinc-900">Team</h2>
+              <p className="mt-0.5 text-xs text-zinc-400">
+                {memberCount} {memberCount === 1 ? 'member' : 'members'} · Manage access and invitations
+              </p>
             </div>
             <Chevron />
           </Link>
-        )}
+
+          {isAdmin && (
+            <Link
+              href="/dashboard/settings/billing"
+              className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-5 py-5 transition-colors hover:bg-zinc-50"
+            >
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm font-medium text-zinc-900">Billing</h2>
+                  {org.subscription_status === 'past_due' && (
+                    <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+                      Action required
+                    </span>
+                  )}
+                </div>
+                <p className="mt-0.5 text-xs text-zinc-400">{billingSubtitle}</p>
+              </div>
+              <Chevron />
+            </Link>
+          )}
+
+        </div>
 
         {/* ── VAT — admin only ─────────────────────────────────────────── */}
         {isAdmin && (
@@ -240,68 +243,63 @@ export default async function SettingsPage() {
           </div>
         </div>
 
-        {/* ── Job Types — admin only ───────────────────────────────────── */}
+        {/* ── Admin config cards — 2-col grid on desktop ──────────────── */}
         {isAdmin && (
-          <Link
-            href="/dashboard/settings/job-types"
-            className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-5 py-4 transition-colors hover:bg-zinc-50"
-          >
-            <div>
-              <h2 className="text-sm font-medium text-zinc-900">Job Types</h2>
-              <p className="mt-0.5 text-xs text-zinc-400">
-                {jobTypeCount} active type{jobTypeCount !== 1 ? 's' : ''} · Define the jobs your business offers
-              </p>
-            </div>
-            <Chevron />
-          </Link>
-        )}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 
-        {/* ── Checklists — admin only ──────────────────────────────────── */}
-        {isAdmin && (
-          <Link
-            href="/dashboard/settings/checklists"
-            className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-5 py-4 transition-colors hover:bg-zinc-50"
-          >
-            <div>
-              <h2 className="text-sm font-medium text-zinc-900">Checklists</h2>
-              <p className="mt-0.5 text-xs text-zinc-400">
-                {checklistCount} template{checklistCount !== 1 ? 's' : ''} · Team members complete these during jobs
-              </p>
-            </div>
-            <Chevron />
-          </Link>
-        )}
+            <Link
+              href="/dashboard/settings/job-types"
+              className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-5 py-5 transition-colors hover:bg-zinc-50"
+            >
+              <div>
+                <h2 className="text-sm font-medium text-zinc-900">Job Types</h2>
+                <p className="mt-0.5 text-xs text-zinc-400">
+                  {jobTypeCount} active type{jobTypeCount !== 1 ? 's' : ''} · Define the jobs your business offers
+                </p>
+              </div>
+              <Chevron />
+            </Link>
 
-        {/* ── Roles — admin only ───────────────────────────────────────── */}
-        {isAdmin && (
-          <Link
-            href="/dashboard/settings/roles"
-            className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-5 py-4 transition-colors hover:bg-zinc-50"
-          >
-            <div>
-              <h2 className="text-sm font-medium text-zinc-900">Roles &amp; Permissions</h2>
-              <p className="mt-0.5 text-xs text-zinc-400">
-                {rolesCount} custom role{rolesCount !== 1 ? 's' : ''} · Control what each team member can access
-              </p>
-            </div>
-            <Chevron />
-          </Link>
-        )}
+            <Link
+              href="/dashboard/settings/checklists"
+              className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-5 py-5 transition-colors hover:bg-zinc-50"
+            >
+              <div>
+                <h2 className="text-sm font-medium text-zinc-900">Checklists</h2>
+                <p className="mt-0.5 text-xs text-zinc-400">
+                  {checklistCount} template{checklistCount !== 1 ? 's' : ''} · Team members complete these during jobs
+                </p>
+              </div>
+              <Chevron />
+            </Link>
 
-        {/* ── Data & Privacy — admin only ──────────────────────────────── */}
-        {isAdmin && (
-          <Link
-            href="/dashboard/settings/gdpr"
-            className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-5 py-4 transition-colors hover:bg-zinc-50"
-          >
-            <div>
-              <h2 className="text-sm font-medium text-zinc-900">Data &amp; Privacy</h2>
-              <p className="mt-0.5 text-xs text-zinc-400">
-                GDPR requests — data exports, erasures, and consent records
-              </p>
-            </div>
-            <Chevron />
-          </Link>
+            <Link
+              href="/dashboard/settings/roles"
+              className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-5 py-5 transition-colors hover:bg-zinc-50"
+            >
+              <div>
+                <h2 className="text-sm font-medium text-zinc-900">Roles &amp; Permissions</h2>
+                <p className="mt-0.5 text-xs text-zinc-400">
+                  {rolesCount} custom role{rolesCount !== 1 ? 's' : ''} · Control what each team member can access
+                </p>
+              </div>
+              <Chevron />
+            </Link>
+
+            <Link
+              href="/dashboard/settings/gdpr"
+              className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-5 py-5 transition-colors hover:bg-zinc-50"
+            >
+              <div>
+                <h2 className="text-sm font-medium text-zinc-900">Data &amp; Privacy</h2>
+                <p className="mt-0.5 text-xs text-zinc-400">
+                  GDPR requests — data exports, erasures, and consent records
+                </p>
+              </div>
+              <Chevron />
+            </Link>
+
+          </div>
         )}
 
         {/* ── Legal & Compliance ───────────────────────────────────────── */}
