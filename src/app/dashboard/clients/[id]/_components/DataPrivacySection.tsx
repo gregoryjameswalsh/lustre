@@ -63,7 +63,7 @@ function ConsentRow({
         aria-checked={granted}
         role="switch"
         className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none disabled:opacity-50 ${
-          granted ? 'bg-[#4a5c4e]' : 'bg-zinc-200'
+          granted ? 'bg-[#1A3329]' : 'bg-zinc-200'
         }`}
       >
         <span
@@ -99,7 +99,7 @@ function ExportButton({ clientId }: { clientId: string }) {
       <button
         onClick={handleExport}
         disabled={pending}
-        className="rounded-full border border-zinc-200 px-4 py-2 text-xs font-medium text-zinc-600 hover:border-zinc-400 hover:text-zinc-900 transition-colors disabled:opacity-50"
+        className="rounded-lg border border-zinc-200 px-4 py-2 text-xs font-medium text-zinc-600 hover:border-zinc-400 hover:text-zinc-900 transition-colors disabled:opacity-50"
       >
         {pending ? 'Preparing export…' : 'Export data (DSAR)'}
       </button>
@@ -108,7 +108,7 @@ function ExportButton({ clientId }: { clientId: string }) {
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="block text-xs text-[#4a5c4e] hover:underline"
+          className="block text-xs text-[#3D7A5F] hover:underline"
         >
           Download export ↓ (link valid 7 days)
         </a>
@@ -160,14 +160,14 @@ function EraseButton({ clientId }: { clientId: string }) {
           <button
             onClick={handleErase}
             disabled={stage === 'pending'}
-            className="rounded-full bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+            className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 transition-colors disabled:opacity-50"
           >
             {stage === 'pending' ? 'Erasing…' : 'Yes, erase data'}
           </button>
           <button
             onClick={() => { setStage('idle'); setError(null) }}
             disabled={stage === 'pending'}
-            className="rounded-full border border-zinc-200 px-3 py-1.5 text-xs text-zinc-500 hover:text-zinc-700 transition-colors disabled:opacity-50"
+            className="rounded-lg border border-zinc-200 px-3 py-1.5 text-xs text-zinc-500 hover:text-zinc-700 transition-colors disabled:opacity-50"
           >
             Cancel
           </button>
@@ -179,7 +179,7 @@ function EraseButton({ clientId }: { clientId: string }) {
   return (
     <button
       onClick={() => setStage('confirm')}
-      className="rounded-full border border-red-200 px-4 py-2 text-xs font-medium text-red-600 hover:border-red-400 hover:bg-red-50 transition-colors"
+      className="rounded-lg border border-red-200 px-4 py-2 text-xs font-medium text-red-600 hover:border-red-400 hover:bg-red-50 transition-colors"
     >
       Request erasure
     </button>

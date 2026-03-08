@@ -43,7 +43,7 @@ export default function QuoteActions({ quoteId, quoteNumber, status }: QuoteActi
       {/* PDF download — always available */}
       <button
         onClick={handleDownloadPdf}
-        className="rounded-full border border-zinc-200 bg-white px-4 py-2 text-xs font-medium uppercase tracking-widest text-zinc-600 transition-colors hover:border-zinc-300 hover:bg-zinc-50"
+        className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-xs font-medium uppercase tracking-widest text-zinc-600 transition-colors hover:border-zinc-300 hover:bg-zinc-50"
       >
         Download PDF
       </button>
@@ -53,14 +53,14 @@ export default function QuoteActions({ quoteId, quoteNumber, status }: QuoteActi
           <button
             onClick={() => handleStatus('sent')}
             disabled={loading === 'sent'}
-            className="rounded-full bg-[#4a5c4e] px-4 py-2 text-xs font-medium uppercase tracking-widest text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="rounded-lg bg-[#1A3329] px-4 py-2 text-xs font-medium uppercase tracking-widest text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {loading === 'sent' ? 'Sending…' : 'Send to client'}
           </button>
           <button
             onClick={handleDelete}
             disabled={loading === 'delete'}
-            className="rounded-full border border-red-100 bg-white px-4 py-2 text-xs font-medium uppercase tracking-widest text-red-400 transition-colors hover:border-red-200 hover:bg-red-50 disabled:opacity-50"
+            className="rounded-lg border border-red-100 bg-white px-4 py-2 text-xs font-medium uppercase tracking-widest text-red-400 transition-colors hover:border-red-200 hover:bg-red-50 disabled:opacity-50"
           >
             {loading === 'delete' ? 'Deleting…' : 'Delete'}
           </button>
@@ -72,14 +72,14 @@ export default function QuoteActions({ quoteId, quoteNumber, status }: QuoteActi
           <button
             onClick={() => handleStatus('accepted')}
             disabled={loading === 'accepted'}
-            className="rounded-full bg-[#4a5c4e] px-4 py-2 text-xs font-medium uppercase tracking-widest text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="rounded-lg bg-[#1A3329] px-4 py-2 text-xs font-medium uppercase tracking-widest text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {loading === 'accepted' ? 'Saving…' : 'Mark accepted'}
           </button>
           <button
             onClick={() => handleStatus('declined')}
             disabled={loading === 'declined'}
-            className="rounded-full border border-zinc-200 bg-white px-4 py-2 text-xs font-medium uppercase tracking-widest text-zinc-600 transition-colors hover:bg-zinc-50 disabled:opacity-50"
+            className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-xs font-medium uppercase tracking-widest text-zinc-600 transition-colors hover:bg-zinc-50 disabled:opacity-50"
           >
             {loading === 'declined' ? 'Saving…' : 'Mark declined'}
           </button>
@@ -90,7 +90,7 @@ export default function QuoteActions({ quoteId, quoteNumber, status }: QuoteActi
         <span className="rounded-full bg-emerald-50 px-4 py-2 text-xs font-medium uppercase tracking-widest text-emerald-700">Accepted</span>
       )}
       {status === 'declined' && (
-        <span className="rounded-full bg-red-50 px-4 py-2 text-xs font-medium uppercase tracking-widest text-red-500">Declined</span>
+        <span className="rounded-lg bg-red-50 px-4 py-2 text-xs font-medium uppercase tracking-widest text-red-500">Declined</span>
       )}
       {status === 'expired' && (
         <span className="rounded-full bg-zinc-100 px-4 py-2 text-xs font-medium uppercase tracking-widest text-zinc-400">Expired</span>

@@ -82,7 +82,7 @@ function LostReasonModal({
           <button
             onClick={() => onConfirm(reason.trim() || null)}
             disabled={isPending}
-            className="rounded-full bg-zinc-900 px-4 py-1.5 text-xs font-medium text-white hover:bg-zinc-700 transition-colors disabled:opacity-50"
+            className="rounded-lg bg-[#1A3329] px-4 py-1.5 text-xs font-medium text-white hover:bg-zinc-700 transition-colors disabled:opacity-50"
           >
             {isPending ? 'Saving…' : 'Confirm'}
           </button>

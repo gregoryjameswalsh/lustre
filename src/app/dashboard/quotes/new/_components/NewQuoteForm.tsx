@@ -18,7 +18,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="rounded-full bg-[#4a5c4e] px-6 py-2.5 text-xs font-medium uppercase tracking-widest text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+      className="rounded-lg bg-[#1A3329] px-6 py-2.5 text-xs font-medium uppercase tracking-widest text-white transition-opacity hover:opacity-90 disabled:opacity-50"
     >
       {pending ? 'Saving…' : 'Save as draft'}
     </button>
@@ -92,7 +92,7 @@ export default function NewQuoteForm({ clients, vatRegistered, vatRate }: NewQuo
   const itemisedTotal    = itemisedSubtotal + itemisedTax
 
   return (
-    <div className="min-h-screen bg-[#f9f8f5]">
+    <div className="min-h-screen bg-[#F9FAFB]">
       <div className="mx-auto max-w-2xl px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
 
         <div className="mb-6">
@@ -124,7 +124,7 @@ export default function NewQuoteForm({ clients, vatRegistered, vatRate }: NewQuo
                   required
                   value={selectedClient}
                   onChange={e => { setSelectedClient(e.target.value); if (!e.target.value) setProperties([]) }}
-                  className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-[#0c0c0b] outline-none focus:border-[#4a5c4e] focus:ring-2 focus:ring-[#4a5c4e]/10"
+                  className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-[#0c0c0b] outline-none focus:border-[#1A3329] focus:ring-2 focus:ring-[#4a5c4e]/10"
                 >
                   <option value="">Select a client…</option>
                   {clients.map(c => (
@@ -139,7 +139,7 @@ export default function NewQuoteForm({ clients, vatRegistered, vatRate }: NewQuo
                   </label>
                   <select
                     name="property_id"
-                    className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-[#0c0c0b] outline-none focus:border-[#4a5c4e] focus:ring-2 focus:ring-[#4a5c4e]/10"
+                    className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-[#0c0c0b] outline-none focus:border-[#1A3329] focus:ring-2 focus:ring-[#4a5c4e]/10"
                   >
                     <option value="">No specific property</option>
                     {properties.map(p => (
@@ -162,7 +162,7 @@ export default function NewQuoteForm({ clients, vatRegistered, vatRate }: NewQuo
                   type="text"
                   required
                   placeholder="e.g. Regular cleaning — 3 bed house"
-                  className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-[#0c0c0b] placeholder-zinc-300 outline-none focus:border-[#4a5c4e] focus:ring-2 focus:ring-[#4a5c4e]/10"
+                  className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-[#0c0c0b] placeholder-zinc-300 outline-none focus:border-[#1A3329] focus:ring-2 focus:ring-[#4a5c4e]/10"
                 />
               </div>
               <div>
@@ -171,7 +171,7 @@ export default function NewQuoteForm({ clients, vatRegistered, vatRate }: NewQuo
                   name="valid_until"
                   type="date"
                   defaultValue={defaultValidUntil()}
-                  className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-[#0c0c0b] outline-none focus:border-[#4a5c4e] focus:ring-2 focus:ring-[#4a5c4e]/10"
+                  className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-[#0c0c0b] outline-none focus:border-[#1A3329] focus:ring-2 focus:ring-[#4a5c4e]/10"
                 />
               </div>
             </div>
@@ -202,7 +202,7 @@ export default function NewQuoteForm({ clients, vatRegistered, vatRate }: NewQuo
                   onClick={() => setPricingType(type)}
                   className={`flex-1 rounded-md py-2 text-xs font-medium capitalize transition-colors ${
                     pricingType === type
-                      ? 'bg-[#4a5c4e] text-white'
+                      ? 'bg-[#1A3329] text-white'
                       : 'text-zinc-500 hover:text-zinc-700'
                   }`}
                 >
@@ -226,7 +226,7 @@ export default function NewQuoteForm({ clients, vatRegistered, vatRate }: NewQuo
                   placeholder="0.00"
                   value={fixedPrice || ''}
                   onChange={e => setFixedPrice(parseFloat(e.target.value) || 0)}
-                  className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-[#0c0c0b] placeholder-zinc-300 outline-none focus:border-[#4a5c4e] focus:ring-2 focus:ring-[#4a5c4e]/10"
+                  className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-[#0c0c0b] placeholder-zinc-300 outline-none focus:border-[#1A3329] focus:ring-2 focus:ring-[#4a5c4e]/10"
                 />
                 {vatRegistered && fixedPrice > 0 && (
                   <div className="mt-2 space-y-0.5 rounded-lg bg-zinc-50 px-3 py-2 text-xs text-zinc-500">
@@ -266,7 +266,7 @@ export default function NewQuoteForm({ clients, vatRegistered, vatRate }: NewQuo
                         value={item.description}
                         onChange={e => updateLineItem(i, 'description', e.target.value)}
                         placeholder={item.is_addon ? 'Add-on description' : 'Service description'}
-                        className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-[#0c0c0b] placeholder-zinc-300 outline-none focus:border-[#4a5c4e] focus:ring-2 focus:ring-[#4a5c4e]/10"
+                        className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-[#0c0c0b] placeholder-zinc-300 outline-none focus:border-[#1A3329] focus:ring-2 focus:ring-[#4a5c4e]/10"
                       />
                       <input
                         type="number"
@@ -274,7 +274,7 @@ export default function NewQuoteForm({ clients, vatRegistered, vatRate }: NewQuo
                         min="0.5"
                         step="0.5"
                         onChange={e => updateLineItem(i, 'quantity', e.target.value)}
-                        className="w-full rounded-lg border border-zinc-200 bg-white px-2 py-2 text-sm text-center text-[#0c0c0b] outline-none focus:border-[#4a5c4e] focus:ring-2 focus:ring-[#4a5c4e]/10"
+                        className="w-full rounded-lg border border-zinc-200 bg-white px-2 py-2 text-sm text-center text-[#0c0c0b] outline-none focus:border-[#1A3329] focus:ring-2 focus:ring-[#4a5c4e]/10"
                       />
                       <input
                         type="number"
@@ -282,7 +282,7 @@ export default function NewQuoteForm({ clients, vatRegistered, vatRate }: NewQuo
                         min="0"
                         step="0.01"
                         onChange={e => updateLineItem(i, 'unit_price', e.target.value)}
-                        className="w-full rounded-lg border border-zinc-200 bg-white px-2 py-2 text-sm text-[#0c0c0b] outline-none focus:border-[#4a5c4e] focus:ring-2 focus:ring-[#4a5c4e]/10"
+                        className="w-full rounded-lg border border-zinc-200 bg-white px-2 py-2 text-sm text-[#0c0c0b] outline-none focus:border-[#1A3329] focus:ring-2 focus:ring-[#4a5c4e]/10"
                       />
                       <button
                         type="button"
@@ -298,7 +298,7 @@ export default function NewQuoteForm({ clients, vatRegistered, vatRate }: NewQuo
                 ))}
 
                 <div className="flex gap-2 pt-1">
-                  <button type="button" onClick={() => addLineItem(false)} className="text-xs text-[#4a5c4e] hover:underline">
+                  <button type="button" onClick={() => addLineItem(false)} className="text-xs text-[#3D7A5F] hover:underline">
                     + Add line item
                   </button>
                   <span className="text-zinc-200">|</span>
@@ -344,7 +344,7 @@ export default function NewQuoteForm({ clients, vatRegistered, vatRate }: NewQuo
                   name="notes"
                   rows={3}
                   placeholder="e.g. Price includes all cleaning products. Regular visits every two weeks."
-                  className="w-full resize-none rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-[#0c0c0b] placeholder-zinc-300 outline-none focus:border-[#4a5c4e] focus:ring-2 focus:ring-[#4a5c4e]/10"
+                  className="w-full resize-none rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-[#0c0c0b] placeholder-zinc-300 outline-none focus:border-[#1A3329] focus:ring-2 focus:ring-[#4a5c4e]/10"
                 />
               </div>
               <div>
@@ -355,7 +355,7 @@ export default function NewQuoteForm({ clients, vatRegistered, vatRate }: NewQuo
                   name="internal_notes"
                   rows={2}
                   placeholder="Internal reminders, pricing rationale, etc."
-                  className="w-full resize-none rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-[#0c0c0b] placeholder-zinc-300 outline-none focus:border-[#4a5c4e] focus:ring-2 focus:ring-[#4a5c4e]/10"
+                  className="w-full resize-none rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-[#0c0c0b] placeholder-zinc-300 outline-none focus:border-[#1A3329] focus:ring-2 focus:ring-[#4a5c4e]/10"
                 />
               </div>
             </div>

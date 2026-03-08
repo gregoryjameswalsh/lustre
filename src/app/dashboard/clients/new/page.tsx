@@ -27,7 +27,7 @@ export default function NewClientPage() {
   )
 
   return (
-    <div className="min-h-screen bg-[#f9f8f5]">
+    <div className="min-h-screen bg-[#F9FAFB]">
 
       <main className="max-w-3xl mx-auto px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
 
@@ -127,7 +127,7 @@ export default function NewClientPage() {
                       name="status"
                       value={s}
                       defaultChecked={s === initialStatus}
-                      className="accent-[#4a5c4e]"
+                      className="accent-[#1A3329]"
                     />
                     <span className="text-sm text-zinc-700 capitalize">{s}</span>
                   </label>
@@ -160,13 +160,13 @@ export default function NewClientPage() {
             <button
               type="submit"
               disabled={pending}
-              className="text-xs font-medium tracking-[0.15em] uppercase bg-zinc-900 text-[#f9f8f5] px-6 py-3 rounded-full hover:bg-[#4a5c4e] transition-colors disabled:opacity-50"
+              className="text-xs font-medium tracking-[0.15em] uppercase bg-[#1A3329] text-white px-6 py-3 rounded-lg hover:bg-[#3D7A5F] transition-colors disabled:opacity-50"
             >
               {pending ? 'Saving…' : 'Save Client'}
             </button>
             <Link
               href={returnPath}
-              className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-6 py-3 rounded-full hover:border-zinc-400 transition-colors"
+              className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-6 py-3 rounded-lg hover:border-zinc-400 transition-colors"
             >
               Cancel
             </Link>

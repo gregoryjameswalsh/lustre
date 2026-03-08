@@ -70,7 +70,7 @@ function CreateForm({ onSuccess }: { onSuccess: () => void }) {
       <button
         type="submit"
         disabled={pending}
-        className="text-xs font-medium tracking-[0.15em] uppercase bg-zinc-900 text-[#f9f8f5] px-5 py-2.5 rounded-full hover:bg-[#4a5c4e] transition-colors disabled:opacity-50"
+        className="text-xs font-medium tracking-[0.15em] uppercase bg-[#1A3329] text-white px-5 py-2.5 rounded-lg hover:bg-[#3D7A5F] transition-colors disabled:opacity-50"
       >
         {pending ? 'Adding…' : '+ Add Job Type'}
       </button>
@@ -122,7 +122,7 @@ function EditForm({
         <button
           type="submit"
           disabled={pending}
-          className="text-xs font-medium tracking-wide text-[#4a5c4e] hover:underline disabled:opacity-50"
+          className="text-xs font-medium tracking-wide text-[#3D7A5F] hover:underline disabled:opacity-50"
         >
           {pending ? 'Saving…' : 'Save'}
         </button>
@@ -194,14 +194,14 @@ export default function JobTypesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f9f8f5]">
+      <div className="min-h-screen bg-[#F9FAFB]">
         <div className="max-w-2xl mx-auto px-4 pt-8 sm:px-6 md:pt-24 text-sm text-zinc-300">Loading…</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#f9f8f5]">
+    <div className="min-h-screen bg-[#F9FAFB]">
       <main className="max-w-2xl mx-auto px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
 
         <div className="mb-8">
@@ -275,7 +275,7 @@ export default function JobTypesPage() {
                           ) : (
                             <button
                               onClick={() => handleReactivate(jt.id)}
-                              className="text-xs text-[#4a5c4e] hover:underline transition-colors"
+                              className="text-xs text-[#3D7A5F] hover:underline transition-colors"
                             >
                               Reactivate
                             </button>

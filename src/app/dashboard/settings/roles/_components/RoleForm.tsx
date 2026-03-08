@@ -50,7 +50,7 @@ export default function RoleForm({
               maxLength={50}
               defaultValue={defaultName}
               placeholder="e.g. Estimator, Field Supervisor"
-              className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 outline-none focus:border-[#4a5c4e] focus:ring-1 focus:ring-[#4a5c4e]"
+              className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 outline-none focus:border-[#1A3329] focus:ring-1 focus:ring-[#4a5c4e]"
             />
           </div>
           <div>
@@ -64,7 +64,7 @@ export default function RoleForm({
               maxLength={200}
               defaultValue={defaultDescription ?? ''}
               placeholder="Optional — shown on the roles list"
-              className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 outline-none focus:border-[#4a5c4e] focus:ring-1 focus:ring-[#4a5c4e]"
+              className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 outline-none focus:border-[#1A3329] focus:ring-1 focus:ring-[#4a5c4e]"
             />
           </div>
         </div>
@@ -97,7 +97,7 @@ export default function RoleForm({
                         name="permissions"
                         value={key}
                         defaultChecked={checked}
-                        className="h-4 w-4 rounded border-zinc-300 accent-[#4a5c4e]"
+                        className="h-4 w-4 rounded border-zinc-300 accent-[#1A3329]"
                       />
                       {label}
                     </label>
@@ -118,13 +118,13 @@ export default function RoleForm({
         <button
           type="submit"
           disabled={pending}
-          className="rounded-full bg-zinc-900 px-5 py-2.5 text-xs font-medium tracking-[0.15em] uppercase text-white hover:bg-zinc-700 disabled:opacity-50 transition-colors"
+          className="rounded-lg bg-[#1A3329] px-5 py-2.5 text-xs font-medium tracking-[0.15em] uppercase text-white hover:bg-zinc-700 disabled:opacity-50 transition-colors"
         >
           {pending ? 'Saving…' : submitLabel}
         </button>
         <Link
           href="/dashboard/settings/roles"
-          className="rounded-full border border-zinc-200 px-5 py-2.5 text-xs font-medium tracking-[0.15em] uppercase text-zinc-500 hover:border-zinc-400 hover:text-zinc-700 transition-colors"
+          className="rounded-lg border border-zinc-200 px-5 py-2.5 text-xs font-medium tracking-[0.15em] uppercase text-zinc-500 hover:border-zinc-400 hover:text-zinc-700 transition-colors"
         >
           Cancel
         </Link>

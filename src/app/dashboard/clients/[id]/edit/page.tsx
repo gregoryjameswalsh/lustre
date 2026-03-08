@@ -77,13 +77,13 @@ export default function EditClientPage() {
   const labelClass = "block text-xs font-medium tracking-wider uppercase text-zinc-500 mb-2"
 
   if (fetching) return (
-    <div className="min-h-screen bg-[#f9f8f5]">
+    <div className="min-h-screen bg-[#F9FAFB]">
       <div className="max-w-3xl mx-auto px-4 pt-8 sm:px-6 md:pt-24 text-sm text-zinc-300">Loading…</div>
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-[#f9f8f5]">
+    <div className="min-h-screen bg-[#F9FAFB]">
       <main className="max-w-3xl mx-auto px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
 
         <div className="mb-8">
@@ -147,7 +147,7 @@ export default function EditClientPage() {
                       name="status"
                       value={s}
                       defaultChecked={client?.status === s}
-                      className="accent-[#4a5c4e]"
+                      className="accent-[#1A3329]"
                     />
                     <span className="text-sm text-zinc-700 capitalize">{s}</span>
                   </label>
@@ -178,13 +178,13 @@ export default function EditClientPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="text-xs font-medium tracking-[0.15em] uppercase bg-zinc-900 text-[#f9f8f5] px-6 py-3 rounded-full hover:bg-[#4a5c4e] transition-colors disabled:opacity-50"
+                className="text-xs font-medium tracking-[0.15em] uppercase bg-[#1A3329] text-white px-6 py-3 rounded-lg hover:bg-[#3D7A5F] transition-colors disabled:opacity-50"
               >
                 {loading ? 'Saving…' : 'Save Changes'}
               </button>
               <a
                 href={`/dashboard/clients/${clientId}`}
-                className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-6 py-3 rounded-full hover:border-zinc-400 transition-colors"
+                className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-500 px-6 py-3 rounded-lg hover:border-zinc-400 transition-colors"
               >
                 Cancel
               </a>

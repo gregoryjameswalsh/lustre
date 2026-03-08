@@ -71,7 +71,7 @@ export default async function BillingSettingsPage({
     : null
 
   return (
-    <div className="min-h-screen bg-[#f9f8f5]">
+    <div className="min-h-screen bg-[#F9FAFB]">
       <main className="mx-auto max-w-2xl px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
 
         {/* Breadcrumb */}
@@ -179,7 +179,7 @@ export default async function BillingSettingsPage({
                 {org.plan === 'free' && (
                   <Link
                     href="/billing"
-                    className="rounded-full bg-[#0c0c0b] px-5 py-2 text-xs font-medium tracking-[0.12em] uppercase text-[#f9f8f5] hover:bg-zinc-800 transition-colors"
+                    className="rounded-lg bg-[#1A3329] px-5 py-2 text-xs font-medium tracking-[0.12em] uppercase text-white hover:bg-[#3D7A5F] transition-colors"
                   >
                     Choose a plan
                   </Link>
@@ -190,7 +190,7 @@ export default async function BillingSettingsPage({
                 {org.plan === 'free' && (
                   <Link
                     href="/billing"
-                    className="rounded-full border border-zinc-200 px-5 py-2 text-xs font-medium tracking-[0.12em] uppercase text-zinc-600 hover:border-zinc-400 transition-colors"
+                    className="rounded-lg border border-zinc-200 px-5 py-2 text-xs font-medium tracking-[0.12em] uppercase text-zinc-600 hover:border-zinc-400 transition-colors"
                   >
                     View plans
                   </Link>

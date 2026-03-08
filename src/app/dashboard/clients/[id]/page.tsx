@@ -64,7 +64,7 @@ export default async function ClientProfilePage({
   const consents   = (consentsData ?? []) as ConsentRecord[]
 
   return (
-    <div className="min-h-screen bg-[#f9f8f5]">
+    <div className="min-h-screen bg-[#F9FAFB]">
 
       <main className="max-w-7xl mx-auto px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
 
@@ -91,13 +91,13 @@ export default async function ClientProfilePage({
           <div className="flex flex-wrap gap-3">
             <a
               href={`/dashboard/clients/${id}/edit`}
-              className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-600 px-5 py-2.5 rounded-full hover:border-zinc-400 transition-colors"
+              className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-600 px-5 py-2.5 rounded-lg hover:border-zinc-400 transition-colors"
             >
               Edit
             </a>
             <a
               href={`/dashboard/jobs/new?client_id=${id}`}
-              className="text-xs font-medium tracking-[0.15em] uppercase bg-zinc-900 text-[#f9f8f5] px-5 py-2.5 rounded-full hover:bg-[#4a5c4e] transition-colors"
+              className="text-xs font-medium tracking-[0.15em] uppercase bg-[#1A3329] text-white px-5 py-2.5 rounded-lg hover:bg-[#3D7A5F] transition-colors"
             >
               + Schedule Job
             </a>
@@ -199,7 +199,7 @@ export default async function ClientProfilePage({
                 <h2 className="text-sm font-medium text-zinc-900 tracking-tight">Properties</h2>
                 <a
                   href={`/dashboard/clients/${id}/properties/new`}
-                  className="text-xs text-[#4a5c4e] hover:underline tracking-wide"
+                  className="text-xs text-[#3D7A5F] hover:underline tracking-wide"
                 >
                   + Add property
                 </a>
@@ -208,7 +208,7 @@ export default async function ClientProfilePage({
               {properties.length === 0 ? (
                 <div className="px-6 py-8 text-center">
                   <p className="text-xs text-zinc-300 mb-2">No properties yet</p>
-                  <a href={`/dashboard/clients/${id}/properties/new`} className="text-xs text-[#4a5c4e] hover:underline">
+                  <a href={`/dashboard/clients/${id}/properties/new`} className="text-xs text-[#3D7A5F] hover:underline">
                     Add one →
                   </a>
                 </div>
@@ -236,7 +236,7 @@ export default async function ClientProfilePage({
                             <span className="text-xs text-zinc-400">{property.bedrooms} bed</span>
                           )}
                           {property.key_held && (
-                            <span className="text-xs bg-[#f0f4f1] text-[#4a5c4e] px-2 py-0.5 rounded-full">Key held</span>
+                            <span className="text-xs bg-[#C8F5D7] text-[#3D7A5F] px-2 py-0.5 rounded-full">Key held</span>
                           )}
                         </div>
                       </div>
@@ -266,7 +266,7 @@ export default async function ClientProfilePage({
                 <h2 className="text-sm font-medium text-zinc-900 tracking-tight">Job History</h2>
                 <a
                   href={`/dashboard/jobs/new?client_id=${id}`}
-                  className="text-xs text-[#4a5c4e] hover:underline tracking-wide"
+                  className="text-xs text-[#3D7A5F] hover:underline tracking-wide"
                 >
                   + Schedule job
                 </a>
@@ -275,7 +275,7 @@ export default async function ClientProfilePage({
               {jobs.length === 0 ? (
                 <div className="px-6 py-8 text-center">
                   <p className="text-xs text-zinc-300 mb-2">No jobs yet</p>
-                  <a href={`/dashboard/jobs/new?client_id=${id}`} className="text-xs text-[#4a5c4e] hover:underline">
+                  <a href={`/dashboard/jobs/new?client_id=${id}`} className="text-xs text-[#3D7A5F] hover:underline">
                     Schedule the first →
                   </a>
                 </div>

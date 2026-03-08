@@ -37,7 +37,7 @@ export default async function PropertyPage({
     .single()
 
   return (
-    <div className="min-h-screen bg-[#f9f8f5]">
+    <div className="min-h-screen bg-[#F9FAFB]">
       <main className="max-w-4xl mx-auto px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
 
         {/* Header */}
@@ -55,7 +55,7 @@ export default async function PropertyPage({
           </div>
           <a
             href={`/dashboard/clients/${clientId}/properties/${propertyId}/edit`}
-            className="self-start text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-600 px-5 py-2.5 rounded-full hover:border-zinc-400 transition-colors"
+            className="self-start text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-600 px-5 py-2.5 rounded-lg hover:border-zinc-400 transition-colors"
           >
             Edit
           </a>
@@ -96,7 +96,7 @@ export default async function PropertyPage({
         <div className="mt-6">
           <a
             href={`/dashboard/jobs/new?client_id=${clientId}&property_id=${propertyId}`}
-            className="text-xs font-medium tracking-[0.15em] uppercase bg-zinc-900 text-[#f9f8f5] px-5 py-3 rounded-full hover:bg-[#4a5c4e] transition-colors"
+            className="text-xs font-medium tracking-[0.15em] uppercase bg-[#1A3329] text-white px-5 py-3 rounded-lg hover:bg-[#3D7A5F] transition-colors"
           >
             + Schedule Job at This Property
           </a>

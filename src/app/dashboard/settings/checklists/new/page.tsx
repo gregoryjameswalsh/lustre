@@ -94,7 +94,7 @@ export default function NewChecklistTemplatePage() {
   const isBusy = pending || savingItems
 
   return (
-    <div className="min-h-screen bg-[#f9f8f5]">
+    <div className="min-h-screen bg-[#F9FAFB]">
       <main className="max-w-3xl mx-auto px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
 
         <div className="mb-8">
@@ -161,9 +161,9 @@ export default function NewChecklistTemplatePage() {
                       key={jt.id}
                       type="button"
                       onClick={() => toggleJobType(jt.id)}
-                      className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
+                      className={`text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors ${
                         selectedJobTypes.includes(jt.id)
-                          ? 'bg-[#4a5c4e] text-white border-[#4a5c4e]'
+                          ? 'bg-[#1A3329] text-white border-[#1A3329]'
                           : 'border-zinc-200 text-zinc-500 hover:border-zinc-400 hover:text-zinc-700'
                       }`}
                     >
@@ -223,7 +223,7 @@ export default function NewChecklistTemplatePage() {
               <button
                 type="button"
                 onClick={addItem}
-                className="text-xs font-medium tracking-[0.12em] uppercase border border-zinc-200 text-zinc-500 px-4 py-2 rounded-full hover:border-zinc-400 hover:text-zinc-700 transition-colors"
+                className="text-xs font-medium tracking-[0.12em] uppercase border border-zinc-200 text-zinc-500 px-4 py-2 rounded-lg hover:border-zinc-400 hover:text-zinc-700 transition-colors"
               >
                 + Add Item
               </button>
@@ -238,7 +238,7 @@ export default function NewChecklistTemplatePage() {
             <button
               type="submit"
               disabled={isBusy}
-              className="text-xs font-medium tracking-[0.15em] uppercase bg-zinc-900 text-[#f9f8f5] px-6 py-3 rounded-full hover:bg-[#4a5c4e] transition-colors disabled:opacity-50"
+              className="text-xs font-medium tracking-[0.15em] uppercase bg-[#1A3329] text-white px-6 py-3 rounded-lg hover:bg-[#3D7A5F] transition-colors disabled:opacity-50"
             >
               {isBusy ? 'Saving…' : 'Save Template'}
             </button>

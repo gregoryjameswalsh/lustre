@@ -78,7 +78,7 @@ export default function ChecklistTemplateListClient({
         {isAdmin && (
           <Link
             href="/dashboard/settings/checklists/new"
-            className="text-xs font-medium tracking-[0.15em] uppercase bg-zinc-900 text-[#f9f8f5] px-5 py-2.5 rounded-full hover:bg-[#4a5c4e] transition-colors inline-block"
+            className="text-xs font-medium tracking-[0.15em] uppercase bg-[#1A3329] text-white px-5 py-2.5 rounded-lg hover:bg-[#3D7A5F] transition-colors inline-block"
           >
             + New Template
           </Link>
@@ -123,7 +123,7 @@ export default function ChecklistTemplateListClient({
                   {template.job_types.map(jt => (
                     <span
                       key={jt.id}
-                      className="text-xs px-2 py-0.5 rounded-full bg-[#4a5c4e]/10 text-[#4a5c4e] font-medium"
+                      className="text-xs px-2 py-0.5 rounded-lg bg-[#1A3329]/10 text-[#3D7A5F] font-medium"
                     >
                       {jt.name}
                     </span>
@@ -157,7 +157,7 @@ export default function ChecklistTemplateListClient({
                 ) : (
                   <button
                     onClick={() => handleReactivate(template.id)}
-                    className="text-xs text-[#4a5c4e] hover:underline transition-colors"
+                    className="text-xs text-[#3D7A5F] hover:underline transition-colors"
                   >
                     Reactivate
                   </button>

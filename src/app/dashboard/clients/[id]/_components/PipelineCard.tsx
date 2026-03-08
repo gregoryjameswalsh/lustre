@@ -54,7 +54,7 @@ function LostReasonModal({
           <button
             onClick={() => onConfirm(reason.trim() || null)}
             disabled={isPending}
-            className="rounded-full bg-zinc-900 px-4 py-1.5 text-xs font-medium text-white hover:bg-zinc-700 transition-colors disabled:opacity-50"
+            className="rounded-lg bg-[#1A3329] px-4 py-1.5 text-xs font-medium text-white hover:bg-zinc-700 transition-colors disabled:opacity-50"
           >
             {isPending ? 'Saving…' : 'Confirm'}
           </button>
@@ -188,7 +188,7 @@ export default function PipelineCard({
                 <div className="flex gap-2 mt-2">
                   <button
                     onClick={handleSaveNotes}
-                    className="text-xs font-medium text-zinc-900 hover:text-[#4a5c4e] transition-colors"
+                    className="text-xs font-medium text-zinc-900 hover:text-[#3D7A5F] transition-colors"
                   >
                     Save
                   </button>
@@ -213,14 +213,14 @@ export default function PipelineCard({
           <button
             onClick={handleWin}
             disabled={isPending}
-            className="flex-1 rounded-full bg-emerald-600 px-4 py-2 text-xs font-medium tracking-[0.1em] uppercase text-white hover:bg-emerald-700 transition-colors disabled:opacity-50"
+            className="flex-1 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-medium tracking-[0.1em] uppercase text-white hover:bg-emerald-700 transition-colors disabled:opacity-50"
           >
             Mark as won
           </button>
           <button
             onClick={() => setShowLostModal(true)}
             disabled={isPending}
-            className="flex-1 rounded-full border border-zinc-200 px-4 py-2 text-xs font-medium tracking-[0.1em] uppercase text-zinc-600 hover:border-zinc-400 transition-colors disabled:opacity-50"
+            className="flex-1 rounded-lg border border-zinc-200 px-4 py-2 text-xs font-medium tracking-[0.1em] uppercase text-zinc-600 hover:border-zinc-400 transition-colors disabled:opacity-50"
           >
             Mark as lost
           </button>

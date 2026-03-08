@@ -267,7 +267,7 @@ export default function JobDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f9f8f5]">
+      <div className="min-h-screen bg-[#F9FAFB]">
         <div className="max-w-7xl mx-auto px-4 pt-8 sm:px-6 md:pt-24">
           <div className="text-sm text-zinc-300">Loading…</div>
         </div>
@@ -277,7 +277,7 @@ export default function JobDetailPage() {
 
   if (!job) {
     return (
-      <div className="min-h-screen bg-[#f9f8f5]">
+      <div className="min-h-screen bg-[#F9FAFB]">
         <div className="max-w-7xl mx-auto px-4 pt-8 sm:px-6 md:pt-24">
           <div className="text-sm text-zinc-400">Job not found.</div>
         </div>
@@ -300,7 +300,7 @@ export default function JobDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f9f8f5]">
+    <div className="min-h-screen bg-[#F9FAFB]">
 
       {/* Template selection modal */}
       {showTemplateModal && (
@@ -386,13 +386,13 @@ export default function JobDetailPage() {
             <div className="flex gap-2">
               <button
                 onClick={() => handleCompleteJob(true)}
-                className="flex-1 text-xs font-medium tracking-[0.12em] uppercase bg-emerald-600 text-white px-4 py-2.5 rounded-full hover:bg-emerald-700 transition-colors"
+                className="flex-1 text-xs font-medium tracking-[0.12em] uppercase bg-emerald-600 text-white px-4 py-2.5 rounded-lg hover:bg-emerald-700 transition-colors"
               >
                 Complete anyway
               </button>
               <button
                 onClick={() => setShowIncompleteWarning(false)}
-                className="flex-1 text-xs font-medium tracking-[0.12em] uppercase border border-zinc-200 text-zinc-600 px-4 py-2.5 rounded-full hover:border-zinc-400 transition-colors"
+                className="flex-1 text-xs font-medium tracking-[0.12em] uppercase border border-zinc-200 text-zinc-600 px-4 py-2.5 rounded-lg hover:border-zinc-400 transition-colors"
               >
                 Review checklist
               </button>
@@ -429,7 +429,7 @@ export default function JobDetailPage() {
           <div className="flex flex-wrap items-center gap-2 md:gap-3">
             <a
               href={`/dashboard/jobs/${jobId}/edit`}
-              className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-600 px-5 py-2.5 rounded-full hover:border-zinc-400 transition-colors"
+              className="text-xs font-medium tracking-[0.15em] uppercase border border-zinc-200 text-zinc-600 px-5 py-2.5 rounded-lg hover:border-zinc-400 transition-colors"
             >
               Edit
             </a>
@@ -445,7 +445,7 @@ export default function JobDetailPage() {
                   }
                 }}
                 disabled={updating}
-                className={`text-xs font-medium tracking-[0.15em] uppercase px-5 py-2.5 rounded-full transition-colors disabled:opacity-50 ${nextStatusColour[nextStatus]}`}
+                className={`text-xs font-medium tracking-[0.15em] uppercase px-5 py-2.5 rounded-lg transition-colors disabled:opacity-50 ${nextStatusColour[nextStatus]}`}
               >
                 {updating && nextStatus === 'in_progress' ? 'Starting…' : nextStatusLabel[nextStatus]}
               </button>
@@ -454,7 +454,7 @@ export default function JobDetailPage() {
               <button
                 onClick={() => updateStatus('cancelled')}
                 disabled={updating}
-                className="text-xs font-medium tracking-[0.15em] uppercase px-5 py-2.5 rounded-full bg-red-50 hover:bg-red-100 text-red-500 border border-red-200 transition-colors disabled:opacity-50"
+                className="text-xs font-medium tracking-[0.15em] uppercase px-5 py-2.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 border border-red-200 transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -492,7 +492,7 @@ export default function JobDetailPage() {
             <button
               onClick={handleOpenApplyModal}
               disabled={updating}
-              className="flex-shrink-0 text-xs font-medium tracking-[0.12em] uppercase border border-zinc-200 text-zinc-600 px-4 py-2 rounded-full hover:border-zinc-400 transition-colors disabled:opacity-50"
+              className="flex-shrink-0 text-xs font-medium tracking-[0.12em] uppercase border border-zinc-200 text-zinc-600 px-4 py-2 rounded-lg hover:border-zinc-400 transition-colors disabled:opacity-50"
             >
               Apply checklist
             </button>
@@ -569,7 +569,7 @@ export default function JobDetailPage() {
             <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
               <div className="px-5 py-4 border-b border-zinc-100 flex items-center justify-between">
                 <h2 className="text-xs font-medium tracking-[0.2em] uppercase text-zinc-500">Client</h2>
-                <a href={`/dashboard/clients/${job.clients?.id}`} className="text-xs text-[#4a5c4e] hover:underline">
+                <a href={`/dashboard/clients/${job.clients?.id}`} className="text-xs text-[#3D7A5F] hover:underline">
                   View →
                 </a>
               </div>
@@ -613,7 +613,7 @@ export default function JobDetailPage() {
                   </div>
                 )}
                 {job.properties?.key_held && (
-                  <span className="text-xs bg-[#f0f4f1] text-[#4a5c4e] px-2.5 py-1 rounded-full inline-block">
+                  <span className="text-xs bg-[#C8F5D7] text-[#3D7A5F] px-2.5 py-1 rounded-full inline-block">
                     Key held
                   </span>
                 )}

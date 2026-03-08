@@ -29,7 +29,7 @@ export default async function PipelinePage() {
   const totalValue = allClients.reduce((sum, c) => sum + (c.estimated_monthly_value ?? 0), 0)
 
   return (
-    <div className="min-h-screen bg-[#f9f8f5]">
+    <div className="min-h-screen bg-[#F9FAFB]">
       <main className="px-4 pt-8 pb-8 sm:px-6 md:pt-24">
 
         {/* Header */}
@@ -48,7 +48,7 @@ export default async function PipelinePage() {
           </div>
           <Link
             href={`/dashboard/clients/new?status=lead&from=pipeline${stages[0]?.id ? `&stage_id=${stages[0].id}` : ''}`}
-            className="mt-1 rounded-full bg-zinc-900 px-4 py-2 text-xs font-medium tracking-[0.15em] uppercase text-white hover:bg-zinc-700 transition-colors"
+            className="mt-1 rounded-lg bg-[#1A3329] px-4 py-2 text-xs font-medium tracking-[0.15em] uppercase text-white hover:bg-zinc-700 transition-colors"
           >
             Add lead
           </Link>

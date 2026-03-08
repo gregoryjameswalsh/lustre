@@ -38,7 +38,7 @@ export default async function RolesPage() {
   const { roles, memberCounts } = await getData()
 
   return (
-    <div className="min-h-screen bg-[#f9f8f5]">
+    <div className="min-h-screen bg-[#F9FAFB]">
       <main className="mx-auto max-w-2xl px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
 
         <div className="mb-8 flex items-start justify-between">
@@ -59,7 +59,7 @@ export default async function RolesPage() {
           </div>
           <Link
             href="/dashboard/settings/roles/new"
-            className="mt-1 rounded-full bg-zinc-900 px-4 py-2 text-xs font-medium tracking-[0.15em] uppercase text-white hover:bg-zinc-700 transition-colors"
+            className="mt-1 rounded-lg bg-[#1A3329] px-4 py-2 text-xs font-medium tracking-[0.15em] uppercase text-white hover:bg-zinc-700 transition-colors"
           >
             New role
           </Link>

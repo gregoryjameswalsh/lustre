@@ -12,7 +12,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="rounded-full bg-[#4a5c4e] px-5 py-2.5 text-xs font-medium uppercase tracking-widest text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+      className="rounded-lg bg-[#1A3329] px-5 py-2.5 text-xs font-medium uppercase tracking-widest text-white transition-opacity hover:opacity-90 disabled:opacity-50"
     >
       {pending ? 'Sending…' : 'Send invitation'}
     </button>
@@ -44,7 +44,7 @@ export default function InviteForm() {
           type="email"
           required
           placeholder="colleague@example.com"
-          className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-[#0c0c0b] placeholder-zinc-300 outline-none focus:border-[#4a5c4e] focus:ring-2 focus:ring-[#4a5c4e]/10"
+          className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-[#0c0c0b] placeholder-zinc-300 outline-none focus:border-[#1A3329] focus:ring-2 focus:ring-[#4a5c4e]/10"
         />
       </div>
 
@@ -53,7 +53,7 @@ export default function InviteForm() {
         <select
           name="role"
           defaultValue="team_member"
-          className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-[#0c0c0b] outline-none focus:border-[#4a5c4e] focus:ring-2 focus:ring-[#4a5c4e]/10"
+          className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-[#0c0c0b] outline-none focus:border-[#1A3329] focus:ring-2 focus:ring-[#4a5c4e]/10"
         >
           <option value="team_member">Team member</option>
           <option value="admin">Admin</option>

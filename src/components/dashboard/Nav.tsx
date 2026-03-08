@@ -22,7 +22,7 @@ function Avatar({ name }: { name: string }) {
     <span
       title={name}
       aria-label={name}
-      className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#4a5c4e] text-[10px] font-semibold uppercase tracking-wider text-white"
+      className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-[#1A3329] text-[10px] font-semibold uppercase tracking-wider text-white"
     >
       {initials}
     </span>
@@ -55,7 +55,7 @@ export default function Nav({ orgName, userName }: NavProps) {
   return (
     <>
       {/* ── Mobile header (phone only) ─────────────────────────────── */}
-      <div className="md:hidden fixed top-0 inset-x-0 z-50 h-12 flex items-center bg-[rgba(249,248,245,0.9)] backdrop-blur-md border-b border-zinc-200">
+      <div className="md:hidden fixed top-0 inset-x-0 z-50 h-12 flex items-center bg-[rgba(249,250,251,0.9)] backdrop-blur-md border-b border-zinc-200">
         {/* User avatar — left */}
         <div className="w-12 flex items-center justify-center">
           {userName ? <Avatar name={userName} /> : <div className="w-7" />}
@@ -79,7 +79,7 @@ export default function Nav({ orgName, userName }: NavProps) {
       </div>
 
       {/* ── Desktop / tablet top nav (md+) ────────────────────────── */}
-      <nav className="hidden md:block fixed top-0 inset-x-0 z-50 bg-[rgba(249,248,245,0.9)] backdrop-blur-md border-b border-zinc-200">
+      <nav className="hidden md:block fixed top-0 inset-x-0 z-50 bg-[rgba(249,250,251,0.9)] backdrop-blur-md border-b border-zinc-200">
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <a href="/dashboard" className="flex flex-col leading-tight">
@@ -139,7 +139,7 @@ export default function Nav({ orgName, userName }: NavProps) {
 
       {/* ── Mobile bottom tab bar (phone only) ────────────────────── */}
       <nav
-        className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-[rgba(249,248,245,0.9)] backdrop-blur-md border-t border-zinc-200"
+        className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-[rgba(249,250,251,0.9)] backdrop-blur-md border-t border-zinc-200"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         <div className="flex h-16">
