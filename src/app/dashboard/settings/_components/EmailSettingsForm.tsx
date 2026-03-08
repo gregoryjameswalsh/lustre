@@ -10,7 +10,7 @@
 //   verified — domain active; show the from address with a remove option
 // =============================================================================
 
-import { useActionState, useState, useEffect, useTransition } from 'react'
+import { useActionState, useState, useEffect, useTransition, useCallback } from 'react'
 import { useFormStatus } from 'react-dom'
 import {
   addCustomEmailDomain,
@@ -65,6 +65,39 @@ function Alert({ type, message }: { type: 'error' | 'success'; message: string }
 // DNS records table — shown in the "pending" state
 // -----------------------------------------------------------------------------
 
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      // Clipboard API unavailable — silently ignore
+    }
+  }, [text])
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      title="Copy to clipboard"
+      className="ml-1.5 shrink-0 rounded p-0.5 text-zinc-300 transition-colors hover:text-zinc-600"
+    >
+      {copied ? (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5 text-emerald-500">
+          <path fillRule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
+        </svg>
+      ) : (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="size-3.5">
+          <path fillRule="evenodd" d="M10.986 3H12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h1.014A2.25 2.25 0 0 1 7.25 1h1.5a2.25 2.25 0 0 1 2.236 2ZM9.75 3.25a.75.75 0 0 0-.75-.75h-1.5a.75.75 0 0 0-.75.75v.5c0 .414.336.75.75.75h1.5a.75.75 0 0 0 .75-.75v-.5Z" clipRule="evenodd" />
+        </svg>
+      )}
+    </button>
+  )
+}
+
 function DnsRecordsTable({ records }: { records: ResendDnsRecord[] }) {
   return (
     <div className="overflow-x-auto rounded-lg border border-zinc-100">
@@ -81,8 +114,18 @@ function DnsRecordsTable({ records }: { records: ResendDnsRecord[] }) {
           {records.map((r, i) => (
             <tr key={i} className="align-top">
               <td className="px-3 py-2 font-mono text-zinc-400">{r.type}</td>
-              <td className="max-w-[120px] break-all px-3 py-2 font-mono text-zinc-700">{r.name}</td>
-              <td className="max-w-[200px] break-all px-3 py-2 font-mono text-zinc-700">{r.value}</td>
+              <td className="max-w-[120px] break-all px-3 py-2">
+                <div className="flex items-start gap-1">
+                  <span className="font-mono text-zinc-700">{r.name}</span>
+                  <CopyButton text={r.name} />
+                </div>
+              </td>
+              <td className="max-w-[200px] break-all px-3 py-2">
+                <div className="flex items-start gap-1">
+                  <span className="font-mono text-zinc-700">{r.value}</span>
+                  <CopyButton text={r.value} />
+                </div>
+              </td>
               <td className="px-3 py-2">
                 {r.status === 'verified' ? (
                   <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-600">Verified</span>

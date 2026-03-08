@@ -8,6 +8,7 @@
 import { useActionState, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { saveVatSettings } from '@/lib/actions/settings'
+import AutoDismissAlert from './AutoDismissAlert'
 
 function SubmitButton() {
   const { pending } = useFormStatus()
@@ -42,17 +43,8 @@ export default function VatSettingsForm({ vatRegistered, vatRate, vatNumber, isA
         </div>
       )}
 
-      {state.error && (
-        <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-3">
-          <p className="text-sm text-red-600">{state.error}</p>
-        </div>
-      )}
-
-      {state.success && (
-        <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3">
-          <p className="text-sm text-emerald-700">VAT settings saved.</p>
-        </div>
-      )}
+      {state.error && <AutoDismissAlert type="error" message={state.error} />}
+      {state.success && <AutoDismissAlert type="success" message="VAT settings saved." />}
 
       {/* VAT registered toggle */}
       <div className="flex items-center justify-between">

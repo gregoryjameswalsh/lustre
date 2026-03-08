@@ -38,8 +38,7 @@ export default async function RolesPage() {
   const { roles, memberCounts } = await getData()
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB]">
-      <main className="mx-auto max-w-2xl px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
+    <main className="mx-auto max-w-2xl px-4 pt-8 pb-4 sm:px-6 md:pt-16 md:pb-16">
 
         <div className="mb-8 flex items-start justify-between">
           <div>
@@ -120,7 +119,6 @@ export default async function RolesPage() {
           System roles (Admin, Team Member) are managed automatically and cannot be edited or deleted.
         </p>
 
-      </main>
-    </div>
+    </main>
   )
 }

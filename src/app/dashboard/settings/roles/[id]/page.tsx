@@ -35,8 +35,7 @@ export default async function EditRolePage({ params }: { params: Promise<{ id: s
   }
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB]">
-      <main className="mx-auto max-w-2xl px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
+    <main className="mx-auto max-w-2xl px-4 pt-8 pb-4 sm:px-6 md:pt-16 md:pb-16">
 
         <div className="mb-8">
           <h1 className="text-2xl font-light tracking-tight text-zinc-900 sm:text-3xl">Edit role</h1>
@@ -51,7 +50,6 @@ export default async function EditRolePage({ params }: { params: Promise<{ id: s
           submitLabel="Save changes"
         />
 
-      </main>
-    </div>
+    </main>
   )
 }

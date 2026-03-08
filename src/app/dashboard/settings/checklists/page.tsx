@@ -25,8 +25,7 @@ export default async function ChecklistsPage() {
   const templates = await getChecklistTemplates()
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB]">
-      <main className="max-w-3xl mx-auto px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
+    <main className="max-w-3xl mx-auto px-4 pt-8 pb-4 sm:px-6 md:pt-16 md:pb-16">
 
         <div className="mb-8">
           <Link href="/dashboard/settings" className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors tracking-wide">
@@ -52,7 +51,6 @@ export default async function ChecklistsPage() {
 
         <ChecklistTemplateListClient templates={templates} isAdmin={isAdmin} />
 
-      </main>
-    </div>
+    </main>
   )
 }

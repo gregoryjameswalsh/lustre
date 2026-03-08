@@ -71,8 +71,7 @@ export default async function BillingSettingsPage({
     : null
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB]">
-      <main className="mx-auto max-w-2xl px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
+    <main className="mx-auto max-w-2xl px-4 pt-8 pb-4 sm:px-6 md:pt-16 md:pb-16">
 
         {/* Breadcrumb */}
         <div className="mb-6 flex items-center gap-2 text-sm text-zinc-400">
@@ -228,6 +227,5 @@ export default async function BillingSettingsPage({
 
         </div>
       </main>
-    </div>
   )
 }
