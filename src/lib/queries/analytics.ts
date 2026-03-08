@@ -269,7 +269,7 @@ export async function getTopClients(
     const map: ClientMap = {}
     for (const job of jobs ?? []) {
       const cid = job.client_id as string
-      const client = job.clients as { first_name: string; last_name: string } | null
+      const client = job.clients as unknown as { first_name: string; last_name: string } | null
       if (!map[cid]) {
         map[cid] = {
           name: client ? `${client.first_name} ${client.last_name}` : 'Unknown',
@@ -305,7 +305,7 @@ export async function getTopClients(
     const map: ClientMap = {}
     for (const quote of quotes ?? []) {
       const cid = quote.client_id as string
-      const client = quote.clients as { first_name: string; last_name: string } | null
+      const client = quote.clients as unknown as { first_name: string; last_name: string } | null
       if (!map[cid]) {
         map[cid] = {
           name: client ? `${client.first_name} ${client.last_name}` : 'Unknown',
