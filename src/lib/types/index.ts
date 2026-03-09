@@ -171,6 +171,21 @@ export interface ClientInPipeline extends Client {
 // Property
 // -----------------------------------------------------------------------------
 
+export interface PropertyPhoto {
+  id:               string
+  organisation_id:  string
+  property_id:      string
+  storage_path:     string
+  file_name:        string
+  file_size_bytes:  number | null
+  mime_type:        string | null
+  caption:          string | null
+  display_order:    number
+  is_main:          boolean
+  uploaded_by:      string | null
+  uploaded_at:      string
+}
+
 export interface Property {
   id: string
   organisation_id: string

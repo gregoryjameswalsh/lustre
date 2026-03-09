@@ -11,7 +11,7 @@ import { useState, useEffect, useRef, useTransition } from 'react'
 import { createClient }             from '@/lib/supabase/client'
 import { toggleChecklistItemAction } from '@/lib/actions/checklist-completion'
 import { savePhotoMetadataAction, deletePhotoAction } from '@/lib/actions/checklist-photos'
-import PhotoLightbox                 from './PhotoLightbox'
+import PhotoLightbox                 from '@/components/dashboard/PhotoLightbox'
 import type { JobChecklistWithItems, JobChecklistItem, JobChecklistPhoto } from '@/lib/types'
 
 const BUCKET = 'checklist-photos'
