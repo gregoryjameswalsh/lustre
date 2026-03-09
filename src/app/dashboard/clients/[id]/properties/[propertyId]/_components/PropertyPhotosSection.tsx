@@ -18,8 +18,9 @@
 import { useState, useEffect, useRef } from 'react'
 import imageCompression                 from 'browser-image-compression'
 import { createClient }                 from '@/lib/supabase/client'
-import { savePropertyPhotoMetadataAction, deletePropertyPhotoAction, setMainPropertyPhotoAction } from '@/lib/actions/property-photos'
+import { savePropertyPhotoMetadataAction, deletePropertyPhotoAction, setMainPropertyPhotoAction, updatePropertyPhotoCaptionAction } from '@/lib/actions/property-photos'
 import PhotoLightbox                    from '@/components/dashboard/PhotoLightbox'
+import type { LightboxPhoto }           from '@/components/dashboard/PhotoLightbox'
 import type { PropertyPhoto }           from '@/lib/types'
 
 const BUCKET          = 'property-photos'
@@ -192,6 +193,16 @@ export default function PropertyPhotosSection({
   }
 
   // ---------------------------------------------------------------------------
+  // Caption
+  // ---------------------------------------------------------------------------
+  async function handleCaptionSave(photoId: string, caption: string) {
+    await updatePropertyPhotoCaptionAction(photoId, caption)
+    setPhotos(prev => prev.map(p =>
+      p.id === photoId ? { ...p, caption: caption.trim() || null } : p
+    ))
+  }
+
+  // ---------------------------------------------------------------------------
   // Set as Main
   // ---------------------------------------------------------------------------
   async function handleSetMain(photoId: string, makeMain: boolean) {
@@ -210,10 +221,11 @@ export default function PropertyPhotosSection({
   // ---------------------------------------------------------------------------
   // Lightbox photo list
   // ---------------------------------------------------------------------------
-  const lightboxPhotos = photos.map(p => ({
+  const lightboxPhotos: LightboxPhoto[] = photos.map(p => ({
     id:        p.id,
     signedUrl: p.signedUrl ?? '',
     fileName:  p.file_name,
+    caption:   p.caption,
   }))
 
   // ---------------------------------------------------------------------------
@@ -233,6 +245,7 @@ export default function PropertyPhotosSection({
           onSetMain={handleSetMain}
           isMainPhoto={id => photos.find(p => p.id === id)?.is_main ?? false}
           settingMain={settingMain}
+          onCaptionSave={handleCaptionSave}
         />
       )}
 
@@ -308,18 +321,18 @@ export default function PropertyPhotosSection({
 
           {/* Photo grid */}
           {photos.length > 0 ? (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-x-2 gap-y-3">
               {photos.map((photo, idx) => (
+                <div key={photo.id} className="flex flex-col gap-1">
                 <button
-                  key={photo.id}
                   type="button"
                   onClick={() => setLightboxIndex(idx)}
-                  className={`relative aspect-square rounded-md overflow-hidden border transition-colors bg-zinc-50 flex-shrink-0 ${
+                  className={`relative aspect-square w-full rounded-md overflow-hidden border transition-colors bg-zinc-50 ${
                     photo.is_main
                       ? 'border-amber-400 ring-1 ring-amber-400'
                       : 'border-zinc-200 hover:border-zinc-400'
                   }`}
-                  title={photo.file_name}
+                  title={photo.caption ?? photo.file_name}
                 >
                   {photo.signedUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -344,6 +357,10 @@ export default function PropertyPhotosSection({
                     </span>
                   )}
                 </button>
+                {photo.caption && (
+                  <p className="text-xs text-zinc-400 truncate text-center leading-tight">{photo.caption}</p>
+                )}
+                </div>
               ))}
             </div>
           ) : (

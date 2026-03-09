@@ -6,7 +6,8 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { deleteJobAction } from '@/lib/actions/jobs'
 import { startJobAction, applyChecklistAction, type TemplateChoice } from '@/lib/actions/checklist-completion'
-import ChecklistSection from './_components/ChecklistSection'
+import ChecklistSection          from './_components/ChecklistSection'
+import PropertyPhotosReadOnly    from './_components/PropertyPhotosReadOnly'
 import type { JobChecklistWithItems } from '@/lib/types'
 
 const statusFlow = ['scheduled', 'in_progress', 'completed', 'cancelled']
@@ -647,6 +648,11 @@ export default function JobDetailPage() {
                   )}
                 </div>
               </div>
+            )}
+
+            {/* Property photos */}
+            {job.properties?.id && (
+              <PropertyPhotosReadOnly propertyId={job.properties.id} />
             )}
 
           </div>

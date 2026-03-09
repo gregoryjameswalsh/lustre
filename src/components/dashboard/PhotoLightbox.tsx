@@ -2,16 +2,17 @@
 
 // src/components/dashboard/PhotoLightbox.tsx
 // =============================================================================
-// LUSTRE — Full-screen photo lightbox with navigation, delete, and optional
-// "Set as Main" action.
+// LUSTRE — Full-screen photo lightbox with navigation, delete, optional
+// "Set as Main" action, and optional caption editing.
 // =============================================================================
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
-type LightboxPhoto = {
-  id: string
+export type LightboxPhoto = {
+  id:       string
   signedUrl: string
-  fileName: string
+  fileName:  string
+  caption?:  string | null
 }
 
 export default function PhotoLightbox({
@@ -25,6 +26,7 @@ export default function PhotoLightbox({
   onSetMain,
   isMainPhoto,
   settingMain,
+  onCaptionSave,
 }: {
   photos:        LightboxPhoto[]
   currentIndex:  number
@@ -37,11 +39,16 @@ export default function PhotoLightbox({
   onSetMain?:    (photoId: string, makeMain: boolean) => void
   isMainPhoto?:  (photoId: string) => boolean
   settingMain?:  boolean
+  // Optional caption editing — if omitted, caption is shown read-only
+  onCaptionSave?: (photoId: string, caption: string) => void
 }) {
   const photo  = photos[currentIndex]
-  if (!photo) return null
 
-  const isMain = isMainPhoto?.(photo.id) ?? false
+  // Caption draft — reset when photo changes
+  const [captionDraft, setCaptionDraft] = useState(photo?.caption ?? '')
+  useEffect(() => {
+    setCaptionDraft(photo?.caption ?? '')
+  }, [photo?.id])
 
   // Close on Escape, navigate with arrow keys
   useEffect(() => {
@@ -53,6 +60,18 @@ export default function PhotoLightbox({
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [currentIndex, photos.length])
+
+  if (!photo) return null
+
+  const isMain = isMainPhoto?.(photo.id) ?? false
+
+  function handleCaptionCommit() {
+    if (!onCaptionSave) return
+    const trimmed = captionDraft.trim()
+    if (trimmed !== (photo.caption ?? '')) {
+      onCaptionSave(photo.id, trimmed)
+    }
+  }
 
   return (
     <div
@@ -151,14 +170,35 @@ export default function PhotoLightbox({
         )}
       </div>
 
-      {/* Counter */}
-      {photos.length > 1 && (
-        <div className="text-center py-3 flex-shrink-0">
-          <span className="text-xs text-white/40">
+      {/* Caption + counter */}
+      <div
+        className="flex-shrink-0 px-4 pb-4 pt-2 flex flex-col items-center gap-1"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Editable caption */}
+        {onCaptionSave ? (
+          <input
+            type="text"
+            value={captionDraft}
+            onChange={e => setCaptionDraft(e.target.value)}
+            onBlur={handleCaptionCommit}
+            onKeyDown={e => { if (e.key === 'Enter') { e.currentTarget.blur() } }}
+            placeholder="Add a caption…"
+            className="w-full max-w-sm text-center text-xs bg-transparent border-0 border-b border-white/20 focus:border-white/50 text-white/70 placeholder-white/25 outline-none transition-colors py-1"
+          />
+        ) : (
+          photo.caption && (
+            <p className="text-xs text-white/50 text-center">{photo.caption}</p>
+          )
+        )}
+
+        {/* Counter */}
+        {photos.length > 1 && (
+          <span className="text-xs text-white/30">
             {currentIndex + 1} / {photos.length}
           </span>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }

@@ -68,6 +68,26 @@ export async function savePropertyPhotoMetadataAction(
 }
 
 /**
+ * Update the caption on a property photo.
+ * Passing an empty string clears the caption (stored as null).
+ */
+export async function updatePropertyPhotoCaptionAction(
+  photoId:  string,
+  caption:  string,
+): Promise<{ error?: string }> {
+  const { supabase, orgId } = await getOrgAndUser()
+
+  const { error } = await supabase
+    .from('property_photos')
+    .update({ caption: caption.trim() || null })
+    .eq('id', photoId)
+    .eq('organisation_id', orgId)
+
+  if (error) return { error: 'Failed to save caption.' }
+  return {}
+}
+
+/**
  * Set or unset a photo as the main (hero) photo for a property.
  * Passing makeMain=true clears any existing main first (enforced by DB
  * partial unique index, so we clear first to avoid conflicts).
