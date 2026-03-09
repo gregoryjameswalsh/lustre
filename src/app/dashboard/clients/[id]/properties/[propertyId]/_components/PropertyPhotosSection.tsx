@@ -18,7 +18,7 @@
 import { useState, useEffect, useRef } from 'react'
 import imageCompression                 from 'browser-image-compression'
 import { createClient }                 from '@/lib/supabase/client'
-import { savePropertyPhotoMetadataAction, deletePropertyPhotoAction } from '@/lib/actions/property-photos'
+import { savePropertyPhotoMetadataAction, deletePropertyPhotoAction, setMainPropertyPhotoAction } from '@/lib/actions/property-photos'
 import PhotoLightbox                    from '@/components/dashboard/PhotoLightbox'
 import type { PropertyPhoto }           from '@/lib/types'
 
@@ -46,6 +46,7 @@ export default function PropertyPhotosSection({
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [lightboxIndex, setLightboxIndex]     = useState<number | null>(null)
   const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null)
+  const [settingMain, setSettingMain]         = useState(false)
 
   const cameraInputRef  = useRef<HTMLInputElement | null>(null)
   const libraryInputRef = useRef<HTMLInputElement | null>(null)
@@ -156,6 +157,7 @@ export default function PropertyPhotosSection({
       mime_type:       compressed.type,
       caption:         null,
       display_order:   photos.length,
+      is_main:         false,
       uploaded_by:     null,
       uploaded_at:     new Date().toISOString(),
       signedUrl:       urlData?.signedUrl ?? '',
@@ -190,6 +192,22 @@ export default function PropertyPhotosSection({
   }
 
   // ---------------------------------------------------------------------------
+  // Set as Main
+  // ---------------------------------------------------------------------------
+  async function handleSetMain(photoId: string, makeMain: boolean) {
+    setSettingMain(true)
+    const result = await setMainPropertyPhotoAction(photoId, propertyId, makeMain)
+    setSettingMain(false)
+
+    if (result.error) return
+
+    setPhotos(prev => prev.map(p => ({
+      ...p,
+      is_main: makeMain ? p.id === photoId : (p.id === photoId ? false : p.is_main),
+    })))
+  }
+
+  // ---------------------------------------------------------------------------
   // Lightbox photo list
   // ---------------------------------------------------------------------------
   const lightboxPhotos = photos.map(p => ({
@@ -212,6 +230,9 @@ export default function PropertyPhotosSection({
           onDelete={handleDelete}
           canDelete={true}
           deleting={!!deletingPhotoId}
+          onSetMain={handleSetMain}
+          isMainPhoto={id => photos.find(p => p.id === id)?.is_main ?? false}
+          settingMain={settingMain}
         />
       )}
 
@@ -293,7 +314,11 @@ export default function PropertyPhotosSection({
                   key={photo.id}
                   type="button"
                   onClick={() => setLightboxIndex(idx)}
-                  className="aspect-square rounded-md overflow-hidden border border-zinc-200 hover:border-zinc-400 transition-colors bg-zinc-50 flex-shrink-0"
+                  className={`relative aspect-square rounded-md overflow-hidden border transition-colors bg-zinc-50 flex-shrink-0 ${
+                    photo.is_main
+                      ? 'border-amber-400 ring-1 ring-amber-400'
+                      : 'border-zinc-200 hover:border-zinc-400'
+                  }`}
                   title={photo.file_name}
                 >
                   {photo.signedUrl ? (
@@ -309,6 +334,14 @@ export default function PropertyPhotosSection({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                       </svg>
                     </div>
+                  )}
+                  {/* Star badge on main photo */}
+                  {photo.is_main && (
+                    <span className="absolute top-1 left-1 bg-amber-400 rounded-full p-0.5" title="Main photo">
+                      <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                      </svg>
+                    </span>
                   )}
                 </button>
               ))}

@@ -68,6 +68,50 @@ export async function savePropertyPhotoMetadataAction(
 }
 
 /**
+ * Set or unset a photo as the main (hero) photo for a property.
+ * Passing makeMain=true clears any existing main first (enforced by DB
+ * partial unique index, so we clear first to avoid conflicts).
+ * Passing makeMain=false unsets without promoting another.
+ */
+export async function setMainPropertyPhotoAction(
+  photoId:  string,
+  propertyId: string,
+  makeMain: boolean,
+): Promise<{ error?: string }> {
+  const { supabase, orgId } = await getOrgAndUser()
+
+  // Verify the photo belongs to this org + property
+  const { data: photo } = await supabase
+    .from('property_photos')
+    .select('id')
+    .eq('id', photoId)
+    .eq('property_id', propertyId)
+    .eq('organisation_id', orgId)
+    .single()
+
+  if (!photo) return { error: 'Photo not found.' }
+
+  if (makeMain) {
+    // Clear existing main first (partial unique index only allows one)
+    await supabase
+      .from('property_photos')
+      .update({ is_main: false })
+      .eq('property_id', propertyId)
+      .eq('organisation_id', orgId)
+      .eq('is_main', true)
+  }
+
+  const { error } = await supabase
+    .from('property_photos')
+    .update({ is_main: makeMain })
+    .eq('id', photoId)
+    .eq('organisation_id', orgId)
+
+  if (error) return { error: 'Failed to update main photo.' }
+  return {}
+}
+
+/**
  * Delete a photo: removes from Supabase Storage and the DB record.
  */
 export async function deletePropertyPhotoAction(

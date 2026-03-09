@@ -46,9 +46,31 @@ export default async function PropertyPage({
       .order('uploaded_at',   { ascending: true }),
   ])
 
+  // Generate a signed URL for the main photo to use as a server-rendered hero
+  const mainPhoto = (photos ?? []).find(p => p.is_main)
+  let mainPhotoUrl: string | null = null
+  if (mainPhoto) {
+    const { data: urlData } = await supabase.storage
+      .from('property-photos')
+      .createSignedUrl(mainPhoto.storage_path, 3600)
+    mainPhotoUrl = urlData?.signedUrl ?? null
+  }
+
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
       <main className="max-w-4xl mx-auto px-4 pt-8 pb-4 sm:px-6 md:pt-24 md:pb-16">
+
+        {/* Main photo hero */}
+        {mainPhotoUrl && (
+          <div className="mb-6 md:mb-8 rounded-xl overflow-hidden border border-zinc-200 h-52 sm:h-72">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={mainPhotoUrl}
+              alt={`${property.address_line1} — main photo`}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
 
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-6 md:mb-8">

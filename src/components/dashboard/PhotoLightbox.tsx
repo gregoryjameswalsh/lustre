@@ -1,8 +1,9 @@
 'use client'
 
-// src/app/dashboard/jobs/[id]/_components/PhotoLightbox.tsx
+// src/components/dashboard/PhotoLightbox.tsx
 // =============================================================================
-// LUSTRE — Full-screen photo lightbox with navigation and delete.
+// LUSTRE — Full-screen photo lightbox with navigation, delete, and optional
+// "Set as Main" action.
 // =============================================================================
 
 import { useEffect } from 'react'
@@ -21,17 +22,26 @@ export default function PhotoLightbox({
   onDelete,
   canDelete,
   deleting,
+  onSetMain,
+  isMainPhoto,
+  settingMain,
 }: {
-  photos:       LightboxPhoto[]
-  currentIndex: number
-  onClose:      () => void
-  onNavigate:   (index: number) => void
-  onDelete:     (photoId: string) => void
-  canDelete:    boolean
-  deleting:     boolean
+  photos:        LightboxPhoto[]
+  currentIndex:  number
+  onClose:       () => void
+  onNavigate:    (index: number) => void
+  onDelete:      (photoId: string) => void
+  canDelete:     boolean
+  deleting:      boolean
+  // Optional "Set as Main" support
+  onSetMain?:    (photoId: string, makeMain: boolean) => void
+  isMainPhoto?:  (photoId: string) => boolean
+  settingMain?:  boolean
 }) {
-  const photo = photos[currentIndex]
+  const photo  = photos[currentIndex]
   if (!photo) return null
+
+  const isMain = isMainPhoto?.(photo.id) ?? false
 
   // Close on Escape, navigate with arrow keys
   useEffect(() => {
@@ -54,8 +64,32 @@ export default function PhotoLightbox({
         className="flex items-center justify-between px-4 py-3 flex-shrink-0"
         onClick={e => e.stopPropagation()}
       >
-        <span className="text-xs text-white/60 truncate max-w-[60%]">{photo.fileName}</span>
+        <span className="text-xs text-white/60 truncate max-w-[50%]">{photo.fileName}</span>
         <div className="flex items-center gap-4">
+
+          {/* Set as Main (optional) */}
+          {onSetMain && (
+            <button
+              onClick={() => onSetMain(photo.id, !isMain)}
+              disabled={settingMain}
+              className={`flex items-center gap-1.5 text-xs transition-colors disabled:opacity-50 ${
+                isMain ? 'text-amber-400 hover:text-amber-300' : 'text-white/50 hover:text-white'
+              }`}
+              title={isMain ? 'Unset main photo' : 'Set as main photo'}
+            >
+              <svg
+                className="w-4 h-4"
+                viewBox="0 0 24 24"
+                fill={isMain ? 'currentColor' : 'none'}
+                stroke="currentColor"
+                strokeWidth={1.5}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+              </svg>
+              {isMain ? 'Main' : 'Set as Main'}
+            </button>
+          )}
+
           {canDelete && (
             <button
               onClick={() => onDelete(photo.id)}

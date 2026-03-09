@@ -181,6 +181,7 @@ export interface PropertyPhoto {
   mime_type:        string | null
   caption:          string | null
   display_order:    number
+  is_main:          boolean
   uploaded_by:      string | null
   uploaded_at:      string
 }
