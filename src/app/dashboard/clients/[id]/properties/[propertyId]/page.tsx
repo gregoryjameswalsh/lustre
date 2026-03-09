@@ -75,20 +75,29 @@ export default async function PropertyPage({
             />
           )}
 
-          {/* Gradient scrim: transparent at top → dark at bottom for text legibility */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
+          {/* Gradient scrim — inline style guarantees the CSS is emitted as-is,
+              bypassing any Tailwind class-generation or autoprefixer concerns.
+              Fades from near-black at bottom to ~10% at top so text always reads
+              clearly and bright photos don't wash out the top controls. */}
+          <div
+            className="absolute inset-0"
+            style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.45) 45%, rgba(0,0,0,0.15) 100%)' }}
+          />
 
-          {/* Top row: breadcrumb ← and Edit button */}
+          {/* Top row: breadcrumb ← and Edit button
+              backdropFilter inline so -webkit- prefix is always present for iOS Safari */}
           <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-5 pt-4">
             <a
               href={`/dashboard/clients/${clientId}`}
-              className="text-xs text-white/70 hover:text-white transition-colors tracking-wide bg-black/20 backdrop-blur-sm px-3 py-1.5 rounded-full"
+              className="text-xs text-white/80 hover:text-white transition-colors tracking-wide px-3 py-1.5 rounded-full border border-white/20"
+              style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', background: 'rgba(0,0,0,0.35)' }}
             >
               ← {client?.first_name} {client?.last_name}
             </a>
             <a
               href={`/dashboard/clients/${clientId}/properties/${propertyId}/edit`}
-              className="text-xs font-medium tracking-[0.15em] uppercase bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 px-4 py-2 rounded-lg hover:bg-white/20 transition-colors"
+              className="text-xs font-medium tracking-[0.15em] uppercase text-white/90 px-4 py-2 rounded-lg border border-white/25 hover:border-white/50 transition-colors"
+              style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', background: 'rgba(255,255,255,0.12)' }}
             >
               Edit
             </a>
@@ -96,38 +105,53 @@ export default async function PropertyPage({
 
           {/* Bottom: address + property-at-a-glance badges */}
           <div className="absolute bottom-0 left-0 right-0 px-5 pb-5">
-            <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-white drop-shadow-sm">
+            <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-white">
               {property.address_line1}
             </h1>
             {property.town && (
-              <p className="text-white/65 mt-1 text-sm">
+              <p className="text-white/70 mt-1 text-sm">
                 {property.town}{property.postcode && `, ${property.postcode}`}
               </p>
             )}
             {/* Quick-reference badges */}
             <div className="flex flex-wrap items-center gap-1.5 mt-3">
               {property.property_type && (
-                <span className="text-xs bg-white/15 backdrop-blur-sm border border-white/10 text-white/80 px-2.5 py-1 rounded-full capitalize">
+                <span
+                  className="text-xs text-white/85 px-2.5 py-1 rounded-full border border-white/20 capitalize"
+                  style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', background: 'rgba(255,255,255,0.15)' }}
+                >
                   {property.property_type}
                 </span>
               )}
               {property.bedrooms && (
-                <span className="text-xs bg-white/15 backdrop-blur-sm border border-white/10 text-white/80 px-2.5 py-1 rounded-full">
+                <span
+                  className="text-xs text-white/85 px-2.5 py-1 rounded-full border border-white/20"
+                  style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', background: 'rgba(255,255,255,0.15)' }}
+                >
                   {property.bedrooms} bed
                 </span>
               )}
               {property.bathrooms && (
-                <span className="text-xs bg-white/15 backdrop-blur-sm border border-white/10 text-white/80 px-2.5 py-1 rounded-full">
+                <span
+                  className="text-xs text-white/85 px-2.5 py-1 rounded-full border border-white/20"
+                  style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', background: 'rgba(255,255,255,0.15)' }}
+                >
                   {property.bathrooms} bath
                 </span>
               )}
               {property.key_held && (
-                <span className="text-xs bg-white/15 backdrop-blur-sm border border-white/10 text-white/80 px-2.5 py-1 rounded-full">
+                <span
+                  className="text-xs text-white/85 px-2.5 py-1 rounded-full border border-white/20"
+                  style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', background: 'rgba(255,255,255,0.15)' }}
+                >
                   Key held
                 </span>
               )}
               {property.pets && (
-                <span className="text-xs bg-white/15 backdrop-blur-sm border border-white/10 text-white/80 px-2.5 py-1 rounded-full">
+                <span
+                  className="text-xs text-white/85 px-2.5 py-1 rounded-full border border-white/20"
+                  style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', background: 'rgba(255,255,255,0.15)' }}
+                >
                   Pets
                 </span>
               )}
