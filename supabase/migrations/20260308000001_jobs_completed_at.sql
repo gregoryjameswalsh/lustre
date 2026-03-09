@@ -6,9 +6,10 @@
 
 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;
 
--- Backfill: for already-completed jobs, use updated_at as the best proxy
+-- Backfill: for already-completed jobs, use created_at as the best available proxy
+-- (jobs has no updated_at column)
 UPDATE jobs
-SET completed_at = updated_at
+SET completed_at = created_at
 WHERE status = 'completed'
   AND completed_at IS NULL;
 
