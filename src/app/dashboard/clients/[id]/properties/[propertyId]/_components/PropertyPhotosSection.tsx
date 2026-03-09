@@ -15,13 +15,35 @@
 // Signed URLs are generated client-side on mount (1 hour TTL).
 // =============================================================================
 
-import { useState, useEffect, useRef } from 'react'
-import imageCompression                 from 'browser-image-compression'
-import { createClient }                 from '@/lib/supabase/client'
-import { savePropertyPhotoMetadataAction, deletePropertyPhotoAction, setMainPropertyPhotoAction, updatePropertyPhotoCaptionAction } from '@/lib/actions/property-photos'
-import PhotoLightbox                    from '@/components/dashboard/PhotoLightbox'
-import type { LightboxPhoto }           from '@/components/dashboard/PhotoLightbox'
-import type { PropertyPhoto }           from '@/lib/types'
+import { useState, useEffect, useRef }                    from 'react'
+import imageCompression                                     from 'browser-image-compression'
+import { createClient }                                     from '@/lib/supabase/client'
+import {
+  savePropertyPhotoMetadataAction,
+  deletePropertyPhotoAction,
+  setMainPropertyPhotoAction,
+  updatePropertyPhotoCaptionAction,
+  reorderPropertyPhotosAction,
+} from '@/lib/actions/property-photos'
+import PhotoLightbox                                        from '@/components/dashboard/PhotoLightbox'
+import type { LightboxPhoto }                               from '@/components/dashboard/PhotoLightbox'
+import type { PropertyPhoto }                               from '@/lib/types'
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  useSortable,
+  rectSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
 const BUCKET          = 'property-photos'
 const MAX_RAW_BYTES   = 20 * 1024 * 1024  // 20 MiB — reject before even trying to compress
@@ -30,6 +52,79 @@ const ALLOWED_TYPES   = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 
 const SIGNED_URL_TTL  = 3600              // 1 hour
 
 type PhotoEntry = PropertyPhoto & { signedUrl?: string }
+
+// ---------------------------------------------------------------------------
+// Sortable photo item — wraps each thumbnail with dnd-kit drag behaviour.
+// Drag listeners are on the outer div so the inner button click still fires
+// cleanly; PointerSensor (distance: 8px) and TouchSensor (delay: 250ms)
+// distinguish a tap-to-open from a drag-to-reorder.
+// ---------------------------------------------------------------------------
+function SortablePhotoItem({
+  photo,
+  idx,
+  onOpen,
+}: {
+  photo:   PhotoEntry
+  idx:     number
+  onOpen:  () => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: photo.id })
+
+  const style = {
+    transform:  CSS.Transform.toString(transform),
+    transition,
+    opacity:    isDragging ? 0.4 : 1,
+    zIndex:     isDragging ? 10  : undefined,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="flex flex-col gap-1 touch-none"
+    >
+      <button
+        type="button"
+        onClick={onOpen}
+        className={`relative aspect-square w-full rounded-md overflow-hidden border transition-colors bg-zinc-50 cursor-grab active:cursor-grabbing ${
+          photo.is_main
+            ? 'border-amber-400 ring-1 ring-amber-400'
+            : 'border-zinc-200 hover:border-zinc-400'
+        }`}
+        title={photo.caption ?? photo.file_name}
+      >
+        {photo.signedUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={photo.signedUrl}
+            alt={photo.file_name}
+            className="w-full h-full object-cover pointer-events-none"
+            draggable={false}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <svg className="w-5 h-5 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+            </svg>
+          </div>
+        )}
+        {photo.is_main && (
+          <span className="absolute top-1 left-1 bg-amber-400 rounded-full p-0.5" title="Main photo">
+            <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+            </svg>
+          </span>
+        )}
+      </button>
+      {photo.caption && (
+        <p className="text-xs text-zinc-400 truncate text-center leading-tight select-none">{photo.caption}</p>
+      )}
+    </div>
+  )
+}
 
 export default function PropertyPhotosSection({
   propertyId,
@@ -51,6 +146,11 @@ export default function PropertyPhotosSection({
 
   const cameraInputRef  = useRef<HTMLInputElement | null>(null)
   const libraryInputRef = useRef<HTMLInputElement | null>(null)
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor,   { activationConstraint: { delay: 250, tolerance: 5 } }),
+  )
 
   // ---------------------------------------------------------------------------
   // Generate signed URLs on mount
@@ -193,6 +293,32 @@ export default function PropertyPhotosSection({
   }
 
   // ---------------------------------------------------------------------------
+  // Drag to reorder
+  // ---------------------------------------------------------------------------
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const oldIndex = photos.findIndex(p => p.id === active.id)
+    const newIndex = photos.findIndex(p => p.id === over.id)
+    const reordered = arrayMove(photos, oldIndex, newIndex)
+
+    // Update lightbox index to follow the dragged photo
+    if (lightboxIndex !== null) {
+      if (lightboxIndex === oldIndex) {
+        setLightboxIndex(newIndex)
+      } else if (oldIndex < lightboxIndex && newIndex >= lightboxIndex) {
+        setLightboxIndex(lightboxIndex - 1)
+      } else if (oldIndex > lightboxIndex && newIndex <= lightboxIndex) {
+        setLightboxIndex(lightboxIndex + 1)
+      }
+    }
+
+    setPhotos(reordered)
+    reorderPropertyPhotosAction(propertyId, reordered.map(p => p.id))
+  }
+
+  // ---------------------------------------------------------------------------
   // Caption
   // ---------------------------------------------------------------------------
   async function handleCaptionSave(photoId: string, caption: string) {
@@ -319,50 +445,26 @@ export default function PropertyPhotosSection({
             <p className="text-xs text-red-500 mb-4">{uploadError}</p>
           )}
 
-          {/* Photo grid */}
+          {/* Photo grid — drag to reorder */}
           {photos.length > 0 ? (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-x-2 gap-y-3">
-              {photos.map((photo, idx) => (
-                <div key={photo.id} className="flex flex-col gap-1">
-                <button
-                  type="button"
-                  onClick={() => setLightboxIndex(idx)}
-                  className={`relative aspect-square w-full rounded-md overflow-hidden border transition-colors bg-zinc-50 ${
-                    photo.is_main
-                      ? 'border-amber-400 ring-1 ring-amber-400'
-                      : 'border-zinc-200 hover:border-zinc-400'
-                  }`}
-                  title={photo.caption ?? photo.file_name}
-                >
-                  {photo.signedUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={photo.signedUrl}
-                      alt={photo.file_name}
-                      className="w-full h-full object-cover"
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext items={photos.map(p => p.id)} strategy={rectSortingStrategy}>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-x-2 gap-y-3">
+                  {photos.map((photo, idx) => (
+                    <SortablePhotoItem
+                      key={photo.id}
+                      photo={photo}
+                      idx={idx}
+                      onOpen={() => setLightboxIndex(idx)}
                     />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <svg className="w-5 h-5 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                      </svg>
-                    </div>
-                  )}
-                  {/* Star badge on main photo */}
-                  {photo.is_main && (
-                    <span className="absolute top-1 left-1 bg-amber-400 rounded-full p-0.5" title="Main photo">
-                      <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
-                      </svg>
-                    </span>
-                  )}
-                </button>
-                {photo.caption && (
-                  <p className="text-xs text-zinc-400 truncate text-center leading-tight">{photo.caption}</p>
-                )}
+                  ))}
                 </div>
-              ))}
-            </div>
+              </SortableContext>
+            </DndContext>
           ) : (
             !uploading && (
               <p className="text-sm text-zinc-400 text-center py-6">

@@ -68,6 +68,31 @@ export async function savePropertyPhotoMetadataAction(
 }
 
 /**
+ * Persist a new display_order after client-side drag-to-reorder.
+ * `orderedPhotoIds` is the full ordered array of IDs after the drag.
+ * Each photo's display_order is set to its index in that array.
+ */
+export async function reorderPropertyPhotosAction(
+  propertyId:     string,
+  orderedPhotoIds: string[],
+): Promise<{ error?: string }> {
+  const { supabase, orgId } = await getOrgAndUser()
+
+  await Promise.all(
+    orderedPhotoIds.map((id, index) =>
+      supabase
+        .from('property_photos')
+        .update({ display_order: index })
+        .eq('id', id)
+        .eq('property_id', propertyId)
+        .eq('organisation_id', orgId)
+    )
+  )
+
+  return {}
+}
+
+/**
  * Update the caption on a property photo.
  * Passing an empty string clears the caption (stored as null).
  */
