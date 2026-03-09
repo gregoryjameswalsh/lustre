@@ -8,7 +8,8 @@ import { deleteJobAction } from '@/lib/actions/jobs'
 import { startJobAction, applyChecklistAction, type TemplateChoice } from '@/lib/actions/checklist-completion'
 import ChecklistSection          from './_components/ChecklistSection'
 import PropertyPhotosReadOnly    from './_components/PropertyPhotosReadOnly'
-import type { JobChecklistWithItems } from '@/lib/types'
+import TagPicker                 from '@/components/dashboard/TagPicker'
+import type { JobChecklistWithItems, Tag } from '@/lib/types'
 
 const statusFlow = ['scheduled', 'in_progress', 'completed', 'cancelled']
 
@@ -56,7 +57,10 @@ export default function JobDetailPage() {
   const [loading, setLoading]                 = useState(true)
   const [updating, setUpdating]               = useState(false)
   const [isAdmin, setIsAdmin]                 = useState(false)
+  const [canEditTags, setCanEditTags]         = useState(false)
   const [orgId, setOrgId]                     = useState<string>('')
+  const [allTags, setAllTags]                 = useState<Tag[]>([])
+  const [jobTags, setJobTags]                 = useState<Tag[]>([])
 
   // Checklist
   const [checklist, setChecklist]             = useState<JobChecklistWithItems | null>(null)
@@ -105,13 +109,46 @@ export default function JobDetailPage() {
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('role, organisation_id')
+          .select('role, organisation_id, custom_role_id')
           .eq('id', user.id)
           .single()
         setIsAdmin(profile?.role === 'admin')
         if (profile?.organisation_id) {
           setOrgId(profile.organisation_id)
           currentOrgId = profile.organisation_id
+
+          // Determine jobs:write permission
+          let hasJobsWrite = profile?.role === 'admin'
+          if (!hasJobsWrite && profile?.custom_role_id) {
+            const { data: perm } = await supabase
+              .from('role_permissions')
+              .select('permission')
+              .eq('role_id', profile.custom_role_id)
+              .eq('permission', 'jobs:write')
+              .maybeSingle()
+            hasJobsWrite = !!perm
+          }
+          setCanEditTags(hasJobsWrite)
+
+          // Fetch tags for this job
+          const [{ data: tagData }, { data: entityTagData }] = await Promise.all([
+            supabase
+              .from('tags')
+              .select('id, name, colour, organisation_id, created_at')
+              .eq('organisation_id', profile.organisation_id)
+              .order('name', { ascending: true }),
+            supabase
+              .from('entity_tags')
+              .select('tag_id, tags(id, name, colour, organisation_id, created_at)')
+              .eq('entity_id', jobId)
+              .eq('entity_type', 'job'),
+          ])
+          setAllTags(tagData ?? [])
+          setJobTags(
+            (entityTagData ?? [])
+              .map(r => r.tags as Tag | null)
+              .filter((t): t is Tag => t !== null)
+          )
         }
       }
       setLoading(false)
@@ -563,6 +600,22 @@ export default function JobDetailPage() {
                     <span className="text-sm text-zinc-900">{value}</span>
                   </div>
                 ) : null)}
+              </div>
+            </div>
+
+            {/* Tags */}
+            <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
+              <div className="px-5 py-4 border-b border-zinc-100">
+                <h2 className="text-xs font-medium tracking-[0.2em] uppercase text-zinc-500">Tags</h2>
+              </div>
+              <div className="px-5 py-4">
+                <TagPicker
+                  entityId={jobId}
+                  entityType="job"
+                  allTags={allTags}
+                  appliedTags={jobTags}
+                  canEdit={canEditTags}
+                />
               </div>
             </div>
 

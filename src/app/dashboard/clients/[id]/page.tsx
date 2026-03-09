@@ -1,12 +1,15 @@
 import { createClient } from '@/lib/supabase/server'
 import { getClientWithProperties } from '@/lib/queries/clients'
 import { getStages } from '@/lib/queries/pipeline'
+import { getTags, getEntityTags } from '@/lib/queries/tags'
+import { getCurrentPermissions } from '@/lib/actions/_auth'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import ActivityTimeline from '@/components/dashboard/ActivityTimeline'
 import { getClientActivities, getOpenFollowUps } from '@/lib/queries/activities'
 import DataPrivacySection from './_components/DataPrivacySection'
 import PipelineCard from './_components/PipelineCard'
+import TagPicker from '@/components/dashboard/TagPicker'
 import type { Property, JobWithRelations, ConsentRecord, ClientInPipeline, PipelineStage } from '@/lib/types'
 
 
@@ -52,12 +55,17 @@ export default async function ClientProfilePage({
   const client = await getClientWithProperties(id)
   if (!client) notFound()
 
-  const [activities, followUps, pipelineStages, { data: consentsData }] = await Promise.all([
+  const [activities, followUps, pipelineStages, { data: consentsData }, allTags, clientTags, permissions] = await Promise.all([
     getClientActivities(id),
     getOpenFollowUps(id),
     getStages(),
     supabase.from('consent_records').select('*').eq('client_id', id),
+    getTags(),
+    getEntityTags(id, 'client'),
+    getCurrentPermissions(),
   ])
+
+  const canEditTags = permissions.includes('clients:write')
 
   // Fetch main photos for all properties and generate signed URLs
   const propertyIds = (client.properties ?? []).map((p: Property) => p.id)
@@ -164,6 +172,22 @@ export default async function ClientProfilePage({
                   <span className="text-xs text-zinc-400 block mb-0.5">Client Since</span>
                   <span className="text-sm text-zinc-900">{formatDate(client.created_at)}</span>
                 </div>
+              </div>
+            </div>
+
+            {/* Tags */}
+            <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
+              <div className="px-5 py-4 border-b border-zinc-100">
+                <h2 className="text-xs font-medium tracking-[0.2em] uppercase text-zinc-500">Tags</h2>
+              </div>
+              <div className="px-5 py-4">
+                <TagPicker
+                  entityId={id}
+                  entityType="client"
+                  allTags={allTags}
+                  appliedTags={clientTags}
+                  canEdit={canEditTags}
+                />
               </div>
             </div>
 

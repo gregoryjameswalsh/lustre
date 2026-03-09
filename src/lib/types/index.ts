@@ -165,6 +165,8 @@ export interface Client {
 export interface ClientInPipeline extends Client {
   pipeline_stages?: { name: string; colour: string | null; is_won: boolean; is_lost: boolean } | null
   pipeline_assigned_profile?: { full_name: string | null } | null
+  /** Tags joined via entity_tags → tags. Present only when the pipeline query includes the join. */
+  tags?: { id: string; colour: string | null; name: string }[]
 }
 
 // -----------------------------------------------------------------------------
@@ -427,6 +429,46 @@ export interface GdprRequest {
 
 export interface GdprRequestWithClient extends GdprRequest {
   clients?: { first_name: string; last_name: string } | null
+}
+
+// -----------------------------------------------------------------------------
+// Tags & Segmentation (M03)
+// -----------------------------------------------------------------------------
+
+/** Curated colour palette for tags. Palette is enforced in the UI only; hex is stored as-is. */
+export const CURATED_TAG_COLOURS = [
+  { name: 'Frost Mint',     hex: '#C8F5D7' },
+  { name: 'Sky Blue',       hex: '#C8E6FF' },
+  { name: 'Soft Lavender',  hex: '#E0D5FF' },
+  { name: 'Warm Peach',     hex: '#FFE0CC' },
+  { name: 'Blush Rose',     hex: '#FFD5D5' },
+  { name: 'Lemon Cream',    hex: '#FFF3C8' },
+  { name: 'Cloud Grey',     hex: '#E2E8F0' },
+  { name: 'Sage',           hex: '#D4EDD4' },
+] as const
+
+export const DEFAULT_TAG_COLOUR = '#E2E8F0' // Cloud Grey
+
+export type TagEntityType = 'client' | 'job'
+
+export interface Tag {
+  id:              string
+  organisation_id: string
+  name:            string
+  colour:          string | null
+  created_at:      string
+}
+
+export interface TagWithUsage extends Tag {
+  usage_count: number
+}
+
+export interface EntityTag {
+  id:          string
+  tag_id:      string
+  entity_id:   string
+  entity_type: TagEntityType
+  tag?:        Tag
 }
 
 // -----------------------------------------------------------------------------
