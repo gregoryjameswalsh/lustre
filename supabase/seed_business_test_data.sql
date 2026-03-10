@@ -192,10 +192,19 @@ BEGIN
   -- ══════════════════════════════════════════════════════════════════════════
   -- 3. PROFILES  (trigger assign_system_role_to_profile sets custom_role_id)
   -- ══════════════════════════════════════════════════════════════════════════
+  -- Upsert so that if a handle_new_user trigger already created a bare profile
+  -- from the auth.users insert above, we overwrite it with the correct data.
   INSERT INTO public.profiles (id, organisation_id, full_name, email, phone, role, custom_role_id)
   VALUES
     (v_admin_id,  v_org_id, 'Sarah Mitchell', 'admin@sparklepro.test', '07700 900123', 'admin',       v_role_admin_id),
-    (v_member_id, v_org_id, 'James Kowalski', 'team@sparklepro.test',  '07700 900456', 'team_member', v_role_member_id);
+    (v_member_id, v_org_id, 'James Kowalski', 'team@sparklepro.test',  '07700 900456', 'team_member', v_role_member_id)
+  ON CONFLICT (id) DO UPDATE SET
+    organisation_id = EXCLUDED.organisation_id,
+    full_name       = EXCLUDED.full_name,
+    email           = EXCLUDED.email,
+    phone           = EXCLUDED.phone,
+    role            = EXCLUDED.role,
+    custom_role_id  = EXCLUDED.custom_role_id;
 
   -- ══════════════════════════════════════════════════════════════════════════
   -- 4. CLIENTS
