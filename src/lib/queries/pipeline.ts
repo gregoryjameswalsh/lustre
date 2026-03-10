@@ -87,7 +87,7 @@ export async function getPipelineClients(): Promise<ClientInPipeline[]> {
   for (const row of entityTagRows ?? []) {
     if (!row.tags) continue
     if (!tagsByClient[row.entity_id]) tagsByClient[row.entity_id] = []
-    tagsByClient[row.entity_id].push(row.tags as { id: string; name: string; colour: string | null })
+    tagsByClient[row.entity_id].push(row.tags as unknown as { id: string; name: string; colour: string | null })
   }
 
   return clients.map(c => ({ ...c, tags: tagsByClient[c.id] ?? [] }))

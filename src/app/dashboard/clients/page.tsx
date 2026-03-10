@@ -73,7 +73,7 @@ export default function ClientsPage() {
       for (const row of entityTagData ?? []) {
         if (!row.tags) continue
         if (!tagsByClient[row.entity_id]) tagsByClient[row.entity_id] = []
-        tagsByClient[row.entity_id].push(row.tags as { id: string; name: string; colour: string | null })
+        tagsByClient[row.entity_id].push(row.tags as unknown as { id: string; name: string; colour: string | null })
       }
 
       setClients(

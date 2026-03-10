@@ -75,7 +75,7 @@ export default function JobsPage() {
       for (const row of entityTagData ?? []) {
         if (!row.tags) continue
         if (!tagsByJob[row.entity_id]) tagsByJob[row.entity_id] = []
-        tagsByJob[row.entity_id].push(row.tags as { id: string; name: string; colour: string | null })
+        tagsByJob[row.entity_id].push(row.tags as unknown as { id: string; name: string; colour: string | null })
       }
 
       setJobs((jobData ?? []).map(j => ({ ...j, tags: tagsByJob[j.id] ?? [] })) as JobRow[])
