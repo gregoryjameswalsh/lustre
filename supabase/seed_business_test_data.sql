@@ -108,9 +108,11 @@ BEGIN
 
   -- ══════════════════════════════════════════════════════════════════════════
   -- CLEAN UP previous run (safe to re-run)
+  -- Delete in FK-safe order: leaf tables first, then parents.
   -- ══════════════════════════════════════════════════════════════════════════
-  DELETE FROM auth.users WHERE id IN (v_admin_id, v_member_id);
+  DELETE FROM public.profiles      WHERE organisation_id = v_org_id;
   DELETE FROM public.organisations WHERE id = v_org_id;
+  DELETE FROM auth.users           WHERE id IN (v_admin_id, v_member_id);
 
   -- ══════════════════════════════════════════════════════════════════════════
   -- 1. AUTH USERS
