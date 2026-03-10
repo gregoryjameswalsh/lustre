@@ -178,12 +178,13 @@ BEGIN
 
   -- GoTrue requires a matching row in auth.identities for email/password login.
   INSERT INTO auth.identities (
-    id, user_id, provider, identity_data, last_sign_in_at, created_at, updated_at
+    id, user_id, provider, provider_id, identity_data, last_sign_in_at, created_at, updated_at
   ) VALUES
     (
       v_admin_id,
       v_admin_id,
       'email',
+      'admin@sparklepro.test',
       jsonb_build_object('sub', v_admin_id::text, 'email', 'admin@sparklepro.test'),
       now(), now(), now()
     ),
@@ -191,6 +192,7 @@ BEGIN
       v_member_id,
       v_member_id,
       'email',
+      'team@sparklepro.test',
       jsonb_build_object('sub', v_member_id::text, 'email', 'team@sparklepro.test'),
       now(), now(), now()
     )
