@@ -17,6 +17,7 @@ import {
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { moveClientStageAction, winClientAction, loseClientAction } from '@/lib/actions/pipeline'
+import TagDots from '@/components/dashboard/TagDots'
 import type { PipelineStage, ClientInPipeline } from '@/lib/types'
 
 // ---------------------------------------------------------------------------
@@ -144,6 +145,11 @@ function ClientCard({
           <p className="mt-1 text-[10px] text-zinc-400">
             {assigned}
           </p>
+        )}
+        {client.tags && client.tags.length > 0 && (
+          <div className="mt-1.5">
+            <TagDots tags={client.tags} />
+          </div>
         )}
       </Link>
 
