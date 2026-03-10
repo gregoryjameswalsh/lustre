@@ -4,6 +4,8 @@
 // =============================================================================
 
 import { createClient } from '@/lib/supabase/server'
+import { clampLimit, buildPaginatedResult, decodeCursor, pgVal } from '@/lib/pagination'
+import type { PaginationParams, PaginatedResult } from '@/lib/types/pagination'
 
 export type QuoteWithClient = {
   id: string
@@ -53,11 +55,27 @@ export type QuoteWithClient = {
 }
 
 // -----------------------------------------------------------------------------
-// Get all quotes for the org
+// Get paginated quotes for the org
 // -----------------------------------------------------------------------------
 
-export async function getQuotes(status?: string) {
+export async function getQuotes(
+  status?: string,
+  pagination?: PaginationParams,
+): Promise<PaginatedResult<{
+  id: string
+  quote_number: string
+  title: string
+  total: number
+  status: string
+  valid_until: string | null
+  created_at: string
+  clients?: { first_name: string; last_name: string; email: string | null }[] | null
+}>> {
   const supabase = await createClient()
+
+  const limit       = clampLimit(pagination?.limit)
+  const isFirstPage = !pagination?.after && !pagination?.before
+  const direction   = pagination?.before ? 'backward' : 'forward'
 
   let query = supabase
     .from('quotes')
@@ -68,15 +86,48 @@ export async function getQuotes(status?: string) {
       created_at, updated_at, job_id, client_id,
       clients ( first_name, last_name, email )
     `)
-    .order('created_at', { ascending: false })
+    .limit(limit + 1)
 
   if (status) {
     query = query.eq('status', status)
   }
 
+  if (pagination?.after) {
+    const cursor = decodeCursor(pagination.after)
+    if (cursor) {
+      query = query.or(
+        `created_at.lt.${pgVal(cursor.created_at)},and(created_at.eq.${pgVal(cursor.created_at)},id.lt.${pgVal(cursor.id)})`
+      )
+    }
+  } else if (pagination?.before) {
+    const cursor = decodeCursor(pagination.before)
+    if (cursor) {
+      query = query.or(
+        `created_at.gt.${pgVal(cursor.created_at)},and(created_at.eq.${pgVal(cursor.created_at)},id.gt.${pgVal(cursor.id)})`
+      )
+    }
+  }
+
+  if (direction === 'backward') {
+    query = query
+      .order('created_at', { ascending: true })
+      .order('id',         { ascending: true })
+  } else {
+    query = query
+      .order('created_at', { ascending: false })
+      .order('id',         { ascending: false })
+  }
+
   const { data, error } = await query
   if (error) throw error
-  return data ?? []
+
+  return buildPaginatedResult(
+    data ?? [],
+    limit,
+    direction,
+    isFirstPage,
+    (row) => ({ created_at: row.created_at, id: row.id }),
+  )
 }
 
 // -----------------------------------------------------------------------------

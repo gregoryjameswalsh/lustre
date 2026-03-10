@@ -55,7 +55,7 @@ export default async function ClientProfilePage({
   const client = await getClientWithProperties(id)
   if (!client) notFound()
 
-  const [activities, followUps, pipelineStages, { data: consentsData }, allTags, clientTags, permissions] = await Promise.all([
+  const [activitiesResult, followUpsResult, pipelineStages, { data: consentsData }, allTags, clientTags, permissions] = await Promise.all([
     getClientActivities(id),
     getOpenFollowUps(id),
     getStages(),
@@ -65,7 +65,10 @@ export default async function ClientProfilePage({
     getCurrentPermissions(),
   ])
 
-  const canEditTags = permissions.includes('clients:write')
+  const canEditTags    = permissions.includes('clients:write')
+  const activities     = activitiesResult.data
+  const followUps      = followUpsResult.data
+  const activitiesNext = activitiesResult.nextCursor
 
   // Fetch main photos for all properties and generate signed URLs
   const propertyIds = (client.properties ?? []).map((p: Property) => p.id)
@@ -322,6 +325,7 @@ export default async function ClientProfilePage({
     clientId={id}
     initialActivities={activities}
     initialFollowUps={followUps}
+    initialNextCursor={activitiesNext}
   />
 </div>
 
