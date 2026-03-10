@@ -131,7 +131,7 @@ BEGIN
   -- Profiles are now safe to delete (all referencing jobs are gone via cascade).
   DELETE FROM public.profiles WHERE id IN (v_admin_id, v_member_id);
 
-  -- Delete the auth rows last.
+  -- Delete the auth rows last (also cleans up auth.identities via cascade).
   DELETE FROM auth.users WHERE id IN (v_admin_id, v_member_id);
 
   -- ══════════════════════════════════════════════════════════════════════════
@@ -175,6 +175,26 @@ BEGIN
     );
 
   SET session_replication_role = DEFAULT;   -- re-enable triggers
+
+  -- GoTrue requires a matching row in auth.identities for email/password login.
+  INSERT INTO auth.identities (
+    id, user_id, provider, identity_data, last_sign_in_at, created_at, updated_at
+  ) VALUES
+    (
+      v_admin_id::text,
+      v_admin_id,
+      'email',
+      jsonb_build_object('sub', v_admin_id::text, 'email', 'admin@sparklepro.test'),
+      now(), now(), now()
+    ),
+    (
+      v_member_id::text,
+      v_member_id,
+      'email',
+      jsonb_build_object('sub', v_member_id::text, 'email', 'team@sparklepro.test'),
+      now(), now(), now()
+    )
+  ON CONFLICT (provider, id) DO NOTHING;
 
   -- ══════════════════════════════════════════════════════════════════════════
   -- 2. ORGANISATION  (triggers auto-create roles, pipeline stages, job types)
