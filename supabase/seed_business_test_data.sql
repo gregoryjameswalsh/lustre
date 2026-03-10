@@ -24,16 +24,19 @@
 
 BEGIN;
 
--- ── Fix plan CHECK constraint ─────────────────────────────────────────────────
--- The live DB may have a CHECK constraint created via the Table Editor that
--- doesn't yet include 'business'. Drop and recreate with the full plan set.
--- This is safe — the application enforces valid values at the type level.
+-- ── Fix CHECK constraints ─────────────────────────────────────────────────────
+-- Drop and recreate any constraints that may be missing values added post-setup.
+-- Application code enforces valid values; DB constraints are belt-and-braces.
+
 ALTER TABLE public.organisations
   DROP CONSTRAINT IF EXISTS organisations_plan_check;
-
 ALTER TABLE public.organisations
   ADD CONSTRAINT organisations_plan_check
   CHECK (plan IN ('free', 'starter', 'professional', 'business', 'enterprise'));
+
+-- property_type: drop so any string value is accepted (app enforces via select).
+ALTER TABLE public.properties
+  DROP CONSTRAINT IF EXISTS properties_property_type_check;
 -- ─────────────────────────────────────────────────────────────────────────────
 
 DO $$
