@@ -146,7 +146,7 @@ export default function JobDetailPage() {
           setAllTags(tagData ?? [])
           setJobTags(
             (entityTagData ?? [])
-              .map(r => r.tags as Tag | null)
+              .map(r => r.tags as unknown as Tag | null)
               .filter((t): t is Tag => t !== null)
           )
         }

@@ -61,7 +61,7 @@ export async function getEntityTags(
   if (error) throw new Error('Failed to fetch entity tags.')
 
   return (data ?? [])
-    .map(row => row.tags as Tag | null)
+    .map(row => row.tags as unknown as Tag | null)
     .filter((t): t is Tag => t !== null)
 }
 
