@@ -303,37 +303,37 @@ BEGIN
     key_held, specialist_surfaces, pets,
     created_at
   ) VALUES
-    -- Emily Hartley
-    (v_p1a, v_org_id, v_c1, '4 Elm Grove', NULL,           'Manchester', 'M20 2AA', 'semi-detached', 3, 2, 'Key under the blue plant pot at side gate.', 'Street parking on Elm Grove.', NULL, true,  NULL,             'Two golden retrievers (friendly).',  now() - interval '18 months'),
-    (v_p1b, v_org_id, v_c1, '8 Oak Mews',  'Didsbury',      'Manchester', 'M20 6BB', 'flat',          2, 1, 'Key fob in envelope under welcome mat.', 'Resident permit bay, speak to Emily.', NULL, true, NULL,             NULL,                                 now() - interval '6 months'),
+    -- Emily Hartley  (semi-detached → house, flat stays flat)
+    (v_p1a, v_org_id, v_c1, '4 Elm Grove', NULL,           'Manchester', 'M20 2AA', 'house',  3, 2, 'Key under the blue plant pot at side gate.', 'Street parking on Elm Grove.', NULL, true,  NULL,             'Two golden retrievers (friendly).',  now() - interval '18 months'),
+    (v_p1b, v_org_id, v_c1, '8 Oak Mews',  'Didsbury',      'Manchester', 'M20 6BB', 'flat',  2, 1, 'Key fob in envelope under welcome mat.', 'Resident permit bay, speak to Emily.', NULL, true, NULL,             NULL,                                 now() - interval '6 months'),
 
-    -- Robert Nguyen
-    (v_p2a, v_org_id, v_c2, '12 Canal St', 'Apt 3A',        'Manchester', 'M1 3XZ',  'apartment',     1, 1, 'Key safe code: 4829. Door faces the canal.', 'Loading bay for 30 min, ring Robert.', NULL, true, 'Marble worktops - no bleach.', NULL,                                 now() - interval '12 months'),
-    (v_p2b, v_org_id, v_c2, '7 Piccadilly', 'Studio 12',    'Manchester', 'M1 1ER',  'studio',        1, 1, 'Buzz unit 12 on the intercom.', 'No parking - NCP 5 mins away.', NULL, false, NULL,            NULL,                                 now() - interval '10 months'),
+    -- Robert Nguyen  (apartment → flat, studio → flat)
+    (v_p2a, v_org_id, v_c2, '12 Canal St', 'Apt 3A',        'Manchester', 'M1 3XZ',  'flat',  1, 1, 'Key safe code: 4829. Door faces the canal.', 'Loading bay for 30 min, ring Robert.', NULL, true, 'Marble worktops - no bleach.', NULL,                                 now() - interval '12 months'),
+    (v_p2b, v_org_id, v_c2, '7 Piccadilly', 'Studio 12',    'Manchester', 'M1 1ER',  'flat',  1, 1, 'Buzz unit 12 on the intercom.', 'No parking - NCP 5 mins away.', NULL, false, NULL,            NULL,                                 now() - interval '10 months'),
 
-    -- Charlotte Osei
-    (v_p3a, v_org_id, v_c3, '22 Beech Road', NULL,          'Stockport',  'SK2 5TT', 'terraced',      3, 1, 'Key with next door neighbour (Mrs Patel, No.24).', 'Park on Beech Road, no restrictions.', 'Alarm code: 1234 (beeps 30 sec).', false, 'Slate bathroom tiles.', NULL,   now() - interval '8 months'),
-    (v_p3b, v_org_id, v_c3, '1 Rose Court', 'Flat B',       'Stockport',  'SK2 1AB', 'flat',          2, 1, 'Collect key from Charlotte at first visit.', 'Visitor bay at front.', NULL, true, NULL,             NULL,                                 now() - interval '3 months'),
+    -- Charlotte Osei  (terraced → house)
+    (v_p3a, v_org_id, v_c3, '22 Beech Road', NULL,          'Stockport',  'SK2 5TT', 'house', 3, 1, 'Key with next door neighbour (Mrs Patel, No.24).', 'Park on Beech Road, no restrictions.', 'Alarm code: 1234 (beeps 30 sec).', false, 'Slate bathroom tiles.', NULL,   now() - interval '8 months'),
+    (v_p3b, v_org_id, v_c3, '1 Rose Court', 'Flat B',       'Stockport',  'SK2 1AB', 'flat',  2, 1, 'Collect key from Charlotte at first visit.', 'Visitor bay at front.', NULL, true, NULL,             NULL,                                 now() - interval '3 months'),
 
-    -- Tom Birchall
-    (v_p4a, v_org_id, v_c4, '56 Maple Drive', NULL,         'Sale',       'M33 4PP', 'detached',      4, 2, 'Keysafe by front door - code: 7712.', 'Large driveway.', 'Alarm off before 8 am (neighbours). Code: 9988.', true, NULL, 'One indoor cat (Whiskers).',          now() - interval '5 months'),
-    (v_p4b, v_org_id, v_c4, '3 Birch Lane', NULL,           'Sale',       'M33 6QQ', 'terraced',      2, 1, 'Tom will be present most visits.', 'On-street.', NULL, false, NULL,            NULL,                                 now() - interval '2 months'),
+    -- Tom Birchall  (detached → house, terraced → house)
+    (v_p4a, v_org_id, v_c4, '56 Maple Drive', NULL,         'Sale',       'M33 4PP', 'house', 4, 2, 'Keysafe by front door - code: 7712.', 'Large driveway.', 'Alarm off before 8 am (neighbours). Code: 9988.', true, NULL, 'One indoor cat (Whiskers).',          now() - interval '5 months'),
+    (v_p4b, v_org_id, v_c4, '3 Birch Lane', NULL,           'Sale',       'M33 6QQ', 'house', 2, 1, 'Tom will be present most visits.', 'On-street.', NULL, false, NULL,            NULL,                                 now() - interval '2 months'),
 
-    -- Priya Sharma (lead)
-    (v_p5a, v_org_id, v_c5, '9 The Quays',  'Flat 14',      'Salford',    'M50 3TQ', 'apartment',     2, 1, 'Contact Priya for access.', 'Underground car park, visitor space B3.', NULL, false, NULL,            NULL,                                 now() - interval '10 days'),
-    (v_p5b, v_org_id, v_c5, '200 Regent Road', NULL,        'Salford',    'M5 4AB',  'terraced',      3, 1, 'Key with agent until completion.', 'On-street.', NULL, false, NULL,            NULL,                                 now() - interval '8 days'),
+    -- Priya Sharma (lead)  (apartment → flat, terraced → house)
+    (v_p5a, v_org_id, v_c5, '9 The Quays',  'Flat 14',      'Salford',    'M50 3TQ', 'flat',  2, 1, 'Contact Priya for access.', 'Underground car park, visitor space B3.', NULL, false, NULL,            NULL,                                 now() - interval '10 days'),
+    (v_p5b, v_org_id, v_c5, '200 Regent Road', NULL,        'Salford',    'M5 4AB',  'house', 3, 1, 'Key with agent until completion.', 'On-street.', NULL, false, NULL,            NULL,                                 now() - interval '8 days'),
 
-    -- Marcus Webb (lead)
-    (v_p6a, v_org_id, v_c6, '45 King St',   '3rd Floor',    'Manchester', 'M2 7ER',  'office',        NULL, 2, 'Reception open from 7 am. Sign in with security.', 'NCP on Deansgate.', NULL, false, NULL,            NULL,                                 now() - interval '5 days'),
-    (v_p6b, v_org_id, v_c6, '45 King St',   'Basement Gym', 'Manchester', 'M2 7ER',  'other',         NULL, 1, 'Same building - access via stairwell B.', 'NCP on Deansgate.', NULL, false, NULL,            NULL,                                 now() - interval '5 days'),
+    -- Marcus Webb (lead)  (office → other, other stays other)
+    (v_p6a, v_org_id, v_c6, '45 King St',   '3rd Floor',    'Manchester', 'M2 7ER',  'other', NULL, 2, 'Reception open from 7 am. Sign in with security.', 'NCP on Deansgate.', NULL, false, NULL,            NULL,                                 now() - interval '5 days'),
+    (v_p6b, v_org_id, v_c6, '45 King St',   'Basement Gym', 'Manchester', 'M2 7ER',  'other', NULL, 1, 'Same building - access via stairwell B.', 'NCP on Deansgate.', NULL, false, NULL,            NULL,                                 now() - interval '5 days'),
 
-    -- Fiona McAllister (lead)
-    (v_p7a, v_org_id, v_c7, '33 Victoria Rd', NULL,         'Altrincham', 'WA14 2QS','terraced',      2, 1, 'Tenants still in situ - liaise with Fiona.', 'On-street.', NULL, false, NULL,            NULL,                                 now() - interval '2 days'),
-    (v_p7b, v_org_id, v_c7, '10 Market St',   'Flat 2',     'Altrincham', 'WA14 1AB','flat',          1, 1, 'Will be vacant on clean day.', 'Visitor bay at rear.', NULL, false, NULL,            NULL,                                 now() - interval '1 day'),
+    -- Fiona McAllister (lead)  (terraced → house)
+    (v_p7a, v_org_id, v_c7, '33 Victoria Rd', NULL,         'Altrincham', 'WA14 2QS','house', 2, 1, 'Tenants still in situ - liaise with Fiona.', 'On-street.', NULL, false, NULL,            NULL,                                 now() - interval '2 days'),
+    (v_p7b, v_org_id, v_c7, '10 Market St',   'Flat 2',     'Altrincham', 'WA14 1AB','flat',  1, 1, 'Will be vacant on clean day.', 'Visitor bay at rear.', NULL, false, NULL,            NULL,                                 now() - interval '1 day'),
 
-    -- Derek Flanagan (inactive)
-    (v_p8a, v_org_id, v_c8, '18 Willow Way', NULL,          'Bury',       'BL9 7TT', 'semi-detached', 3, 1, 'N/A - client no longer active.', NULL, NULL, false, NULL,            NULL,                                 now() - interval '4 months'),
-    (v_p8b, v_org_id, v_c8, '2 Fern Close',  NULL,          'Bury',       'BL9 3JJ', 'terraced',      2, 1, 'N/A - client no longer active.', NULL, NULL, false, NULL,            NULL,                                 now() - interval '4 months');
+    -- Derek Flanagan (inactive)  (semi-detached → house, terraced → house)
+    (v_p8a, v_org_id, v_c8, '18 Willow Way', NULL,          'Bury',       'BL9 7TT', 'house', 3, 1, 'N/A - client no longer active.', NULL, NULL, false, NULL,            NULL,                                 now() - interval '4 months'),
+    (v_p8b, v_org_id, v_c8, '2 Fern Close',  NULL,          'Bury',       'BL9 3JJ', 'house', 2, 1, 'N/A - client no longer active.', NULL, NULL, false, NULL,            NULL,                                 now() - interval '4 months');
 
   -- ══════════════════════════════════════════════════════════════════════════
   -- 6. JOBS
