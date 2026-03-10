@@ -613,3 +613,20 @@ BEGIN
   RAISE NOTICE 'Login → admin@sparklepro.test / TestPassword123!';
   RAISE NOTICE 'Login → team@sparklepro.test  / TestPassword123!';
 END $$;
+
+-- Auth diagnostics — run these separately and share the output if login still fails:
+SELECT
+  u.email,
+  u.email_confirmed_at IS NOT NULL                                    AS email_confirmed,
+  u.encrypted_password IS NOT NULL                                    AS has_password,
+  (u.encrypted_password = crypt('TestPassword123!', u.encrypted_password)) AS password_hash_ok,
+  u.banned_until,
+  u.deleted_at,
+  i.provider,
+  i.provider_id
+FROM auth.users u
+LEFT JOIN auth.identities i ON i.user_id = u.id
+WHERE u.id IN (
+  'b1000000-0000-0000-0000-000000000002',
+  'b1000000-0000-0000-0000-000000000003'
+);
