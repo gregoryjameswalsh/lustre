@@ -40,7 +40,7 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
           .in('entity_id', clientIds)
           .eq('entity_type', 'client')
           .then(r => r.data)
-      : Promise.resolve([] as null),
+      : Promise.resolve(null),
   ])
 
   const tagsByClient: Record<string, { id: string; name: string; colour: string | null }[]> = {}
