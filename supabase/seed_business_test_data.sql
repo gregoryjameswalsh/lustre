@@ -116,34 +116,31 @@ BEGIN
 
   -- ══════════════════════════════════════════════════════════════════════════
   -- CLEAN UP previous run (safe to re-run)
-  -- handle_new_user() creates a NEW org per auth user on INSERT, so previous
-  -- runs may have left behind trigger-created orgs with slugs like 'admin-b10000'.
-  -- We must delete those too or the next auth.users INSERT will slug-conflict.
   -- ══════════════════════════════════════════════════════════════════════════
 
-  -- 1. Delete trigger-created orgs left over from previous runs
-  --    (found via the profile rows those orgs own).
+  -- Delete orgs that handle_new_user auto-created for these email addresses
+  -- (their slugs conflict on the next run). Match by email — reliable even
+  -- when profile rows were already deleted by a previous partial cleanup.
   DELETE FROM public.organisations
-    WHERE id IN (
-      SELECT organisation_id FROM public.profiles
-      WHERE id IN (v_admin_id, v_member_id)
-        AND organisation_id <> v_org_id   -- don't double-delete our intended org
-    );
+    WHERE email IN ('admin@sparklepro.test', 'team@sparklepro.test')
+      AND id <> v_org_id;
 
-  -- 2. Delete our intended org (cascades: clients, properties, jobs, quotes, activities…)
+  -- Delete our intended org (cascades: clients, properties, jobs, quotes, activities…)
   DELETE FROM public.organisations WHERE id = v_org_id;
 
-  -- 3. Now profiles have no referencing jobs — safe to delete.
+  -- Profiles are now safe to delete (all referencing jobs are gone via cascade).
   DELETE FROM public.profiles WHERE id IN (v_admin_id, v_member_id);
 
-  -- 4. Finally delete the auth rows.
+  -- Delete the auth rows last.
   DELETE FROM auth.users WHERE id IN (v_admin_id, v_member_id);
 
   -- ══════════════════════════════════════════════════════════════════════════
   -- 1. AUTH USERS
-  -- The handle_new_user trigger may auto-create a bare profile row here.
-  -- We purge those immediately afterwards so our explicit insert is clean.
+  -- Disable triggers so handle_new_user does NOT fire and create a spurious
+  -- org+profile. We set up the org and profiles ourselves below.
   -- ══════════════════════════════════════════════════════════════════════════
+  SET session_replication_role = replica;   -- suppresses non-ALWAYS triggers
+
   INSERT INTO auth.users (
     id, instance_id, aud, role,
     email, encrypted_password,
@@ -177,15 +174,7 @@ BEGIN
       '', '', ''
     );
 
-  -- handle_new_user just created one org per user + a profile each.
-  -- Delete those orgs (cascades to the auto-created profiles too), then any
-  -- leftover profile rows, so we start the org+profile insert with a clean slate.
-  DELETE FROM public.organisations
-    WHERE id IN (
-      SELECT organisation_id FROM public.profiles
-      WHERE id IN (v_admin_id, v_member_id)
-    );
-  DELETE FROM public.profiles WHERE id IN (v_admin_id, v_member_id);
+  SET session_replication_role = DEFAULT;   -- re-enable triggers
 
   -- ══════════════════════════════════════════════════════════════════════════
   -- 2. ORGANISATION  (triggers auto-create roles, pipeline stages, job types)
