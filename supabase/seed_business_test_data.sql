@@ -194,7 +194,7 @@ BEGIN
       jsonb_build_object('sub', v_member_id::text, 'email', 'team@sparklepro.test'),
       now(), now(), now()
     )
-  ON CONFLICT (provider, id) DO NOTHING;
+  ;
 
   -- ══════════════════════════════════════════════════════════════════════════
   -- 2. ORGANISATION  (triggers auto-create roles, pipeline stages, job types)
