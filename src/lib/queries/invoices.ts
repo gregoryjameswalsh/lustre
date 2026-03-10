@@ -40,7 +40,7 @@ export async function getInvoices(options?: {
   if (options?.clientId) query = query.eq('client_id', options.clientId)
 
   const { data } = await query
-  return (data ?? []) as InvoiceWithRelations[]
+  return (data ?? []) as unknown as InvoiceWithRelations[]
 }
 
 // Single invoice by ID (must belong to current org — enforced by RLS).
@@ -53,5 +53,5 @@ export async function getInvoice(id: string): Promise<InvoiceWithRelations | nul
     .eq('id', id)
     .single()
 
-  return data as InvoiceWithRelations | null
+  return data as unknown as InvoiceWithRelations | null
 }
