@@ -176,7 +176,7 @@ export default async function ClientProfilePage({
             </div>
 
             {/* Tags */}
-            <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
+            <div className="bg-white border border-zinc-200 rounded-lg">
               <div className="px-5 py-4 border-b border-zinc-100">
                 <h2 className="text-xs font-medium tracking-[0.2em] uppercase text-zinc-500">Tags</h2>
               </div>
