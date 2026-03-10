@@ -119,8 +119,10 @@ BEGIN
   -- Delete by ID first so we catch profiles regardless of their org assignment
   -- (a handle_new_user trigger may have created them with a different org_id).
   -- ══════════════════════════════════════════════════════════════════════════
-  DELETE FROM public.profiles      WHERE id IN (v_admin_id, v_member_id);
+  -- Delete org first — cascades to jobs/clients/properties/quotes/activities.
+  -- Then profiles (jobs referencing them are now gone), then auth.users last.
   DELETE FROM public.organisations WHERE id = v_org_id;
+  DELETE FROM public.profiles      WHERE id IN (v_admin_id, v_member_id);
   DELETE FROM auth.users           WHERE id IN (v_admin_id, v_member_id);
 
   -- ══════════════════════════════════════════════════════════════════════════
