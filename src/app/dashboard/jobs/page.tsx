@@ -78,7 +78,7 @@ export default function JobsPage() {
         tagsByJob[row.entity_id].push(row.tags as unknown as { id: string; name: string; colour: string | null })
       }
 
-      setJobs((jobData ?? []).map(j => ({ ...j, tags: tagsByJob[j.id] ?? [] })) as JobRow[])
+      setJobs((jobData ?? []).map(j => ({ ...j, tags: tagsByJob[j.id] ?? [] })) as unknown as JobRow[])
       setAllTags(tagData ?? [])
       setLoading(false)
     }
