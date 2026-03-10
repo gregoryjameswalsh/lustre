@@ -29,6 +29,8 @@ export type AuditAction =
   | 'invite_team_member'
   | 'revoke_invitation'
   | 'remove_member'
+  | 'suspend_member'
+  | 'unsuspend_member'
   | 'update_member_role'
   | 'create_job_type'
   | 'update_job_type'
