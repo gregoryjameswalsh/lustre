@@ -130,9 +130,11 @@ BEGIN
   -- ══════════════════════════════════════════════════════════════════════════
   INSERT INTO auth.users (
     id, instance_id, aud, role,
-    email, encrypted_password, email_confirmed_at,
+    email, encrypted_password,
+    email_confirmed_at, confirmed_at,   -- both required for GoTrue to allow login
     raw_app_meta_data, raw_user_meta_data,
-    created_at, updated_at
+    created_at, updated_at,
+    confirmation_token, email_change_token_new, recovery_token  -- must be '' not NULL
   ) VALUES
     (
       v_admin_id,
@@ -140,10 +142,11 @@ BEGIN
       'authenticated', 'authenticated',
       'admin@sparklepro.test',
       crypt('TestPassword123!', gen_salt('bf')),
-      now(),
+      now(), now(),
       '{"provider":"email","providers":["email"]}',
       '{"full_name":"Sarah Mitchell"}',
-      now(), now()
+      now(), now(),
+      '', '', ''
     ),
     (
       v_member_id,
@@ -151,10 +154,11 @@ BEGIN
       'authenticated', 'authenticated',
       'team@sparklepro.test',
       crypt('TestPassword123!', gen_salt('bf')),
-      now(),
+      now(), now(),
       '{"provider":"email","providers":["email"]}',
       '{"full_name":"James Kowalski"}',
-      now(), now()
+      now(), now(),
+      '', '', ''
     );
 
   -- Purge any profiles auto-created by handle_new_user before we insert the org.
