@@ -472,6 +472,66 @@ export interface EntityTag {
 }
 
 // -----------------------------------------------------------------------------
+// Invoice
+// -----------------------------------------------------------------------------
+
+export type InvoiceStatus =
+  | 'draft' | 'sent' | 'viewed' | 'paid' | 'overdue' | 'void' | 'credit_note'
+
+export interface Invoice {
+  id:                       string
+  organisation_id:          string
+  client_id:                string
+  job_id:                   string | null
+  quote_id:                 string | null
+  invoice_number:           string
+  view_token:               string
+  status:                   InvoiceStatus
+  issue_date:               string
+  due_date:                 string
+  subtotal:                 number
+  tax_rate:                 number
+  tax_amount:               number
+  total:                    number
+  amount_paid:              number
+  currency:                 string
+  stripe_payment_link_id:   string | null
+  stripe_payment_link_url:  string | null
+  stripe_payment_intent_id: string | null
+  sent_at:                  string | null
+  viewed_at:                string | null
+  paid_at:                  string | null
+  voided_at:                string | null
+  void_reason:              string | null
+  notes:                    string | null
+  internal_notes:           string | null
+  created_at:               string
+  updated_at:               string
+}
+
+export interface InvoiceLineItem {
+  id:              string
+  invoice_id:      string
+  organisation_id: string
+  description:     string
+  quantity:        number
+  unit_price:      number
+  amount:          number
+  sort_order:      number
+  created_at:      string
+}
+
+export interface InvoiceWithRelations extends Invoice {
+  clients?: {
+    first_name: string
+    last_name:  string
+    email:      string | null
+    phone:      string | null
+  } | null
+  invoice_line_items?: InvoiceLineItem[]
+}
+
+// -----------------------------------------------------------------------------
 // Joined / relational types
 // -----------------------------------------------------------------------------
 

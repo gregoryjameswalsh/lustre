@@ -3,15 +3,17 @@
 // src/app/dashboard/quotes/[id]/_components/QuoteActions.tsx
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { updateQuoteStatus, deleteQuote } from '@/lib/actions/quotes'
 
 interface QuoteActionsProps {
-  quoteId: string
+  quoteId:   string
   quoteNumber: string
-  status: string
+  status:    string
+  invoiceId?: string | null
 }
 
-export default function QuoteActions({ quoteId, quoteNumber, status }: QuoteActionsProps) {
+export default function QuoteActions({ quoteId, quoteNumber, status, invoiceId }: QuoteActionsProps) {
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError]     = useState<string | null>(null)
 
@@ -87,7 +89,24 @@ export default function QuoteActions({ quoteId, quoteNumber, status }: QuoteActi
       )}
 
       {status === 'accepted' && (
-        <span className="rounded-full bg-emerald-50 px-4 py-2 text-xs font-medium uppercase tracking-widest text-emerald-700">Accepted</span>
+        <>
+          <span className="rounded-full bg-emerald-50 px-4 py-2 text-xs font-medium uppercase tracking-widest text-emerald-700">Accepted</span>
+          {invoiceId ? (
+            <Link
+              href={`/dashboard/invoices/${invoiceId}`}
+              className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-xs font-medium uppercase tracking-widest text-zinc-600 transition-colors hover:border-zinc-300 hover:bg-zinc-50"
+            >
+              View invoice
+            </Link>
+          ) : (
+            <Link
+              href={`/dashboard/invoices/new?quote_id=${quoteId}`}
+              className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-xs font-medium uppercase tracking-widest text-zinc-600 transition-colors hover:border-zinc-300 hover:bg-zinc-50"
+            >
+              Create invoice
+            </Link>
+          )}
+        </>
       )}
       {status === 'declined' && (
         <span className="rounded-lg bg-red-50 px-4 py-2 text-xs font-medium uppercase tracking-widest text-red-500">Declined</span>

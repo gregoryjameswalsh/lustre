@@ -992,6 +992,134 @@ function trialEmailText(params: SendTrialEmailParams): string {
   ].join('\n')
 }
 
+// =============================================================================
+// Invoice email
+// =============================================================================
+
+export interface SendInvoiceEmailParams {
+  clientEmail:     string
+  clientName:      string
+  invoiceNumber:   string
+  total:           number
+  dueDate:         string
+  invoiceUrl:      string
+  orgName:         string
+  orgEmail:        string
+  orgPhone:        string | null
+  customFromEmail?: string
+}
+
+function invoiceEmailHtml(params: SendInvoiceEmailParams): string {
+  const { clientName, invoiceNumber, total, dueDate, invoiceUrl, orgName, orgPhone } = params
+
+  const phoneLine = orgPhone
+    ? `<p style="margin:4px 0 0;color:#6b7280;font-size:13px;">${orgPhone}</p>`
+    : ''
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice ${invoiceNumber} from ${orgName}</title>
+</head>
+<body style="margin:0;padding:0;background:#f9f8f5;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f8f5;padding:40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+
+          <tr>
+            <td style="padding-bottom:24px;">
+              <p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:#4a5c4e;">${orgName}</p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="background:#ffffff;border-radius:12px;border:1px solid #e5e7eb;padding:32px;">
+
+              <p style="margin:0 0 16px;font-size:16px;color:#0c0c0b;">Hi ${clientName},</p>
+              <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">
+                Please find your invoice below. You can view and pay it securely online.
+              </p>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f8f5;border-radius:8px;margin-bottom:24px;">
+                <tr>
+                  <td style="padding:20px 24px;">
+                    <p style="margin:0 0 4px;font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#9ca3af;">Invoice ${invoiceNumber}</p>
+                    <p style="margin:0 0 8px;font-size:28px;font-weight:300;color:#0c0c0b;">${formatCurrency(total)}</p>
+                    <p style="margin:0;color:#6b7280;font-size:14px;">Due ${formatDate(dueDate)}</p>
+                  </td>
+                </tr>
+              </table>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+                <tr>
+                  <td align="center">
+                    <a href="${invoiceUrl}"
+                       style="display:inline-block;background:#4a5c4e;color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:14px 32px;border-radius:100px;">
+                      View &amp; Pay Invoice
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0;font-size:13px;color:#9ca3af;text-align:center;line-height:1.5;">
+                If you have any questions, reply to this email.
+              </p>
+
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding-top:24px;text-align:center;">
+              <p style="margin:0;color:#9ca3af;font-size:12px;">${orgName}</p>
+              ${phoneLine}
+              <p style="margin:8px 0 0;color:#d1d5db;font-size:11px;">Powered by Lustre</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+}
+
+export async function sendInvoiceEmail(params: SendInvoiceEmailParams): Promise<void> {
+  const { clientEmail, invoiceNumber, orgEmail, customFromEmail } = params
+  const safeOrgName = params.orgName.replace(/[\r\n]/g, ' ').trim()
+  const fromAddress = customFromEmail
+    ? `${safeOrgName} <${customFromEmail}>`
+    : `${safeOrgName} <hello@simplylustre.com>`
+
+  try {
+    await resend.emails.send({
+      from:    fromAddress,
+      to:      clientEmail,
+      replyTo: orgEmail,
+      subject: `Invoice ${invoiceNumber} from ${safeOrgName}`,
+      html:    invoiceEmailHtml({ ...params, orgName: safeOrgName }),
+      text:    [
+        `Hi ${params.clientName},`,
+        '',
+        `${safeOrgName} has sent you an invoice.`,
+        '',
+        `Invoice: ${invoiceNumber}`,
+        `Amount: ${formatCurrency(params.total)}`,
+        `Due: ${formatDate(params.dueDate)}`,
+        '',
+        `View and pay your invoice here:`,
+        params.invoiceUrl,
+      ].join('\n'),
+    })
+  } catch (err) {
+    // Non-blocking — caller decides how to handle
+    console.error('Invoice email failed:', err)
+  }
+}
+
 export async function sendTrialEmail(params: SendTrialEmailParams): Promise<{ error?: string }> {
   const { to, key } = params
   const cfg = TRIAL_EMAIL_CONFIG[key]

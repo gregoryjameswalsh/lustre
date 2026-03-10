@@ -59,6 +59,11 @@ export type AuditAction =
   | 'gdpr_export'
   | 'gdpr_erase'
   | 'gdpr_set_consent'
+  // Invoices
+  | 'create_invoice'
+  | 'send_invoice'
+  | 'void_invoice'
+  | 'record_manual_payment'
 
 export async function logAuditEvent(
   supabase: SupabaseClient,
