@@ -2,18 +2,28 @@ import { getClients } from '@/lib/queries/clients'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+import PaginationControls from '@/components/ui/PaginationControls'
 import type { Client } from '@/lib/types'
 
-export default async function ClientsPage() {
+interface ClientsPageProps {
+  searchParams: Promise<{ after?: string; before?: string }>
+}
+
+export default async function ClientsPage({ searchParams }: ClientsPageProps) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const clients = await getClients()
+  const { after, before } = await searchParams
+  const result = await getClients({ after, before })
+  const { data: clients, nextCursor, prevCursor } = result
+
+  const prevHref = prevCursor ? `/dashboard/clients?before=${prevCursor}` : null
+  const nextHref = nextCursor ? `/dashboard/clients?after=${nextCursor}`  : null
 
   const statusColour: Record<string, string> = {
-    active: 'bg-emerald-50 text-emerald-600',
-    lead:   'bg-amber-50 text-amber-600',
+    active:   'bg-emerald-50 text-emerald-600',
+    lead:     'bg-amber-50 text-amber-600',
     inactive: 'bg-zinc-100 text-zinc-400',
   }
 
@@ -30,7 +40,9 @@ export default async function ClientsPage() {
             </p>
             <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-zinc-900">
               Clients
-              <span className="text-zinc-300 ml-3 text-xl sm:text-2xl">{clients.length}</span>
+              <span className="text-zinc-300 ml-3 text-xl sm:text-2xl">
+                {clients.length > 0 ? `${clients.length}${result.hasNextPage ? '+' : ''}` : '0'}
+              </span>
             </h1>
           </div>
           <Link
@@ -50,60 +62,64 @@ export default async function ClientsPage() {
             </Link>
           </div>
         ) : (
-          <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
-            {/* Table header — tablet+ only */}
-            <div className="hidden sm:grid grid-cols-[1fr_1fr_120px_80px] gap-4 px-6 py-3 border-b border-zinc-100 bg-zinc-50">
-              <span className="text-xs font-medium tracking-[0.15em] uppercase text-zinc-400">Name</span>
-              <span className="text-xs font-medium tracking-[0.15em] uppercase text-zinc-400">Email</span>
-              <span className="text-xs font-medium tracking-[0.15em] uppercase text-zinc-400">Status</span>
-              <span></span>
-            </div>
+          <>
+            <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
+              {/* Table header — tablet+ only */}
+              <div className="hidden sm:grid grid-cols-[1fr_1fr_120px_80px] gap-4 px-6 py-3 border-b border-zinc-100 bg-zinc-50">
+                <span className="text-xs font-medium tracking-[0.15em] uppercase text-zinc-400">Name</span>
+                <span className="text-xs font-medium tracking-[0.15em] uppercase text-zinc-400">Email</span>
+                <span className="text-xs font-medium tracking-[0.15em] uppercase text-zinc-400">Status</span>
+                <span></span>
+              </div>
 
-            {/* Rows */}
-            <div className="divide-y divide-zinc-50">
-              {clients.map((client: Client) => (
-                <a
-                  key={client.id}
-                  href={`/dashboard/clients/${client.id}`}
-                  className="block hover:bg-zinc-50 transition-colors"
-                >
-                  {/* Mobile card */}
-                  <div className="sm:hidden flex items-center justify-between px-4 py-4 gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 rounded-full bg-[#C8F5D7] flex items-center justify-center text-xs font-medium text-[#1A3329] flex-shrink-0">
-                        {client.first_name[0]}{client.last_name[0]}
+              {/* Rows */}
+              <div className="divide-y divide-zinc-50">
+                {clients.map((client: Client) => (
+                  <a
+                    key={client.id}
+                    href={`/dashboard/clients/${client.id}`}
+                    className="block hover:bg-zinc-50 transition-colors"
+                  >
+                    {/* Mobile card */}
+                    <div className="sm:hidden flex items-center justify-between px-4 py-4 gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-full bg-[#C8F5D7] flex items-center justify-center text-xs font-medium text-[#1A3329] flex-shrink-0">
+                          {client.first_name[0]}{client.last_name[0]}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-zinc-900 truncate">
+                            {client.first_name} {client.last_name}
+                          </p>
+                          <p className="text-xs text-zinc-400 mt-0.5 truncate">{client.email ?? '—'}</p>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-zinc-900 truncate">
-                          {client.first_name} {client.last_name}
-                        </p>
-                        <p className="text-xs text-zinc-400 mt-0.5 truncate">{client.email ?? '—'}</p>
-                      </div>
-                    </div>
-                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium tracking-wide flex-shrink-0 ${statusColour[client.status]}`}>
-                      {client.status}
-                    </span>
-                  </div>
-                  {/* Desktop row */}
-                  <div className="hidden sm:grid grid-cols-[1fr_1fr_120px_80px] gap-4 px-6 py-4 items-center">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-[#C8F5D7] flex items-center justify-center text-xs font-medium text-[#1A3329] flex-shrink-0">
-                        {client.first_name[0]}{client.last_name[0]}
-                      </div>
-                      <span className="text-sm font-medium text-zinc-900">
-                        {client.first_name} {client.last_name}
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium tracking-wide flex-shrink-0 ${statusColour[client.status]}`}>
+                        {client.status}
                       </span>
                     </div>
-                    <span className="text-sm text-zinc-500 truncate">{client.email ?? '—'}</span>
-                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium tracking-wide inline-flex w-fit ${statusColour[client.status]}`}>
-                      {client.status}
-                    </span>
-                    <span className="text-xs text-zinc-300 text-right">View →</span>
-                  </div>
-                </a>
-              ))}
+                    {/* Desktop row */}
+                    <div className="hidden sm:grid grid-cols-[1fr_1fr_120px_80px] gap-4 px-6 py-4 items-center">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-[#C8F5D7] flex items-center justify-center text-xs font-medium text-[#1A3329] flex-shrink-0">
+                          {client.first_name[0]}{client.last_name[0]}
+                        </div>
+                        <span className="text-sm font-medium text-zinc-900">
+                          {client.first_name} {client.last_name}
+                        </span>
+                      </div>
+                      <span className="text-sm text-zinc-500 truncate">{client.email ?? '—'}</span>
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium tracking-wide inline-flex w-fit ${statusColour[client.status]}`}>
+                        {client.status}
+                      </span>
+                      <span className="text-xs text-zinc-300 text-right">View →</span>
+                    </div>
+                  </a>
+                ))}
+              </div>
             </div>
-          </div>
+
+            <PaginationControls prevHref={prevHref} nextHref={nextHref} />
+          </>
         )}
       </main>
     </div>

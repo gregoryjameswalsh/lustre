@@ -61,7 +61,8 @@ function getGreeting() {
   return 'Good evening'
 }
 
-  const allFollowUps = await getAllOpenFollowUps()
+  const followUpsResult = await getAllOpenFollowUps()
+  const allFollowUps    = followUpsResult.data
 
   return (
     <div className="min-h-screen bg-[#F9FAFB]">

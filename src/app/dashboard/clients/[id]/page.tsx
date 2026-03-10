@@ -52,16 +52,19 @@ export default async function ClientProfilePage({
   const client = await getClientWithProperties(id)
   if (!client) notFound()
 
-  const [activities, followUps, pipelineStages, { data: consentsData }] = await Promise.all([
+  const [activitiesResult, followUpsResult, pipelineStages, { data: consentsData }] = await Promise.all([
     getClientActivities(id),
     getOpenFollowUps(id),
     getStages(),
     supabase.from('consent_records').select('*').eq('client_id', id),
   ])
 
-  const properties = client.properties ?? []
-  const jobs       = client.jobs ?? []
-  const consents   = (consentsData ?? []) as ConsentRecord[]
+  const properties     = client.properties ?? []
+  const jobs           = client.jobs ?? []
+  const consents       = (consentsData ?? []) as ConsentRecord[]
+  const activities     = activitiesResult.data
+  const followUps      = followUpsResult.data
+  const activitiesNext = activitiesResult.nextCursor
 
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
@@ -251,12 +254,12 @@ export default async function ClientProfilePage({
 <div className="mt-6">
   <div className="mb-4 flex items-center justify-between">
     <h2 className="text-sm font-medium text-zinc-900 tracking-tight">Activity Timeline</h2>
-    <span className="text-xs text-zinc-400">{activities.length} events</span>
   </div>
   <ActivityTimeline
     clientId={id}
     initialActivities={activities}
     initialFollowUps={followUps}
+    initialNextCursor={activitiesNext}
   />
 </div>
 
