@@ -70,7 +70,27 @@ export async function getPipelineClients(): Promise<ClientInPipeline[]> {
     .order('pipeline_entered_at', { ascending: true })
 
   if (error) throw new Error('Failed to fetch pipeline clients.')
-  return (data ?? []) as ClientInPipeline[]
+  const clients = (data ?? []) as ClientInPipeline[]
+  if (clients.length === 0) return clients
+
+  // Polymorphic join: fetch tags for all pipeline clients in one query.
+  // entity_tags has no DB FK on entity_id so Supabase can't auto-join it.
+  const clientIds = clients.map(c => c.id)
+  const { data: entityTagRows } = await supabase
+    .from('entity_tags')
+    .select('entity_id, tags(id, name, colour)')
+    .eq('entity_type', 'client')
+    .in('entity_id', clientIds)
+
+  // Build a map of clientId → tags
+  const tagsByClient: Record<string, { id: string; name: string; colour: string | null }[]> = {}
+  for (const row of entityTagRows ?? []) {
+    if (!row.tags) continue
+    if (!tagsByClient[row.entity_id]) tagsByClient[row.entity_id] = []
+    tagsByClient[row.entity_id].push(row.tags as unknown as { id: string; name: string; colour: string | null })
+  }
+
+  return clients.map(c => ({ ...c, tags: tagsByClient[c.id] ?? [] }))
 }
 
 /** Pipeline clients grouped by stage_id — used to populate the Kanban board. */

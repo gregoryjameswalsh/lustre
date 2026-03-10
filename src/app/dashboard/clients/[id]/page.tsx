@@ -1,12 +1,15 @@
 import { createClient } from '@/lib/supabase/server'
 import { getClientWithProperties } from '@/lib/queries/clients'
 import { getStages } from '@/lib/queries/pipeline'
+import { getTags, getEntityTags } from '@/lib/queries/tags'
+import { getCurrentPermissions } from '@/lib/actions/_auth'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import ActivityTimeline from '@/components/dashboard/ActivityTimeline'
 import { getClientActivities, getOpenFollowUps } from '@/lib/queries/activities'
 import DataPrivacySection from './_components/DataPrivacySection'
 import PipelineCard from './_components/PipelineCard'
+import TagPicker from '@/components/dashboard/TagPicker'
 import type { Property, JobWithRelations, ConsentRecord, ClientInPipeline, PipelineStage } from '@/lib/types'
 
 
@@ -52,19 +55,49 @@ export default async function ClientProfilePage({
   const client = await getClientWithProperties(id)
   if (!client) notFound()
 
-  const [activitiesResult, followUpsResult, pipelineStages, { data: consentsData }] = await Promise.all([
+  const [activitiesResult, followUpsResult, pipelineStages, { data: consentsData }, allTags, clientTags, permissions] = await Promise.all([
     getClientActivities(id),
     getOpenFollowUps(id),
     getStages(),
     supabase.from('consent_records').select('*').eq('client_id', id),
+    getTags(),
+    getEntityTags(id, 'client'),
+    getCurrentPermissions(),
   ])
 
-  const properties     = client.properties ?? []
-  const jobs           = client.jobs ?? []
-  const consents       = (consentsData ?? []) as ConsentRecord[]
+  const canEditTags    = permissions.includes('clients:write')
   const activities     = activitiesResult.data
   const followUps      = followUpsResult.data
   const activitiesNext = activitiesResult.nextCursor
+
+  // Fetch main photos for all properties and generate signed URLs
+  const propertyIds = (client.properties ?? []).map((p: Property) => p.id)
+  const mainPhotoUrls: Record<string, string> = {}
+  if (propertyIds.length > 0) {
+    const { data: mainPhotos } = await supabase
+      .from('property_photos')
+      .select('property_id, storage_path')
+      .eq('is_main', true)
+      .in('property_id', propertyIds)
+
+    if (mainPhotos && mainPhotos.length > 0) {
+      const paths = mainPhotos.map(p => p.storage_path)
+      const { data: signedUrls } = await supabase.storage
+        .from('property-photos')
+        .createSignedUrls(paths, 3600)
+
+      if (signedUrls) {
+        for (const photo of mainPhotos) {
+          const match = signedUrls.find(u => u.path === photo.storage_path)
+          if (match?.signedUrl) mainPhotoUrls[photo.property_id] = match.signedUrl
+        }
+      }
+    }
+  }
+
+  const properties = client.properties ?? []
+  const jobs       = client.jobs ?? []
+  const consents   = (consentsData ?? []) as ConsentRecord[]
 
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
@@ -145,6 +178,22 @@ export default async function ClientProfilePage({
               </div>
             </div>
 
+            {/* Tags */}
+            <div className="bg-white border border-zinc-200 rounded-lg">
+              <div className="px-5 py-4 border-b border-zinc-100">
+                <h2 className="text-xs font-medium tracking-[0.2em] uppercase text-zinc-500">Tags</h2>
+              </div>
+              <div className="px-5 py-4">
+                <TagPicker
+                  entityId={id}
+                  entityType="client"
+                  allTags={allTags}
+                  appliedTags={clientTags}
+                  canEdit={canEditTags}
+                />
+              </div>
+            </div>
+
             {/* Pipeline (shown only for leads in the pipeline) */}
             {client.status === 'lead' && client.pipeline_stage_id && (
               <PipelineCard
@@ -221,9 +270,25 @@ export default async function ClientProfilePage({
                     <a
                       key={property.id}
                       href={`/dashboard/clients/${id}/properties/${property.id}`}
-                      className="px-6 py-4 flex items-start justify-between hover:bg-zinc-50 transition-colors block"
+                      className="px-6 py-4 flex items-center gap-4 hover:bg-zinc-50 transition-colors block"
                     >
-                      <div>
+                      {/* Main photo thumbnail */}
+                      <div className="w-12 h-12 rounded-md overflow-hidden border border-zinc-100 bg-zinc-50 flex-shrink-0 flex items-center justify-center">
+                        {mainPhotoUrls[property.id] ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={mainPhotoUrls[property.id]}
+                            alt={property.address_line1}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <svg className="w-5 h-5 text-zinc-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                          </svg>
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-zinc-900">
                           {property.address_line1}
                           {property.town && `, ${property.town}`}
@@ -243,7 +308,7 @@ export default async function ClientProfilePage({
                           )}
                         </div>
                       </div>
-                      <span className="text-xs text-zinc-300">View →</span>
+                      <span className="text-xs text-zinc-300 flex-shrink-0">View →</span>
                     </a>
                   ))}
                 </div>
@@ -254,6 +319,7 @@ export default async function ClientProfilePage({
 <div className="mt-6">
   <div className="mb-4 flex items-center justify-between">
     <h2 className="text-sm font-medium text-zinc-900 tracking-tight">Activity Timeline</h2>
+    <span className="text-xs text-zinc-400">{activities.length} events</span>
   </div>
   <ActivityTimeline
     clientId={id}

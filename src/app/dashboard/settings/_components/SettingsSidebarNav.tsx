@@ -34,6 +34,7 @@ function buildSections(isAdmin: boolean): NavSection[] {
             items: [
               { label: 'Job Types',  href: '/dashboard/settings/job-types' },
               { label: 'Checklists', href: '/dashboard/settings/checklists' },
+              { label: 'Tags',       href: '/dashboard/settings/tags' },
               { label: 'Roles',      href: '/dashboard/settings/roles' },
             ],
           },
