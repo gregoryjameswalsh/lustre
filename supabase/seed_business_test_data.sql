@@ -116,14 +116,28 @@ BEGIN
 
   -- ══════════════════════════════════════════════════════════════════════════
   -- CLEAN UP previous run (safe to re-run)
-  -- Delete by ID first so we catch profiles regardless of their org assignment
-  -- (a handle_new_user trigger may have created them with a different org_id).
+  -- handle_new_user() creates a NEW org per auth user on INSERT, so previous
+  -- runs may have left behind trigger-created orgs with slugs like 'admin-b10000'.
+  -- We must delete those too or the next auth.users INSERT will slug-conflict.
   -- ══════════════════════════════════════════════════════════════════════════
-  -- Delete org first — cascades to jobs/clients/properties/quotes/activities.
-  -- Then profiles (jobs referencing them are now gone), then auth.users last.
+
+  -- 1. Delete trigger-created orgs left over from previous runs
+  --    (found via the profile rows those orgs own).
+  DELETE FROM public.organisations
+    WHERE id IN (
+      SELECT organisation_id FROM public.profiles
+      WHERE id IN (v_admin_id, v_member_id)
+        AND organisation_id <> v_org_id   -- don't double-delete our intended org
+    );
+
+  -- 2. Delete our intended org (cascades: clients, properties, jobs, quotes, activities…)
   DELETE FROM public.organisations WHERE id = v_org_id;
-  DELETE FROM public.profiles      WHERE id IN (v_admin_id, v_member_id);
-  DELETE FROM auth.users           WHERE id IN (v_admin_id, v_member_id);
+
+  -- 3. Now profiles have no referencing jobs — safe to delete.
+  DELETE FROM public.profiles WHERE id IN (v_admin_id, v_member_id);
+
+  -- 4. Finally delete the auth rows.
+  DELETE FROM auth.users WHERE id IN (v_admin_id, v_member_id);
 
   -- ══════════════════════════════════════════════════════════════════════════
   -- 1. AUTH USERS
@@ -163,7 +177,14 @@ BEGIN
       '', '', ''
     );
 
-  -- Purge any profiles auto-created by handle_new_user before we insert the org.
+  -- handle_new_user just created one org per user + a profile each.
+  -- Delete those orgs (cascades to the auto-created profiles too), then any
+  -- leftover profile rows, so we start the org+profile insert with a clean slate.
+  DELETE FROM public.organisations
+    WHERE id IN (
+      SELECT organisation_id FROM public.profiles
+      WHERE id IN (v_admin_id, v_member_id)
+    );
   DELETE FROM public.profiles WHERE id IN (v_admin_id, v_member_id);
 
   -- ══════════════════════════════════════════════════════════════════════════
