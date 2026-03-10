@@ -210,7 +210,7 @@ function getGreeting() {
                   <p className="text-xs text-zinc-300 tracking-wide">All clear</p>
                 </div>
               ) : (
-                allFollowUps.slice(0, 5).map((fu: FollowUp & { clients?: { first_name: string; last_name: string } }) => {
+                allFollowUps.slice(0, 5).map((fu: FollowUp & { clients?: { first_name: string; last_name: string } | null }) => {
                   const due = fu.due_date ? new Date(fu.due_date) : null
                   const now = new Date()
                   now.setHours(0,0,0,0)
