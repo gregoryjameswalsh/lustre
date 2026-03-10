@@ -179,6 +179,21 @@ BEGIN
       AND id <> v_org_id;
   DELETE FROM public.profiles WHERE id IN (v_admin_id, v_member_id);
 
+  -- GoTrue requires auth.identities rows for email/password login.
+  INSERT INTO auth.identities (
+    id, user_id, provider, provider_id, identity_data, last_sign_in_at, created_at, updated_at
+  ) VALUES
+    (
+      v_admin_id, v_admin_id, 'email', 'admin@sparklepro.test',
+      jsonb_build_object('sub', v_admin_id::text, 'email', 'admin@sparklepro.test'),
+      now(), now(), now()
+    ),
+    (
+      v_member_id, v_member_id, 'email', 'team@sparklepro.test',
+      jsonb_build_object('sub', v_member_id::text, 'email', 'team@sparklepro.test'),
+      now(), now(), now()
+    );
+
   -- ══════════════════════════════════════════════════════════════════════════
   -- 2. ORGANISATION  (triggers auto-create roles, pipeline stages, job types)
   -- ══════════════════════════════════════════════════════════════════════════
