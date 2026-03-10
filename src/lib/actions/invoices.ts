@@ -343,18 +343,20 @@ export async function sendInvoice(invoiceId: string): Promise<InvoiceFormState> 
       const feeBps       = org.platform_fee_bps ?? 200
       const feeAmount    = Math.round(amountPence * (feeBps / 10000))
 
+      // Payment Links require a pre-created Price object — price_data is not
+      // supported on paymentLinks.create (unlike checkout sessions).
+      const price = await stripe.prices.create(
+        {
+          currency:     'gbp',
+          product_data: { name: `Invoice ${invoice.invoice_number}` },
+          unit_amount:  amountPence,
+        },
+        { stripeAccount: org.stripe_account_id }
+      )
+
       const paymentLink = await stripe.paymentLinks.create(
         {
-          line_items: [
-            {
-              price_data: {
-                currency:     'gbp',
-                product_data: { name: `Invoice ${invoice.invoice_number}` },
-                unit_amount:  amountPence,
-              },
-              quantity: 1,
-            },
-          ],
+          line_items: [{ price: price.id, quantity: 1 }],
           payment_intent_data: {
             application_fee_amount: feeAmount,
             metadata: {
