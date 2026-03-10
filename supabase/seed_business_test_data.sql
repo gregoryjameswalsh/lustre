@@ -145,7 +145,7 @@ BEGIN
     email_confirmed_at,          -- confirmed_at is a generated column; setting this is enough
     raw_app_meta_data, raw_user_meta_data,
     created_at, updated_at,
-    confirmation_token, email_change_token_new, recovery_token  -- must be '' not NULL
+    confirmation_token, email_change, email_change_token_new, recovery_token  -- must be '' not NULL
   ) VALUES
     (
       v_admin_id,
@@ -157,7 +157,7 @@ BEGIN
       '{"provider":"email","providers":["email"]}',
       '{"full_name":"Sarah Mitchell"}',
       now(), now(),
-      '', '', ''
+      '', '', '', ''
     ),
     (
       v_member_id,
@@ -169,7 +169,7 @@ BEGIN
       '{"provider":"email","providers":["email"]}',
       '{"full_name":"James Kowalski"}',
       now(), now(),
-      '', '', ''
+      '', '', '', ''
     );
 
   -- handle_new_user just created one org + one profile per user. Nuke them
