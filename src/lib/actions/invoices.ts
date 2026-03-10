@@ -357,13 +357,16 @@ export async function sendInvoice(invoiceId: string): Promise<InvoiceFormState> 
       const paymentLink = await stripe.paymentLinks.create(
         {
           line_items: [{ price: price.id, quantity: 1 }],
+          // application_fee_amount is a Connect-only field that the SDK's
+          // PaymentIntentData type omits — cast to bypass the type gap.
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           payment_intent_data: {
             application_fee_amount: feeAmount,
             metadata: {
               lustre_invoice_id: invoiceId,
               lustre_org_id:     orgId,
             },
-          },
+          } as any,
           after_completion: {
             type:     'redirect',
             redirect: { url: invoiceUrl },
