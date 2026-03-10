@@ -136,11 +136,9 @@ BEGIN
 
   -- ══════════════════════════════════════════════════════════════════════════
   -- 1. AUTH USERS
-  -- Disable triggers so handle_new_user does NOT fire and create a spurious
-  -- org+profile. We set up the org and profiles ourselves below.
+  -- Let handle_new_user fire — it creates a throw-away org+profile per user.
+  -- We delete those immediately below, then insert our own org + profiles.
   -- ══════════════════════════════════════════════════════════════════════════
-  SET session_replication_role = replica;   -- suppresses non-ALWAYS triggers
-
   INSERT INTO auth.users (
     id, instance_id, aud, role,
     email, encrypted_password,
@@ -174,29 +172,12 @@ BEGIN
       '', '', ''
     );
 
-  SET session_replication_role = DEFAULT;   -- re-enable triggers
-
-  -- GoTrue requires a matching row in auth.identities for email/password login.
-  INSERT INTO auth.identities (
-    id, user_id, provider, provider_id, identity_data, last_sign_in_at, created_at, updated_at
-  ) VALUES
-    (
-      v_admin_id,
-      v_admin_id,
-      'email',
-      'admin@sparklepro.test',
-      jsonb_build_object('sub', v_admin_id::text, 'email', 'admin@sparklepro.test'),
-      now(), now(), now()
-    ),
-    (
-      v_member_id,
-      v_member_id,
-      'email',
-      'team@sparklepro.test',
-      jsonb_build_object('sub', v_member_id::text, 'email', 'team@sparklepro.test'),
-      now(), now(), now()
-    )
-  ;
+  -- handle_new_user just created one org + one profile per user. Nuke them
+  -- so our explicit org + profiles (below) start from a clean slate.
+  DELETE FROM public.organisations
+    WHERE email IN ('admin@sparklepro.test', 'team@sparklepro.test')
+      AND id <> v_org_id;
+  DELETE FROM public.profiles WHERE id IN (v_admin_id, v_member_id);
 
   -- ══════════════════════════════════════════════════════════════════════════
   -- 2. ORGANISATION  (triggers auto-create roles, pipeline stages, job types)
