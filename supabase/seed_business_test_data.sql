@@ -37,6 +37,11 @@ ALTER TABLE public.organisations
 -- property_type: drop so any string value is accepted (app enforces via select).
 ALTER TABLE public.properties
   DROP CONSTRAINT IF EXISTS properties_property_type_check;
+
+-- activities type: drop so pipeline_stage_changed / pipeline_won / pipeline_lost
+-- are accepted (these were added after the initial constraint was created).
+ALTER TABLE public.activities
+  DROP CONSTRAINT IF EXISTS activities_type_check;
 -- ─────────────────────────────────────────────────────────────────────────────
 
 DO $$
