@@ -13,6 +13,9 @@
 //   invoice.payment_succeeded          — payment received → ensure status active
 //   invoice.payment_failed             — payment failed → mark past_due
 //
+// Connect account events (event.account is set):
+//   payment_intent.succeeded           — client paid a Lustre invoice → mark paid
+//
 // This route uses the anon Supabase client and calls SECURITY DEFINER RPC
 // functions (stripe_update_org_subscription, stripe_cancel_org_subscription,
 // stripe_set_org_past_due) to write billing state back to organisations.
@@ -172,6 +175,35 @@ export async function POST(request: Request) {
         await supabase.rpc('stripe_set_org_past_due', {
           p_org_id: orgId,
         })
+        break
+      }
+
+      // ── Invoice paid via Stripe Connect Payment Link ───────────────────
+      // These events come from connected accounts (event.account is set).
+      // The PaymentIntent has lustre_invoice_id + lustre_org_id in metadata.
+      case 'payment_intent.succeeded': {
+        if (!event.account) break // platform-level event — not ours to handle here
+
+        const paymentIntent = event.data.object as Stripe.PaymentIntent
+        const invoiceId     = paymentIntent.metadata?.lustre_invoice_id
+        const orgId         = paymentIntent.metadata?.lustre_org_id
+
+        if (!invoiceId || !orgId) {
+          console.warn('payment_intent.succeeded from connected account missing metadata', paymentIntent.id)
+          break
+        }
+
+        // amount_received is in the smallest currency unit (pence for GBP)
+        const amountReceived = (paymentIntent.amount_received ?? paymentIntent.amount) / 100
+
+        await supabase.rpc('mark_invoice_paid_by_stripe', {
+          p_invoice_id:        invoiceId,
+          p_org_id:            orgId,
+          p_payment_intent_id: paymentIntent.id,
+          p_amount_received:   amountReceived,
+        })
+
+        console.log(`Invoice ${invoiceId} marked paid via Stripe (${paymentIntent.id})`)
         break
       }
 

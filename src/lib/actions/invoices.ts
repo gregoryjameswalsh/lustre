@@ -10,6 +10,7 @@ import { redirect }          from 'next/navigation'
 import { getOrgAndUser }     from './_auth'
 import { logAuditEvent }     from '@/lib/audit'
 import { sendInvoiceEmail }  from '@/lib/email'
+import { stripe }            from '@/lib/stripe'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -308,9 +309,9 @@ export async function sendInvoice(invoiceId: string): Promise<InvoiceFormState> 
   const { data: invoice } = await supabase
     .from('invoices')
     .select(`
-      id, invoice_number, total, due_date, view_token, status, notes,
+      id, invoice_number, total, amount_paid, due_date, view_token, status, notes,
       clients ( first_name, last_name, email ),
-      organisations ( name, email, phone, custom_from_email )
+      organisations ( name, email, phone, custom_from_email, stripe_account_id, platform_fee_bps )
     `)
     .eq('id', invoiceId)
     .eq('organisation_id', orgId)
@@ -331,6 +332,52 @@ export async function sendInvoice(invoiceId: string): Promise<InvoiceFormState> 
   const appUrl     = process.env.NEXT_PUBLIC_APP_URL ?? ''
   const invoiceUrl = `${appUrl}/i/${invoice.view_token}`
 
+  // ── Stripe Payment Link (if org has a connected account) ─────────────────
+  let paymentLinkId:  string | null = null
+  let paymentLinkUrl: string | null = null
+
+  if (org?.stripe_account_id) {
+    try {
+      const outstanding  = Math.max(0, invoice.total - (invoice.amount_paid ?? 0))
+      const amountPence  = Math.round(outstanding * 100)
+      const feeBps       = org.platform_fee_bps ?? 200
+      const feeAmount    = Math.round(amountPence * (feeBps / 10000))
+
+      const paymentLink = await stripe.paymentLinks.create(
+        {
+          line_items: [
+            {
+              price_data: {
+                currency:     'gbp',
+                product_data: { name: `Invoice ${invoice.invoice_number}` },
+                unit_amount:  amountPence,
+              },
+              quantity: 1,
+            },
+          ],
+          payment_intent_data: {
+            application_fee_amount: feeAmount,
+            metadata: {
+              lustre_invoice_id: invoiceId,
+              lustre_org_id:     orgId,
+            },
+          },
+          after_completion: {
+            type:     'redirect',
+            redirect: { url: invoiceUrl },
+          },
+        },
+        { stripeAccount: org.stripe_account_id }
+      )
+
+      paymentLinkId  = paymentLink.id
+      paymentLinkUrl = paymentLink.url
+    } catch (err) {
+      // Non-fatal: log and continue sending without a payment link
+      console.error('Failed to create Stripe Payment Link:', err)
+    }
+  }
+
   // Send email
   await sendInvoiceEmail({
     clientEmail:   client.email,
@@ -345,11 +392,26 @@ export async function sendInvoice(invoiceId: string): Promise<InvoiceFormState> 
     customFromEmail: org.custom_from_email,
   })
 
-  // Update status to 'sent' if currently 'draft'
+  // Update status to 'sent' (and store payment link if generated)
   if (invoice.status === 'draft') {
     await supabase
       .from('invoices')
-      .update({ status: 'sent', sent_at: new Date().toISOString() })
+      .update({
+        status:                  'sent',
+        sent_at:                 new Date().toISOString(),
+        ...(paymentLinkId  ? { stripe_payment_link_id:  paymentLinkId  } : {}),
+        ...(paymentLinkUrl ? { stripe_payment_link_url: paymentLinkUrl } : {}),
+      })
+      .eq('id', invoiceId)
+      .eq('organisation_id', orgId)
+  } else if (paymentLinkUrl && !invoice.status.includes('draft')) {
+    // Resend on existing sent/overdue invoice — update link if newly generated
+    await supabase
+      .from('invoices')
+      .update({
+        stripe_payment_link_id:  paymentLinkId,
+        stripe_payment_link_url: paymentLinkUrl,
+      })
       .eq('id', invoiceId)
       .eq('organisation_id', orgId)
   }
