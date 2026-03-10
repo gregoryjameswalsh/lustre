@@ -21,11 +21,32 @@ export default async function PublicInvoicePage({ params }: { params: Promise<{ 
   const supabase  = createAnonClient()
 
   // Fetch invoice via SECURITY DEFINER function (bypasses RLS for public access)
-  const { data: invoice, error } = await supabase
+  const { data: invoiceRaw, error } = await supabase
     .rpc('public_get_invoice_by_token', { p_token: token })
     .single()
 
-  if (error || !invoice) notFound()
+  if (error || !invoiceRaw) notFound()
+
+  // RPC returns SETOF invoices; cast to known shape since the generated types
+  // don't reflect SECURITY DEFINER functions returning table rows.
+  const invoice = invoiceRaw as {
+    id: string
+    organisation_id: string
+    client_id: string
+    invoice_number: string
+    view_token: string
+    status: string
+    issue_date: string
+    due_date: string
+    subtotal: number
+    tax_rate: number
+    tax_amount: number
+    total: number
+    amount_paid: number
+    currency: string
+    stripe_payment_link_url: string | null
+    notes: string | null
+  }
 
   // Fetch related data using the org/client IDs from the invoice
   const [{ data: org }, { data: client }, { data: lineItems }] = await Promise.all([
