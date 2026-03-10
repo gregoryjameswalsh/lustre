@@ -196,6 +196,67 @@ export async function signUpAsInvitee(
 }
 
 // -----------------------------------------------------------------------------
+// Request Password Reset
+// Sends a reset link to the given email via Supabase.
+// Always returns success to avoid leaking whether the email is registered.
+// -----------------------------------------------------------------------------
+
+export type RequestPasswordResetState = { error?: string; success?: boolean }
+
+export async function requestPasswordReset(
+  prevState: RequestPasswordResetState,
+  formData: FormData
+): Promise<RequestPasswordResetState> {
+  const email = (formData.get('email') as string)?.trim().toLowerCase()
+
+  if (!email) return { error: 'Please enter your email address.' }
+  if (!email.includes('@')) return { error: 'Please enter a valid email address.' }
+
+  const ip = ((await headers()).get('x-forwarded-for') ?? 'unknown').split(',')[0].trim()
+  const { success } = await checkRateLimit(loginRateLimit, ip)
+  if (!success) return { error: 'Too many requests. Please wait 15 minutes and try again.' }
+
+  const supabase = await createClient()
+  await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/reset-password`,
+  })
+
+  // Always succeed — don't reveal whether the email is registered
+  return { success: true }
+}
+
+// -----------------------------------------------------------------------------
+// Update Password
+// Called from /reset-password after the user has landed via the reset link.
+// The user must already have an active session (exchanged from the reset token
+// by /auth/callback).
+// -----------------------------------------------------------------------------
+
+export type UpdatePasswordState = { error?: string; success?: boolean }
+
+export async function updatePassword(
+  prevState: UpdatePasswordState,
+  formData: FormData
+): Promise<UpdatePasswordState> {
+  const password = formData.get('password') as string
+  const confirm  = formData.get('confirm') as string
+
+  if (!password || password.length < 8)
+    return { error: 'Password must be at least 8 characters.' }
+  if (password !== confirm)
+    return { error: 'Passwords do not match.' }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const { error } = await supabase.auth.updateUser({ password })
+  if (error) return { error: 'Failed to update password. Your reset link may have expired.' }
+
+  redirect('/dashboard')
+}
+
+// -----------------------------------------------------------------------------
 // Update Email
 // Triggers a confirmation email to the new address via Supabase.
 // Also updates profiles.email immediately so invite/member checks stay in sync.
