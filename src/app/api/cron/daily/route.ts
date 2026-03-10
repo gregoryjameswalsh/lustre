@@ -24,6 +24,7 @@ import {
   sendExpiredQuotesDigest,
   sendFollowUpDigest,
   sendTrialEmail,
+  sendInvoiceOverdueReminder,
   type ExpiredQuote,
   type DueFollowUp,
   type TrialEmailKey,
@@ -187,6 +188,68 @@ async function runTrialEmails(
 }
 
 // ---------------------------------------------------------------------------
+// Job 4 — Invoice dunning (overdue reminders to clients)
+// ---------------------------------------------------------------------------
+
+async function runInvoiceDunning(
+  supabase: ReturnType<typeof createAnonClient>,
+  appUrl: string
+): Promise<{ sent: number; failed: number }> {
+  let sent   = 0
+  let failed = 0
+
+  type DunningRow = {
+    invoice_id:       string
+    invoice_number:   string
+    total:            number
+    amount_paid:      number
+    due_date:         string
+    view_token:       string
+    dunning_step:     number
+    client_email:     string
+    client_first:     string
+    client_last:      string
+    org_id:           string
+    org_name:         string
+    org_email:        string
+    custom_from_email: string | null
+  }
+
+  const { data, error } = await supabase.rpc('cron_invoice_dunning')
+  if (error) {
+    console.error('[cron/daily] cron_invoice_dunning error:', error)
+    return { sent, failed }
+  }
+  if (!data || data.length === 0) return { sent, failed }
+
+  await Promise.all(
+    (data as DunningRow[]).map(async row => {
+      const { error: emailError } = await sendInvoiceOverdueReminder({
+        clientEmail:     row.client_email,
+        clientName:      `${row.client_first} ${row.client_last}`.trim(),
+        invoiceNumber:   row.invoice_number,
+        total:           row.total,
+        amountPaid:      row.amount_paid,
+        dueDate:         row.due_date,
+        invoiceUrl:      `${appUrl}/i/${row.view_token}`,
+        orgName:         row.org_name,
+        orgEmail:        row.org_email,
+        customFromEmail: row.custom_from_email ?? undefined,
+        dunningStep:     row.dunning_step,
+      })
+      if (emailError) {
+        console.error(`[cron/daily] dunning email failed for invoice ${row.invoice_id}:`, emailError)
+        failed++
+      } else {
+        sent++
+      }
+    })
+  )
+
+  return { sent, failed }
+}
+
+// ---------------------------------------------------------------------------
 // Route handler
 // ---------------------------------------------------------------------------
 
@@ -204,17 +267,24 @@ export async function GET(request: Request) {
   const supabase    = createAnonClient()
   const upgradeUrl  = `${appUrl}/billing`
 
-  const [expiredCount, followUpCount, trialEmails] = await Promise.all([
+  const [expiredCount, followUpCount, trialEmails, dunning] = await Promise.all([
     runExpireQuotes(supabase, appUrl),
     runFollowUpReminders(supabase, appUrl),
     runTrialEmails(supabase, upgradeUrl),
+    runInvoiceDunning(supabase, appUrl),
   ])
 
-  console.log(`[cron/daily] done — expired: ${expiredCount}, follow-ups: ${followUpCount}, trial emails sent: ${trialEmails.sent}, failed: ${trialEmails.failed}`)
+  console.log(
+    `[cron/daily] done — expired: ${expiredCount}, follow-ups: ${followUpCount}, ` +
+    `trial emails sent: ${trialEmails.sent}, failed: ${trialEmails.failed}, ` +
+    `dunning sent: ${dunning.sent}, failed: ${dunning.failed}`
+  )
   return NextResponse.json({
-    expired:           expiredCount,
-    followUpsNotified: followUpCount,
-    trialEmailsSent:   trialEmails.sent,
-    trialEmailsFailed: trialEmails.failed,
+    expired:            expiredCount,
+    followUpsNotified:  followUpCount,
+    trialEmailsSent:    trialEmails.sent,
+    trialEmailsFailed:  trialEmails.failed,
+    dunningRemindersSent:   dunning.sent,
+    dunningRemindersFailed: dunning.failed,
   })
 }

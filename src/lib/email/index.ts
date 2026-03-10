@@ -1120,6 +1120,156 @@ export async function sendInvoiceEmail(params: SendInvoiceEmailParams): Promise<
   }
 }
 
+// =============================================================================
+// Invoice overdue reminder (dunning)
+// =============================================================================
+
+export interface SendInvoiceOverdueReminderParams {
+  clientEmail:      string
+  clientName:       string
+  invoiceNumber:    string
+  total:            number
+  amountPaid:       number
+  dueDate:          string
+  invoiceUrl:       string
+  orgName:          string
+  orgEmail:         string
+  customFromEmail?: string
+  dunningStep:      number   // 1 = first reminder, 2 = follow-up, 3 = final
+}
+
+function overdueReminderHtml(params: SendInvoiceOverdueReminderParams): string {
+  const {
+    clientName, invoiceNumber, total, amountPaid, dueDate,
+    invoiceUrl, orgName, dunningStep,
+  } = params
+
+  const outstanding = Math.max(0, total - amountPaid)
+  const urgency =
+    dunningStep === 3 ? 'This is our final reminder before the matter is escalated.' :
+    dunningStep === 2 ? 'This is a follow-up reminder. Please arrange payment at your earliest convenience.' :
+                        'This invoice is now overdue. Please arrange payment as soon as possible.'
+
+  const subject =
+    dunningStep === 3 ? `Final notice — Invoice ${invoiceNumber} is overdue` :
+    dunningStep === 2 ? `Reminder — Invoice ${invoiceNumber} is still outstanding` :
+                        `Invoice ${invoiceNumber} is overdue`
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${subject}</title>
+</head>
+<body style="margin:0;padding:0;background:#f9f8f5;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f8f5;padding:40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+
+          <tr>
+            <td style="padding-bottom:24px;">
+              <p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:#4a5c4e;">${orgName}</p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="background:#ffffff;border-radius:12px;border:1px solid #e5e7eb;padding:32px;">
+
+              <p style="margin:0 0 16px;font-size:16px;color:#0c0c0b;">Hi ${clientName},</p>
+              <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">${urgency}</p>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#fef2f2;border-radius:8px;margin-bottom:24px;border:1px solid #fecaca;">
+                <tr>
+                  <td style="padding:20px 24px;">
+                    <p style="margin:0 0 4px;font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#9ca3af;">Invoice ${invoiceNumber}</p>
+                    <p style="margin:0 0 4px;font-size:28px;font-weight:300;color:#dc2626;">${formatCurrency(outstanding)} outstanding</p>
+                    <p style="margin:0;color:#6b7280;font-size:14px;">Was due ${formatDate(dueDate)}</p>
+                  </td>
+                </tr>
+              </table>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+                <tr>
+                  <td align="center">
+                    <a href="${invoiceUrl}"
+                       style="display:inline-block;background:#dc2626;color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:14px 32px;border-radius:100px;">
+                      Pay Now
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0;font-size:13px;color:#9ca3af;text-align:center;line-height:1.5;">
+                If you believe this is an error or have already arranged payment, please reply to this email.
+              </p>
+
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding-top:24px;text-align:center;">
+              <p style="margin:0;color:#9ca3af;font-size:12px;">${orgName}</p>
+              <p style="margin:8px 0 0;color:#d1d5db;font-size:11px;">Powered by Lustre</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+}
+
+export async function sendInvoiceOverdueReminder(
+  params: SendInvoiceOverdueReminderParams
+): Promise<{ error?: string }> {
+  const { clientEmail, invoiceNumber, orgEmail, customFromEmail, dunningStep } = params
+  const safeOrgName = params.orgName.replace(/[\r\n]/g, ' ').trim()
+  const fromAddress = customFromEmail
+    ? `${safeOrgName} <${customFromEmail}>`
+    : `${safeOrgName} <hello@simplylustre.com>`
+
+  const subject =
+    dunningStep === 3 ? `Final notice — Invoice ${invoiceNumber} is overdue` :
+    dunningStep === 2 ? `Reminder — Invoice ${invoiceNumber} is still outstanding` :
+                        `Invoice ${invoiceNumber} is overdue`
+
+  const outstanding = Math.max(0, params.total - params.amountPaid)
+
+  try {
+    const { error } = await resend.emails.send({
+      from:    fromAddress,
+      to:      clientEmail,
+      replyTo: orgEmail,
+      subject,
+      html:    overdueReminderHtml({ ...params, orgName: safeOrgName }),
+      text:    [
+        `Hi ${params.clientName},`,
+        '',
+        subject + '.',
+        '',
+        `Invoice: ${invoiceNumber}`,
+        `Outstanding: ${formatCurrency(outstanding)}`,
+        `Was due: ${formatDate(params.dueDate)}`,
+        '',
+        `Please pay here:`,
+        params.invoiceUrl,
+      ].join('\n'),
+    })
+    if (error) {
+      console.error(`Overdue reminder email failed (step ${dunningStep}):`, error)
+      return { error: 'Failed to send overdue reminder.' }
+    }
+    return {}
+  } catch (err) {
+    console.error('Overdue reminder email exception:', err)
+    return { error: 'Failed to send overdue reminder.' }
+  }
+}
+
 export async function sendTrialEmail(params: SendTrialEmailParams): Promise<{ error?: string }> {
   const { to, key } = params
   const cfg = TRIAL_EMAIL_CONFIG[key]
