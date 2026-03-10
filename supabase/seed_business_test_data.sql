@@ -108,14 +108,17 @@ BEGIN
 
   -- ══════════════════════════════════════════════════════════════════════════
   -- CLEAN UP previous run (safe to re-run)
-  -- Delete in FK-safe order: leaf tables first, then parents.
+  -- Delete by ID first so we catch profiles regardless of their org assignment
+  -- (a handle_new_user trigger may have created them with a different org_id).
   -- ══════════════════════════════════════════════════════════════════════════
-  DELETE FROM public.profiles      WHERE organisation_id = v_org_id;
+  DELETE FROM public.profiles      WHERE id IN (v_admin_id, v_member_id);
   DELETE FROM public.organisations WHERE id = v_org_id;
   DELETE FROM auth.users           WHERE id IN (v_admin_id, v_member_id);
 
   -- ══════════════════════════════════════════════════════════════════════════
   -- 1. AUTH USERS
+  -- The handle_new_user trigger may auto-create a bare profile row here.
+  -- We purge those immediately afterwards so our explicit insert is clean.
   -- ══════════════════════════════════════════════════════════════════════════
   INSERT INTO auth.users (
     id, instance_id, aud, role,
@@ -145,6 +148,9 @@ BEGIN
       '{"full_name":"James Kowalski"}',
       now(), now()
     );
+
+  -- Purge any profiles auto-created by handle_new_user before we insert the org.
+  DELETE FROM public.profiles WHERE id IN (v_admin_id, v_member_id);
 
   -- ══════════════════════════════════════════════════════════════════════════
   -- 2. ORGANISATION  (triggers auto-create roles, pipeline stages, job types)
@@ -192,19 +198,10 @@ BEGIN
   -- ══════════════════════════════════════════════════════════════════════════
   -- 3. PROFILES  (trigger assign_system_role_to_profile sets custom_role_id)
   -- ══════════════════════════════════════════════════════════════════════════
-  -- Upsert so that if a handle_new_user trigger already created a bare profile
-  -- from the auth.users insert above, we overwrite it with the correct data.
   INSERT INTO public.profiles (id, organisation_id, full_name, email, phone, role, custom_role_id)
   VALUES
     (v_admin_id,  v_org_id, 'Sarah Mitchell', 'admin@sparklepro.test', '07700 900123', 'admin',       v_role_admin_id),
-    (v_member_id, v_org_id, 'James Kowalski', 'team@sparklepro.test',  '07700 900456', 'team_member', v_role_member_id)
-  ON CONFLICT (id) DO UPDATE SET
-    organisation_id = EXCLUDED.organisation_id,
-    full_name       = EXCLUDED.full_name,
-    email           = EXCLUDED.email,
-    phone           = EXCLUDED.phone,
-    role            = EXCLUDED.role,
-    custom_role_id  = EXCLUDED.custom_role_id;
+    (v_member_id, v_org_id, 'James Kowalski', 'team@sparklepro.test',  '07700 900456', 'team_member', v_role_member_id);
 
   -- ══════════════════════════════════════════════════════════════════════════
   -- 4. CLIENTS
