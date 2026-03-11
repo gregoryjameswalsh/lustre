@@ -53,6 +53,17 @@ export default async function DashboardPage() {
     })
   }
 
+  function getDueStatus(scheduledDate: string | null): 'overdue' | 'due_today' | null {
+    if (!scheduledDate) return null
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const due = new Date(scheduledDate)
+    due.setHours(0, 0, 0, 0)
+    if (due.getTime() === today.getTime()) return 'due_today'
+    if (due < today) return 'overdue'
+    return null
+  }
+
   // Add this function alongside your other helpers like formatDate
 function getGreeting() {
   const hour = new Date().getHours()
@@ -127,26 +138,35 @@ function getGreeting() {
                   </Link>
                 </div>
               ) : (
-                upcomingJobs.map((job: JobWithRelations) => (
-                  <div key={job.id} className="px-6 py-4 flex items-center justify-between hover:bg-zinc-50 transition-colors">
-                    <div>
-                      <p className="text-sm text-zinc-900 font-medium">
-                        {job.clients?.first_name} {job.clients?.last_name}
-                      </p>
-                      <p className="text-xs text-zinc-400 mt-0.5">
-                        {job.properties?.address_line1}, {job.properties?.town}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs font-medium text-zinc-700">
-                        {job.scheduled_date ? formatDate(job.scheduled_date) : '—'}
-                      </p>
-                      <p className="text-xs text-zinc-400 mt-0.5">
-                        {(job as JobWithRelations).job_types?.name ?? '—'}
-                      </p>
-                    </div>
-                  </div>
-                ))
+                upcomingJobs.map((job: JobWithRelations) => {
+                  const dueStatus = getDueStatus(job.scheduled_date)
+                  return (
+                    <Link key={job.id} href={`/dashboard/jobs/${job.id}`} className="px-6 py-4 flex items-center justify-between hover:bg-zinc-50 transition-colors block">
+                      <div>
+                        <p className="text-sm text-zinc-900 font-medium">
+                          {job.clients?.first_name} {job.clients?.last_name}
+                        </p>
+                        <p className="text-xs text-zinc-400 mt-0.5">
+                          {job.properties?.address_line1}, {job.properties?.town}
+                        </p>
+                      </div>
+                      <div className="text-right flex flex-col items-end gap-1">
+                        <p className="text-xs font-medium text-zinc-700">
+                          {job.scheduled_date ? formatDate(job.scheduled_date) : '—'}
+                        </p>
+                        <p className="text-xs text-zinc-400">
+                          {(job as JobWithRelations).job_types?.name ?? '—'}
+                        </p>
+                        {dueStatus === 'overdue' && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold tracking-wide bg-red-50 text-red-600 border border-red-200">Overdue</span>
+                        )}
+                        {dueStatus === 'due_today' && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold tracking-wide bg-amber-50 text-amber-600 border border-amber-200">Due today</span>
+                        )}
+                      </div>
+                    </Link>
+                  )
+                })
               )}
             </div>
           </div>
