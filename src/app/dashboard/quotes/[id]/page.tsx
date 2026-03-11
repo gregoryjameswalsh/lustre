@@ -3,9 +3,10 @@
 // LUSTRE — Quote Detail Page
 // =============================================================================
 
-import { notFound } from 'next/navigation'
-import Link from 'next/link'
-import { getQuote } from '@/lib/queries/quotes'
+import { notFound }   from 'next/navigation'
+import Link            from 'next/link'
+import { getQuote }    from '@/lib/queries/quotes'
+import { createClient } from '@/lib/supabase/server'
 import QuoteActions from './_components/QuoteActions'
 import CopyLinkInput from './_components/CopyLinkInput'
 
@@ -33,8 +34,20 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
   const quote = await getQuote(id)
   if (!quote) notFound()
 
-  const coreItems = quote.quote_line_items.filter(i => !i.is_addon).sort((a, b) => a.sort_order - b.sort_order)
-  const addonItems = quote.quote_line_items.filter(i => i.is_addon).sort((a, b) => a.sort_order - b.sort_order)
+  const coreItems  = quote.quote_line_items.filter(i => !i.is_addon).sort((a, b) => a.sort_order - b.sort_order)
+  const addonItems = quote.quote_line_items.filter(i =>  i.is_addon).sort((a, b) => a.sort_order - b.sort_order)
+
+  // Look up a linked invoice (auto-created on acceptance)
+  let invoiceId: string | null = null
+  if (quote.status === 'accepted') {
+    const supabase = await createClient()
+    const { data: inv } = await supabase
+      .from('invoices')
+      .select('id')
+      .eq('quote_id', id)
+      .maybeSingle()
+    invoiceId = inv?.id ?? null
+  }
 
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
@@ -59,7 +72,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
             </div>
             <p className="mt-1 text-sm text-zinc-500">{quote.title}</p>
           </div>
-          <QuoteActions quoteId={id} quoteNumber={quote.quote_number} status={quote.status} />
+          <QuoteActions quoteId={id} quoteNumber={quote.quote_number} status={quote.status} invoiceId={invoiceId} />
         </div>
 
         <div className="grid gap-4 lg:grid-cols-3">

@@ -29,11 +29,12 @@ export async function getOrgAndUser() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('id, organisation_id, role, custom_role_id')
+    .select('id, organisation_id, role, custom_role_id, suspended_at')
     .eq('id', user.id)
     .single()
 
   if (!profile?.organisation_id) redirect('/login')
+  if (profile.suspended_at)      redirect('/suspended')
 
   return {
     supabase,

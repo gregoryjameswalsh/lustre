@@ -13,6 +13,7 @@ import { getOrgAndUser, requireAdmin } from './_auth'
 import { str } from './_validate'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { logAuditEvent } from '@/lib/audit'
+import { createInvoiceFromQuote } from './invoices'
 import { captureServerEvent } from '@/lib/posthog'
 
 // -----------------------------------------------------------------------------
@@ -324,6 +325,8 @@ export async function updateQuoteStatus(
     await captureServerEvent({ distinctId: userId, event: 'quote_accepted', properties: { quote_id: quoteId } })
     await createJobFromQuote(quoteId, supabase)
     await captureServerEvent({ distinctId: userId, event: 'job_created', properties: { from_quote: true, quote_id: quoteId } })
+    // Auto-create a draft invoice from the accepted quote
+    await createInvoiceFromQuote(quoteId, orgId, userId)
   }
 
   if (status === 'declined') {

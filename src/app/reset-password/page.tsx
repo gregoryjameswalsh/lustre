@@ -1,25 +1,20 @@
 'use client'
 
-// src/app/login/page.tsx
-// Login form — uses a server action so auth goes through our server,
-// allowing rate limiting and keeping credentials off the client-side bundle.
+// src/app/reset-password/page.tsx
+// User lands here after clicking the password reset email link.
+// /auth/callback has already exchanged the code for a session, so we
+// can call updatePassword directly.
 
 import { useActionState } from 'react'
-import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
-import { signIn } from '@/lib/actions/auth'
+import { updatePassword } from '@/lib/actions/auth'
 
-function LoginForm() {
-  const [state, action, pending] = useActionState(signIn, {})
-  const searchParams = useSearchParams()
-  const linkExpired  = searchParams.get('error') === 'link_expired'
+export default function ResetPasswordPage() {
+  const [state, action, pending] = useActionState(updatePassword, {})
 
   return (
     <div className="min-h-screen bg-[#f9f8f5] flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
 
-        {/* Logo */}
         <div className="text-center mb-10">
           <span className="text-xs font-medium tracking-[0.25em] uppercase text-zinc-800">
             Lustre
@@ -29,59 +24,45 @@ function LoginForm() {
           </p>
         </div>
 
-        {/* Card */}
         <div className="bg-white border border-zinc-200 rounded-lg p-8">
           <h1 className="text-xl font-light tracking-tight text-zinc-900 mb-1">
-            Welcome back
+            Set new password
           </h1>
           <p className="text-sm text-zinc-400 mb-8">
-            Sign in to your account
+            Choose a strong password for your account.
           </p>
-
-          {linkExpired && (
-            <p className="mb-5 text-xs text-amber-600 tracking-wide">
-              That link has expired. Request a new one below.
-            </p>
-          )}
 
           <form action={action} className="space-y-5">
             <div>
               <label className="block text-xs font-medium tracking-wider uppercase text-zinc-500 mb-2">
-                Email
+                New password
               </label>
-              <input
-                type="email"
-                name="email"
-                required
-                autoComplete="email"
-                className="w-full border border-zinc-200 rounded-md px-4 py-3 text-base text-zinc-900 placeholder:text-zinc-300 focus:outline-none focus:border-zinc-400 transition-colors bg-zinc-50"
-                placeholder="you@example.com"
-              />
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-xs font-medium tracking-wider uppercase text-zinc-500">
-                  Password
-                </label>
-                <Link
-                  href="/forgot-password"
-                  className="text-xs text-zinc-400 hover:text-zinc-600 transition-colors"
-                >
-                  Forgot password?
-                </Link>
-              </div>
               <input
                 type="password"
                 name="password"
                 required
-                autoComplete="current-password"
+                minLength={8}
+                autoComplete="new-password"
                 className="w-full border border-zinc-200 rounded-md px-4 py-3 text-base text-zinc-900 placeholder:text-zinc-300 focus:outline-none focus:border-zinc-400 transition-colors bg-zinc-50"
                 placeholder="••••••••"
               />
             </div>
 
-            {state?.error && (
+            <div>
+              <label className="block text-xs font-medium tracking-wider uppercase text-zinc-500 mb-2">
+                Confirm password
+              </label>
+              <input
+                type="password"
+                name="confirm"
+                required
+                autoComplete="new-password"
+                className="w-full border border-zinc-200 rounded-md px-4 py-3 text-base text-zinc-900 placeholder:text-zinc-300 focus:outline-none focus:border-zinc-400 transition-colors bg-zinc-50"
+                placeholder="••••••••"
+              />
+            </div>
+
+            {state.error && (
               <p className="text-xs text-red-500 tracking-wide">{state.error}</p>
             )}
 
@@ -90,26 +71,15 @@ function LoginForm() {
               disabled={pending}
               className="w-full bg-zinc-900 text-[#f9f8f5] text-xs font-medium tracking-[0.15em] uppercase py-3.5 rounded-full hover:bg-[#4a5c4e] transition-colors disabled:opacity-50"
             >
-              {pending ? 'Signing in...' : 'Sign In'}
+              {pending ? 'Updating…' : 'Update Password'}
             </button>
           </form>
         </div>
 
         <p className="text-center text-xs text-zinc-300 mt-8 tracking-wider">
-          &copy; 2026 Altrera Industries &middot;{' '}
-          <Link href="/legal/terms" className="text-zinc-400 hover:text-zinc-600 transition-colors underline underline-offset-2">Terms</Link>
-          {' '}&middot;{' '}
-          <Link href="/legal/privacy" className="text-zinc-400 hover:text-zinc-600 transition-colors underline underline-offset-2">Privacy</Link>
+          &copy; 2026 Altrera Industries
         </p>
       </div>
     </div>
-  )
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense>
-      <LoginForm />
-    </Suspense>
   )
 }

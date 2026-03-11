@@ -29,6 +29,8 @@ export type AuditAction =
   | 'invite_team_member'
   | 'revoke_invitation'
   | 'remove_member'
+  | 'suspend_member'
+  | 'unsuspend_member'
   | 'update_member_role'
   | 'create_job_type'
   | 'update_job_type'
@@ -59,6 +61,11 @@ export type AuditAction =
   | 'gdpr_export'
   | 'gdpr_erase'
   | 'gdpr_set_consent'
+  // Invoices
+  | 'create_invoice'
+  | 'send_invoice'
+  | 'void_invoice'
+  | 'record_manual_payment'
 
 export async function logAuditEvent(
   supabase: SupabaseClient,

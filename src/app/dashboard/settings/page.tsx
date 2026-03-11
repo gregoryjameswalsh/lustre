@@ -6,10 +6,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import VatSettingsForm from './_components/VatSettingsForm'
-import EmailSettingsForm from './_components/EmailSettingsForm'
-import InlineEditName from './_components/InlineEditName'
-import InlineEditEmail from './_components/InlineEditEmail'
+import VatSettingsForm     from './_components/VatSettingsForm'
+import EmailSettingsForm   from './_components/EmailSettingsForm'
+import InlineEditName      from './_components/InlineEditName'
+import InlineEditEmail     from './_components/InlineEditEmail'
+import StripeConnectCard   from './_components/StripeConnectCard'
 
 // Chevron icon used in link-only cards
 function Chevron() {
@@ -59,7 +60,7 @@ async function getPageData() {
   ] = await Promise.all([
     supabase
       .from('organisations')
-      .select('name, email, phone, vat_registered, vat_rate, vat_number, plan, subscription_status, trial_ends_at, email_domain_status, email_domain_name, custom_from_email')
+      .select('name, email, phone, vat_registered, vat_rate, vat_number, plan, subscription_status, trial_ends_at, email_domain_status, email_domain_name, custom_from_email, stripe_account_id, stripe_connect_status')
       .eq('id', profile.organisation_id)
       .single(),
     supabase
@@ -219,6 +220,25 @@ export default async function SettingsPage() {
                 vatRegistered={org.vat_registered ?? false}
                 vatRate={org.vat_rate ?? 20}
                 vatNumber={org.vat_number ?? ''}
+                isAdmin={isAdmin}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* ── Stripe Payments ─────────────────────────────────────────── */}
+        {isAdmin && (
+          <div className="rounded-xl border border-zinc-200 bg-white">
+            <div className="border-b border-zinc-100 px-5 py-4">
+              <h2 className="text-sm font-medium text-zinc-900">Stripe Payments</h2>
+              <p className="mt-0.5 text-xs text-zinc-400">
+                Accept card payments on your invoices via Stripe.
+              </p>
+            </div>
+            <div className="p-5">
+              <StripeConnectCard
+                connected={org.stripe_connect_status === 'connected'}
+                stripeAccountId={org.stripe_account_id ?? null}
                 isAdmin={isAdmin}
               />
             </div>

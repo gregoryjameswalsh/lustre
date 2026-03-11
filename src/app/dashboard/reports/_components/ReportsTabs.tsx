@@ -5,7 +5,7 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import type { Plan } from '@/lib/types'
 import { planAtLeast } from '@/lib/utils/plan'
 
-type TabId = 'overview' | 'pipeline' | 'clients'
+type TabId = 'overview' | 'pipeline' | 'clients' | 'billing'
 
 interface Tab {
   id: TabId
@@ -18,6 +18,7 @@ const TABS: Tab[] = [
   { id: 'overview',  label: 'Overview',        required: 'starter' },
   { id: 'pipeline',  label: 'Pipeline',         required: 'professional', badge: 'Pro' },
   { id: 'clients',   label: 'Clients & Team',   required: 'business',     badge: 'Business' },
+  { id: 'billing',   label: 'Invoices',         required: 'starter' },
 ]
 
 interface Props {
