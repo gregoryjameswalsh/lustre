@@ -159,7 +159,7 @@ export async function createInvoiceFromQuote(
   const { data: quote } = await supabase
     .from('quotes')
     .select(`
-      client_id, job_id, total, subtotal, tax_rate, tax_amount, notes,
+      status, client_id, job_id, total, subtotal, tax_rate, tax_amount, notes,
       quote_line_items ( description, quantity, unit_price, amount, sort_order )
     `)
     .eq('id', quoteId)
@@ -167,6 +167,7 @@ export async function createInvoiceFromQuote(
     .single()
 
   if (!quote) return { error: 'Quote not found.' }
+  if (quote.status !== 'accepted') return { error: 'Only accepted quotes can be converted to invoices.' }
 
   // Generate invoice number
   const { data: invoiceNumber, error: seqError } = await supabase
