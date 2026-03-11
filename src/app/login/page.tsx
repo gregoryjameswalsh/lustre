@@ -6,10 +6,14 @@
 
 import { useActionState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 import { signIn } from '@/lib/actions/auth'
 
-export default function LoginPage() {
+function LoginForm() {
   const [state, action, pending] = useActionState(signIn, {})
+  const searchParams = useSearchParams()
+  const linkExpired  = searchParams.get('error') === 'link_expired'
 
   return (
     <div className="min-h-screen bg-[#f9f8f5] flex items-center justify-center px-4">
@@ -34,6 +38,12 @@ export default function LoginPage() {
             Sign in to your account
           </p>
 
+          {linkExpired && (
+            <p className="mb-5 text-xs text-amber-600 tracking-wide">
+              That link has expired. Request a new one below.
+            </p>
+          )}
+
           <form action={action} className="space-y-5">
             <div>
               <label className="block text-xs font-medium tracking-wider uppercase text-zinc-500 mb-2">
@@ -50,9 +60,17 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-medium tracking-wider uppercase text-zinc-500 mb-2">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-xs font-medium tracking-wider uppercase text-zinc-500">
+                  Password
+                </label>
+                <Link
+                  href="/forgot-password"
+                  className="text-xs text-zinc-400 hover:text-zinc-600 transition-colors"
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <input
                 type="password"
                 name="password"
@@ -85,5 +103,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   )
 }

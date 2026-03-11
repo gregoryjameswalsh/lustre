@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
+import { clampLimit, buildPaginatedResult, decodeCursor, pgVal } from '@/lib/pagination'
 import type { Client } from '@/lib/types'
+import type { PaginationParams, PaginatedResult } from '@/lib/types/pagination'
 
 async function getOrgId(): Promise<string> {
   const supabase = await createClient()
@@ -16,18 +18,61 @@ async function getOrgId(): Promise<string> {
   return profile.organisation_id
 }
 
-export async function getClients(): Promise<Client[]> {
+export async function getClients(pagination?: PaginationParams): Promise<PaginatedResult<Client>> {
   const supabase = await createClient()
   const orgId = await getOrgId()
 
-  const { data, error } = await supabase
+  const limit       = clampLimit(pagination?.limit)
+  const isFirstPage = !pagination?.after && !pagination?.before
+  const direction   = pagination?.before ? 'backward' : 'forward'
+
+  let query = supabase
     .from('clients')
     .select('*')
     .eq('organisation_id', orgId)
-    .order('last_name', { ascending: true })
+    .limit(limit + 1)
 
+  if (pagination?.after) {
+    const cursor = decodeCursor(pagination.after)
+    if (cursor) {
+      // Forward: records that come after the cursor in last_name ASC order
+      query = query.or(
+        `last_name.gt.${pgVal(cursor.last_name)},and(last_name.eq.${pgVal(cursor.last_name)},id.gt.${pgVal(cursor.id)})`
+      )
+    }
+  } else if (pagination?.before) {
+    const cursor = decodeCursor(pagination.before)
+    if (cursor) {
+      // Backward: records that come before the cursor in last_name ASC order
+      // (query runs DESC so we can use limit efficiently, then we reverse)
+      query = query.or(
+        `last_name.lt.${pgVal(cursor.last_name)},and(last_name.eq.${pgVal(cursor.last_name)},id.lt.${pgVal(cursor.id)})`
+      )
+    }
+  }
+
+  // Backward queries run DESC so the DB index scan is efficient; result is
+  // reversed back to ASC in buildPaginatedResult.
+  if (direction === 'backward') {
+    query = query
+      .order('last_name', { ascending: false })
+      .order('id',        { ascending: false })
+  } else {
+    query = query
+      .order('last_name', { ascending: true })
+      .order('id',        { ascending: true })
+  }
+
+  const { data, error } = await query
   if (error) throw new Error('Failed to fetch clients.')
-  return data ?? []
+
+  return buildPaginatedResult(
+    data ?? [],
+    limit,
+    direction,
+    isFirstPage,
+    (row) => ({ last_name: row.last_name, id: row.id }),
+  )
 }
 
 export async function getClient(id: string): Promise<Client | null> {

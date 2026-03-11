@@ -165,11 +165,28 @@ export interface Client {
 export interface ClientInPipeline extends Client {
   pipeline_stages?: { name: string; colour: string | null; is_won: boolean; is_lost: boolean } | null
   pipeline_assigned_profile?: { full_name: string | null } | null
+  /** Tags joined via entity_tags → tags. Present only when the pipeline query includes the join. */
+  tags?: { id: string; colour: string | null; name: string }[]
 }
 
 // -----------------------------------------------------------------------------
 // Property
 // -----------------------------------------------------------------------------
+
+export interface PropertyPhoto {
+  id:               string
+  organisation_id:  string
+  property_id:      string
+  storage_path:     string
+  file_name:        string
+  file_size_bytes:  number | null
+  mime_type:        string | null
+  caption:          string | null
+  display_order:    number
+  is_main:          boolean
+  uploaded_by:      string | null
+  uploaded_at:      string
+}
 
 export interface Property {
   id: string
@@ -412,6 +429,106 @@ export interface GdprRequest {
 
 export interface GdprRequestWithClient extends GdprRequest {
   clients?: { first_name: string; last_name: string } | null
+}
+
+// -----------------------------------------------------------------------------
+// Tags & Segmentation (M03)
+// -----------------------------------------------------------------------------
+
+/** Curated colour palette for tags. Palette is enforced in the UI only; hex is stored as-is. */
+export const CURATED_TAG_COLOURS = [
+  { name: 'Frost Mint',     hex: '#C8F5D7' },
+  { name: 'Sky Blue',       hex: '#C8E6FF' },
+  { name: 'Soft Lavender',  hex: '#E0D5FF' },
+  { name: 'Warm Peach',     hex: '#FFE0CC' },
+  { name: 'Blush Rose',     hex: '#FFD5D5' },
+  { name: 'Lemon Cream',    hex: '#FFF3C8' },
+  { name: 'Cloud Grey',     hex: '#E2E8F0' },
+  { name: 'Sage',           hex: '#D4EDD4' },
+] as const
+
+export const DEFAULT_TAG_COLOUR = '#E2E8F0' // Cloud Grey
+
+export type TagEntityType = 'client' | 'job'
+
+export interface Tag {
+  id:              string
+  organisation_id: string
+  name:            string
+  colour:          string | null
+  created_at:      string
+}
+
+export interface TagWithUsage extends Tag {
+  usage_count: number
+}
+
+export interface EntityTag {
+  id:          string
+  tag_id:      string
+  entity_id:   string
+  entity_type: TagEntityType
+  tag?:        Tag
+}
+
+// -----------------------------------------------------------------------------
+// Invoice
+// -----------------------------------------------------------------------------
+
+export type InvoiceStatus =
+  | 'draft' | 'sent' | 'viewed' | 'paid' | 'overdue' | 'void' | 'credit_note'
+
+export interface Invoice {
+  id:                       string
+  organisation_id:          string
+  client_id:                string
+  job_id:                   string | null
+  quote_id:                 string | null
+  invoice_number:           string
+  view_token:               string
+  status:                   InvoiceStatus
+  issue_date:               string
+  due_date:                 string
+  subtotal:                 number
+  tax_rate:                 number
+  tax_amount:               number
+  total:                    number
+  amount_paid:              number
+  currency:                 string
+  stripe_payment_link_id:   string | null
+  stripe_payment_link_url:  string | null
+  stripe_payment_intent_id: string | null
+  sent_at:                  string | null
+  viewed_at:                string | null
+  paid_at:                  string | null
+  voided_at:                string | null
+  void_reason:              string | null
+  notes:                    string | null
+  internal_notes:           string | null
+  created_at:               string
+  updated_at:               string
+}
+
+export interface InvoiceLineItem {
+  id:              string
+  invoice_id:      string
+  organisation_id: string
+  description:     string
+  quantity:        number
+  unit_price:      number
+  amount:          number
+  sort_order:      number
+  created_at:      string
+}
+
+export interface InvoiceWithRelations extends Invoice {
+  clients?: {
+    first_name: string
+    last_name:  string
+    email:      string | null
+    phone:      string | null
+  } | null
+  invoice_line_items?: InvoiceLineItem[]
 }
 
 // -----------------------------------------------------------------------------

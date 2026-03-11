@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, ClipboardList, FileText, Settings2, LogOut, Kanban, BarChart2 } from 'lucide-react'
+import { LayoutDashboard, Users, ClipboardList, Settings2, LogOut, Kanban, BarChart2, Receipt } from 'lucide-react'
 
 interface NavProps {
   orgName?: string
@@ -30,21 +30,22 @@ function Avatar({ name }: { name: string }) {
 }
 
 const navLinks = [
-  { href: '/dashboard',          label: 'Dashboard' },
-  { href: '/dashboard/pipeline', label: 'Pipeline' },
-  { href: '/dashboard/clients',  label: 'Clients' },
-  { href: '/dashboard/jobs',     label: 'Jobs' },
-  { href: '/dashboard/quotes',   label: 'Quotes' },
-  { href: '/dashboard/reports',  label: 'Reports' },
+  { href: '/dashboard',           label: 'Dashboard' },
+  { href: '/dashboard/pipeline',  label: 'Pipeline' },
+  { href: '/dashboard/clients',   label: 'Clients' },
+  { href: '/dashboard/jobs',      label: 'Jobs' },
+  { href: '/dashboard/quotes',    label: 'Quotes' },
+  { href: '/dashboard/invoices',  label: 'Invoices' },
+  { href: '/dashboard/reports',   label: 'Reports' },
 ]
 
 const tabs = [
-  { href: '/dashboard',          label: 'Dashboard', Icon: LayoutDashboard },
-  { href: '/dashboard/pipeline', label: 'Pipeline',  Icon: Kanban },
-  { href: '/dashboard/clients',  label: 'Clients',   Icon: Users },
-  { href: '/dashboard/jobs',     label: 'Jobs',      Icon: ClipboardList },
-  { href: '/dashboard/reports',  label: 'Reports',   Icon: BarChart2 },
-  { href: '/dashboard/settings', label: 'Settings',  Icon: Settings2 },
+  { href: '/dashboard',           label: 'Dashboard', Icon: LayoutDashboard },
+  { href: '/dashboard/pipeline',  label: 'Pipeline',  Icon: Kanban },
+  { href: '/dashboard/clients',   label: 'Clients',   Icon: Users },
+  { href: '/dashboard/jobs',      label: 'Jobs',      Icon: ClipboardList },
+  { href: '/dashboard/invoices',  label: 'Invoices',  Icon: Receipt },
+  { href: '/dashboard/settings',  label: 'Settings',  Icon: Settings2 },
 ]
 
 export default function Nav({ orgName, userName }: NavProps) {

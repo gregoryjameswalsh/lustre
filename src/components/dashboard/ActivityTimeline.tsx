@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { loadMoreActivities } from '@/lib/actions/activities-paginated'
 import type { Activity, FollowUp, ActivityType } from '@/lib/types'
 
 const typeConfig: Record<ActivityType, { label: string; icon: string; colour: string }> = {
@@ -59,11 +60,12 @@ interface Props {
   clientId: string
   initialActivities: Activity[]
   initialFollowUps: FollowUp[]
+  initialNextCursor: string | null
 }
 
 type LogType = 'note' | 'call' | 'email' | 'complaint' | 'other'
 
-export default function ActivityTimeline({ clientId, initialActivities, initialFollowUps }: Props) {
+export default function ActivityTimeline({ clientId, initialActivities, initialFollowUps, initialNextCursor }: Props) {
   const [activities, setActivities] = useState<Activity[]>(initialActivities)
   const [followUps, setFollowUps] = useState<FollowUp[]>(initialFollowUps)
   const [showForm, setShowForm] = useState(false)
@@ -71,8 +73,22 @@ export default function ActivityTimeline({ clientId, initialActivities, initialF
   const [logType, setLogType] = useState<LogType>('note')
   const [saving, setSaving] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [nextCursor, setNextCursor] = useState<string | null>(initialNextCursor)
+  const [loadingMore, setLoadingMore] = useState(false)
 
   const supabase = createClient()
+
+  async function handleLoadMore() {
+    if (!nextCursor || loadingMore) return
+    setLoadingMore(true)
+    try {
+      const result = await loadMoreActivities(clientId, nextCursor)
+      setActivities(prev => [...prev, ...result.data])
+      setNextCursor(result.nextCursor)
+    } finally {
+      setLoadingMore(false)
+    }
+  }
 
   async function handleLogActivity(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -515,6 +531,19 @@ export default function ActivityTimeline({ clientId, initialActivities, initialF
                 </div>
               )
             })}
+          </div>
+        )}
+
+        {/* Load More */}
+        {nextCursor && (
+          <div className="pt-2 text-center">
+            <button
+              onClick={handleLoadMore}
+              disabled={loadingMore}
+              className="text-xs font-medium tracking-[0.12em] uppercase text-zinc-400 hover:text-zinc-700 border border-zinc-200 px-5 py-2.5 rounded-lg hover:border-zinc-400 transition-colors disabled:opacity-50"
+            >
+              {loadingMore ? 'Loading…' : 'Load more'}
+            </button>
           </div>
         )}
       </div>

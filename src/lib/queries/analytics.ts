@@ -719,3 +719,109 @@ export async function getWinLossTrend(months: number = 12): Promise<MonthlyWinRa
     }
   })
 }
+
+// ── Invoice billing KPIs ───────────────────────────────────────────────────────
+// Shows the freelancer's invoice health: what's been invoiced, what's been
+// collected, what's outstanding, and average days to payment.
+
+export interface InvoiceKpis {
+  invoicedMtd:       number   // total invoiced this calendar month
+  invoicedLastMonth: number
+  collectedMtd:      number   // amount_paid on invoices paid this month
+  outstanding:       number   // total – amount_paid on all unpaid sent/overdue
+  overdueAmount:     number   // subset of outstanding that is overdue
+  paidRateMtd:       number | null   // collectedMtd / invoicedMtd, null if 0
+  avgDaysToPayment:  number | null   // avg calendar days between issue and paid_at
+  plan:              Plan
+}
+
+export async function getInvoiceKpis(): Promise<InvoiceKpis> {
+  const supabase = await createClient()
+  const { orgId, plan } = await getOrgContext()
+
+  const now            = new Date()
+  const monthStart     = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString()
+
+  const [
+    { data: mtdInvoices },
+    { data: lastMonthInvoices },
+    { data: unpaid },
+    { data: paidWithDates },
+  ] = await Promise.all([
+    // Invoiced this month (not void)
+    supabase
+      .from('invoices')
+      .select('total')
+      .eq('organisation_id', orgId)
+      .gte('issue_date', monthStart.slice(0, 10))
+      .neq('status', 'void'),
+    // Invoiced last month
+    supabase
+      .from('invoices')
+      .select('total')
+      .eq('organisation_id', orgId)
+      .gte('issue_date', lastMonthStart.slice(0, 10))
+      .lt('issue_date', monthStart.slice(0, 10))
+      .neq('status', 'void'),
+    // Unpaid (sent or overdue) — for outstanding + overdue amounts
+    supabase
+      .from('invoices')
+      .select('total, amount_paid, status')
+      .eq('organisation_id', orgId)
+      .in('status', ['sent', 'viewed', 'overdue']),
+    // Paid invoices with dates — for avg days to payment
+    supabase
+      .from('invoices')
+      .select('issue_date, paid_at, amount_paid')
+      .eq('organisation_id', orgId)
+      .eq('status', 'paid')
+      .not('paid_at', 'is', null)
+      .not('issue_date', 'is', null),
+  ])
+
+  const invoicedMtd       = (mtdInvoices ?? []).reduce((s, i) => s + (i.total ?? 0), 0)
+  const invoicedLastMonth = (lastMonthInvoices ?? []).reduce((s, i) => s + (i.total ?? 0), 0)
+
+  // Collected this month: amount_paid on invoices with paid_at >= monthStart
+  // We approximate with amount_paid for simplicity (no paid_at filter on this set)
+  const { data: paidThisMonth } = await supabase
+    .from('invoices')
+    .select('amount_paid')
+    .eq('organisation_id', orgId)
+    .eq('status', 'paid')
+    .gte('paid_at', monthStart)
+
+  const collectedMtd = (paidThisMonth ?? []).reduce((s, i) => s + (i.amount_paid ?? 0), 0)
+
+  let outstanding  = 0
+  let overdueAmount = 0
+  for (const inv of unpaid ?? []) {
+    const owed = Math.max(0, (inv.total ?? 0) - (inv.amount_paid ?? 0))
+    outstanding += owed
+    if (inv.status === 'overdue') overdueAmount += owed
+  }
+
+  // Average days from issue_date to paid_at (on paid invoices)
+  let avgDaysToPayment: number | null = null
+  const paidRows = paidWithDates ?? []
+  if (paidRows.length > 0) {
+    const totalDays = paidRows.reduce((s, inv) => {
+      const issued = new Date(inv.issue_date as string).getTime()
+      const paid   = new Date(inv.paid_at as string).getTime()
+      return s + (paid - issued) / 86400000
+    }, 0)
+    avgDaysToPayment = Math.round(totalDays / paidRows.length)
+  }
+
+  return {
+    invoicedMtd,
+    invoicedLastMonth,
+    collectedMtd,
+    outstanding,
+    overdueAmount,
+    paidRateMtd: invoicedMtd > 0 ? (collectedMtd / invoicedMtd) : null,
+    avgDaysToPayment,
+    plan,
+  }
+}

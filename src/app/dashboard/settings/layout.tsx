@@ -40,6 +40,10 @@ export default async function SettingsLayout({ children }: { children: React.Rea
 
       {/* Page content — fills remaining viewport, content is left-anchored */}
       <div className="min-w-0 flex-1">
+        {/* Mobile nav — horizontal tab strip, hidden on desktop */}
+        <div className="md:hidden sticky top-0 z-10 border-b border-zinc-200 bg-white px-4 pt-14 pb-3">
+          <SettingsSidebarNav isAdmin={isAdmin} mobile />
+        </div>
         {children}
       </div>
 

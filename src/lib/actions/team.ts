@@ -293,6 +293,46 @@ export async function updateMemberRole(
 }
 
 // -----------------------------------------------------------------------------
+// Suspend / unsuspend a member
+// Uses a SECURITY DEFINER RPC — no service role key required.
+// Guards are enforced inside the function (admin-only, same org, not self).
+// -----------------------------------------------------------------------------
+
+export async function setMemberSuspended(
+  profileId: string,
+  suspend: boolean
+): Promise<{ error?: string }> {
+  let ctx
+  try {
+    ctx = await requireAdmin()
+  } catch {
+    return { error: 'Only admins can suspend members.' }
+  }
+
+  const { supabase, orgId, userId } = ctx
+
+  const { error } = await supabase.rpc('set_member_suspended', {
+    p_profile_id: profileId,
+    p_suspended:  suspend,
+  })
+
+  if (error) {
+    console.error('setMemberSuspended error:', error)
+    return { error: error.message ?? 'Failed to update member status.' }
+  }
+
+  await logAuditEvent(supabase, {
+    orgId,
+    actorId:      userId,
+    action:       suspend ? 'suspend_member' : 'unsuspend_member',
+    resourceType: 'profile',
+    resourceId:   profileId,
+  })
+
+  return {}
+}
+
+// -----------------------------------------------------------------------------
 // Accept an invitation
 // Called from /invite/[token] — user must already be authenticated.
 // Delegates to a SECURITY DEFINER function that moves the user's profile

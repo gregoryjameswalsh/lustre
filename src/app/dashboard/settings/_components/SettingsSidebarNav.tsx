@@ -34,6 +34,7 @@ function buildSections(isAdmin: boolean): NavSection[] {
             items: [
               { label: 'Job Types',  href: '/dashboard/settings/job-types' },
               { label: 'Checklists', href: '/dashboard/settings/checklists' },
+              { label: 'Tags',       href: '/dashboard/settings/tags' },
               { label: 'Roles',      href: '/dashboard/settings/roles' },
             ],
           },
@@ -51,9 +52,34 @@ function buildSections(isAdmin: boolean): NavSection[] {
   ]
 }
 
-export default function SettingsSidebarNav({ isAdmin }: { isAdmin: boolean }) {
+export default function SettingsSidebarNav({ isAdmin, mobile = false }: { isAdmin: boolean; mobile?: boolean }) {
   const pathname = usePathname()
   const sections = buildSections(isAdmin)
+  const items = sections.flatMap(s => s.items)
+
+  // Mobile: horizontal scrolling tab strip
+  if (mobile) {
+    return (
+      <nav aria-label="Settings navigation" className="flex gap-1 overflow-x-auto pb-1">
+        {items.map(item => {
+          const active = item.exact ? pathname === item.href : pathname.startsWith(item.href)
+          return (
+            <Link
+              key={item.label}
+              href={item.href}
+              className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ${
+                active
+                  ? 'bg-[#1A3329] text-white'
+                  : 'bg-zinc-100 text-zinc-500 hover:bg-zinc-200'
+              }`}
+            >
+              {item.label}
+            </Link>
+          )
+        })}
+      </nav>
+    )
+  }
 
   return (
     <nav aria-label="Settings navigation">

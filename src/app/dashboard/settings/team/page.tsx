@@ -9,6 +9,7 @@ import Link from 'next/link'
 import InviteForm from './_components/InviteForm'
 import RevokeButton from './_components/RevokeButton'
 import RemoveMemberButton from './_components/RemoveMemberButton'
+import SuspendMemberButton from './_components/SuspendMemberButton'
 import RoleSelect from './_components/RoleSelect'
 import AssignRoleSelect from './_components/AssignRoleSelect'
 import { PLANS } from '@/lib/stripe/plans'
@@ -46,7 +47,7 @@ async function getTeamData() {
   ] = await Promise.all([
     supabase
       .from('profiles')
-      .select('id, full_name, email, role, custom_role_id')
+      .select('id, full_name, email, role, custom_role_id, suspended_at')
       .eq('organisation_id', profile.organisation_id)
       .order('full_name'),
     supabase
@@ -139,6 +140,9 @@ export default async function TeamPage() {
                         {isCurrentUser && (
                           <span className="ml-2 text-xs font-normal text-zinc-400">(you)</span>
                         )}
+                        {member.suspended_at && (
+                          <span className="ml-2 text-xs font-normal text-amber-600">Suspended</span>
+                        )}
                       </p>
                       <p className="text-xs text-zinc-400 truncate">{member.email}</p>
                     </div>
@@ -154,6 +158,10 @@ export default async function TeamPage() {
                           ) : (
                             <RoleSelect profileId={member.id} currentRole={member.role} />
                           )}
+                          <SuspendMemberButton
+                            profileId={member.id}
+                            suspended={!!member.suspended_at}
+                          />
                           <RemoveMemberButton profileId={member.id} />
                         </>
                       ) : (

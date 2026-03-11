@@ -3,6 +3,7 @@ import {
   getRevenueKpis, getRevenueTrend, getTopClients,
   getQuoteFunnel, getPipelineHealth, getRevenueByServiceType,
   getClientLifetimeValues, getTeamPerformance, getWinLossTrend,
+  getInvoiceKpis,
 } from '@/lib/queries/analytics'
 import type { RevenueBasis, ClientRevenueSummary, TrendPoint } from '@/lib/queries/analytics'
 import { planAtLeast } from '@/lib/utils/plan'
@@ -22,10 +23,12 @@ import ClientLifetimeTable from './_components/ClientLifetimeTable'
 import TeamPerformanceChart from './_components/TeamPerformanceChart'
 import WinLossTrend from './_components/WinLossTrend'
 import CsvExportButton from './_components/CsvExportButton'
+import InvoiceKpiCards from './_components/InvoiceKpiCards'
+import Link from 'next/link'
 
 export const metadata = { title: 'Reports — Lustre' }
 
-type Tab = 'overview' | 'pipeline' | 'clients'
+type Tab = 'overview' | 'pipeline' | 'clients' | 'billing'
 
 interface PageProps {
   searchParams: Promise<{ basis?: string; tab?: string; days?: string }>
@@ -36,7 +39,8 @@ export default async function ReportsPage({ searchParams }: PageProps) {
 
   const basis: RevenueBasis = params.basis === 'committed' ? 'committed' : 'earned'
   const tab: Tab = params.tab === 'pipeline' ? 'pipeline'
-    : params.tab === 'clients' ? 'clients'
+    : params.tab === 'clients'  ? 'clients'
+    : params.tab === 'billing'  ? 'billing'
     : 'overview'
 
   // Fetch KPIs first so we know the plan for gating decisions
@@ -199,6 +203,35 @@ export default async function ReportsPage({ searchParams }: PageProps) {
               </div>
             </>
           )}
+        </main>
+      </div>
+    )
+  }
+
+  // ── Billing tab ───────────────────────────────────────────────────────────
+
+  if (tab === 'billing') {
+    const invoiceKpis = await getInvoiceKpis()
+
+    return (
+      <div className="min-h-screen bg-[#F9FAFB]">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-4 md:pt-24 md:pb-16 space-y-6">
+          {header}
+          {tabNav}
+
+          <InvoiceKpiCards kpis={invoiceKpis} />
+
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-zinc-400">
+              Showing invoice health for your organisation. Click a card to filter invoices.
+            </p>
+            <Link
+              href="/dashboard/invoices"
+              className="text-xs font-medium text-[#3D7A5F] hover:underline"
+            >
+              View all invoices →
+            </Link>
+          </div>
         </main>
       </div>
     )
