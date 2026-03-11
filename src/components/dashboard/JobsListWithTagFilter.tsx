@@ -27,6 +27,26 @@ function formatDate(date: string) {
   })
 }
 
+type DueStatus = 'due_today' | 'overdue' | null
+
+function getDueStatus(scheduledDate: string | null, jobStatus: string): DueStatus {
+  if (!scheduledDate || jobStatus === 'completed' || jobStatus === 'cancelled') return null
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const due = new Date(scheduledDate)
+  due.setHours(0, 0, 0, 0)
+  if (due.getTime() === today.getTime()) return 'due_today'
+  if (due < today) return 'overdue'
+  return null
+}
+
+function DueFlag({ status }: { status: DueStatus }) {
+  if (!status) return null
+  return status === 'overdue'
+    ? <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold tracking-wide bg-red-50 text-red-600 border border-red-200">Overdue</span>
+    : <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold tracking-wide bg-amber-50 text-amber-600 border border-amber-200">Due today</span>
+}
+
 export type JobRow = {
   id: string
   status: string
@@ -130,6 +150,11 @@ export default function JobsListWithTagFilter({ jobs, allTags, prevHref, nextHre
                       <p className="text-xs text-zinc-400 mt-0.5">
                         {job.job_types?.name ?? '—'} · {job.scheduled_date ? formatDate(job.scheduled_date) : 'No date'}
                       </p>
+                      {getDueStatus(job.scheduled_date, job.status) && (
+                        <div className="mt-1.5">
+                          <DueFlag status={getDueStatus(job.scheduled_date, job.status)} />
+                        </div>
+                      )}
                       {job.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-1.5">
                           {job.tags.slice(0, MAX_BADGE_DISPLAY).map(t => (
@@ -171,9 +196,12 @@ export default function JobsListWithTagFilter({ jobs, allTags, prevHref, nextHre
                     <span className="text-sm text-zinc-500">
                       {job.scheduled_date ? formatDate(job.scheduled_date) : '—'}
                     </span>
-                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium tracking-wide inline-flex w-fit ${statusColour[job.status]}`}>
-                      {job.status.replace('_', ' ')}
-                    </span>
+                    <div className="flex flex-col gap-1 items-start">
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium tracking-wide inline-flex w-fit ${statusColour[job.status]}`}>
+                        {job.status.replace('_', ' ')}
+                      </span>
+                      <DueFlag status={getDueStatus(job.scheduled_date, job.status)} />
+                    </div>
                     <span className="text-xs text-zinc-300 text-right">View →</span>
                   </div>
                 </a>
