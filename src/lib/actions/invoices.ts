@@ -75,14 +75,31 @@ export async function createInvoice(
   }
   if (items.length === 0) return { error: 'Please add at least one line item.' }
 
-  // Fetch VAT settings
-  const { data: org } = await supabase
-    .from('organisations')
-    .select('vat_registered, vat_rate')
-    .eq('id', orgId)
-    .single()
-  const vatRegistered = org?.vat_registered ?? false
-  const vatRate       = org?.vat_rate       ?? 0
+  // Fetch VAT settings — honour the agreed rate from the source quote when present
+  let vatRegistered: boolean
+  let vatRate: number
+
+  if (quoteId) {
+    const { data: sourceQuote } = await supabase
+      .from('quotes')
+      .select('tax_rate, status')
+      .eq('id', quoteId)
+      .eq('organisation_id', orgId)
+      .single()
+    if (!sourceQuote || sourceQuote.status !== 'accepted') {
+      return { error: 'Source quote is not accepted.' }
+    }
+    vatRate       = sourceQuote.tax_rate ?? 0
+    vatRegistered = vatRate > 0
+  } else {
+    const { data: org } = await supabase
+      .from('organisations')
+      .select('vat_registered, vat_rate')
+      .eq('id', orgId)
+      .single()
+    vatRegistered = org?.vat_registered ?? false
+    vatRate       = org?.vat_rate       ?? 0
+  }
 
   const { subtotal, taxAmount, total } = calcTotals(items, vatRate, vatRegistered)
 

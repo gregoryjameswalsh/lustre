@@ -55,6 +55,10 @@ export default async function NewInvoicePage({
   let preItems:    { description: string; quantity: number; unit_price: number }[] | undefined
   let fromQuote = false
 
+  // Default: use current org VAT settings
+  let effectiveVatRegistered = vatRegistered
+  let effectiveVatRate       = vatRate
+
   if (quoteId) {
     const quote = await getQuote(quoteId)
     // Only accepted quotes can be promoted to invoices
@@ -68,6 +72,9 @@ export default async function NewInvoicePage({
       .sort((a, b) => a.sort_order - b.sort_order)
       .map(i => ({ description: i.description, quantity: i.quantity, unit_price: i.unit_price }))
     fromQuote = true
+    // Use the VAT rate the client agreed to on the quote, not the current org settings
+    effectiveVatRegistered = quote.tax_rate > 0
+    effectiveVatRate       = quote.tax_rate
   }
 
   return (
@@ -80,8 +87,8 @@ export default async function NewInvoicePage({
         </div>
         <NewInvoiceForm
           clients={clients}
-          vatRegistered={vatRegistered}
-          vatRate={vatRate}
+          vatRegistered={effectiveVatRegistered}
+          vatRate={effectiveVatRate}
           preClientId={preClientId}
           preQuoteId={preQuoteId}
           preItems={preItems}
