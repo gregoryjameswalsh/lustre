@@ -56,7 +56,6 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
     id:             j.id,
     status:         j.status,
     scheduled_date: j.scheduled_date,
-    due_date:       j.due_date ?? null,
     clients:        j.clients as { first_name: string; last_name: string } | null,
     properties:     j.properties as { address_line1: string | null; town: string | null } | null,
     job_types:      j.job_types as { name: string } | null,

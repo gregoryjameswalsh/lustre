@@ -29,11 +29,11 @@ function formatDate(date: string) {
 
 type DueStatus = 'due_today' | 'overdue' | null
 
-function getDueStatus(dueDate: string | null, jobStatus: string): DueStatus {
-  if (!dueDate || jobStatus === 'completed' || jobStatus === 'cancelled') return null
+function getDueStatus(scheduledDate: string | null, jobStatus: string): DueStatus {
+  if (!scheduledDate || jobStatus === 'completed' || jobStatus === 'cancelled') return null
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  const due = new Date(dueDate)
+  const due = new Date(scheduledDate)
   due.setHours(0, 0, 0, 0)
   if (due.getTime() === today.getTime()) return 'due_today'
   if (due < today) return 'overdue'
@@ -51,7 +51,6 @@ export type JobRow = {
   id: string
   status: string
   scheduled_date: string | null
-  due_date: string | null
   clients: { first_name: string; last_name: string } | null
   properties: { address_line1: string | null; town: string | null } | null
   job_types: { name: string } | null
@@ -151,9 +150,9 @@ export default function JobsListWithTagFilter({ jobs, allTags, prevHref, nextHre
                       <p className="text-xs text-zinc-400 mt-0.5">
                         {job.job_types?.name ?? '—'} · {job.scheduled_date ? formatDate(job.scheduled_date) : 'No date'}
                       </p>
-                      {getDueStatus(job.due_date, job.status) && (
+                      {getDueStatus(job.scheduled_date, job.status) && (
                         <div className="mt-1.5">
-                          <DueFlag status={getDueStatus(job.due_date, job.status)} />
+                          <DueFlag status={getDueStatus(job.scheduled_date, job.status)} />
                         </div>
                       )}
                       {job.tags.length > 0 && (
@@ -201,7 +200,7 @@ export default function JobsListWithTagFilter({ jobs, allTags, prevHref, nextHre
                       <span className={`text-xs px-2.5 py-1 rounded-full font-medium tracking-wide inline-flex w-fit ${statusColour[job.status]}`}>
                         {job.status.replace('_', ' ')}
                       </span>
-                      <DueFlag status={getDueStatus(job.due_date, job.status)} />
+                      <DueFlag status={getDueStatus(job.scheduled_date, job.status)} />
                     </div>
                     <span className="text-xs text-zinc-300 text-right">View →</span>
                   </div>
