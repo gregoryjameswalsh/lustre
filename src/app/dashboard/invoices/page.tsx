@@ -111,7 +111,6 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
                     <tr
                       key={inv.id}
                       className="hover:bg-zinc-50 transition-colors cursor-pointer"
-                      onClick={() => {/* handled by the Link */}}
                     >
                       <td className="px-4 py-3">
                         <Link href={`/dashboard/invoices/${inv.id}`} className="block">
