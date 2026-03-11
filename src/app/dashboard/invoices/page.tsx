@@ -130,8 +130,8 @@ export default async function InvoicesPage({ searchParams }: InvoicesPageProps) 
                       </td>
                       <td className="px-4 py-3">
                         <Link href={`/dashboard/invoices/${inv.id}`} className="block">
-                          <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${STATUS_STYLES[inv.status]}`}>
-                            {inv.status.replace('_', ' ')}
+                          <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${STATUS_STYLES[inv.status as InvoiceStatus] ?? ''}`}>
+                            {(inv.status ?? '').replace('_', ' ')}
                           </span>
                         </Link>
                       </td>

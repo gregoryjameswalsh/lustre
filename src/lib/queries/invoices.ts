@@ -33,13 +33,14 @@ export async function getInvoices(options?: {
 
   let query = supabase
     .from('invoices')
-    .select(INVOICE_FULL_SELECT)
+    .select(INVOICE_LIST_SELECT)
     .order('created_at', { ascending: false })
 
-  if (options?.status) query = query.eq('status', options.status)
+  if (options?.status)   query = query.eq('status', options.status)
   if (options?.clientId) query = query.eq('client_id', options.clientId)
 
-  const { data } = await query
+  const { data, error } = await query
+  if (error) console.error('[getInvoices]', error.message)
   return (data ?? []) as unknown as InvoiceWithRelations[]
 }
 
