@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
 import { deleteJobAction } from '@/lib/actions/jobs'
 
-type JobData = { id: string; client_id: string; property_id: string | null; job_type_id: string | null; status: string; scheduled_date: string | null; scheduled_time: string | null; due_date: string | null; duration_hours: number | null; price: number | null; notes: string | null; internal_notes: string | null }
+type JobData = { id: string; client_id: string; property_id: string | null; job_type_id: string | null; status: string; scheduled_date: string | null; scheduled_time: string | null; duration_hours: number | null; price: number | null; notes: string | null; internal_notes: string | null }
 type ClientOption = { id: string; first_name: string; last_name: string }
 type PropertyOption = { id: string; address_line1: string; town: string }
 type JobTypeOption = { id: string; name: string }
@@ -80,7 +80,6 @@ export default function EditJobPage() {
       status: formData.get('status') as string,
       scheduled_date: formData.get('scheduled_date') || null,
       scheduled_time: formData.get('scheduled_time') || null,
-      due_date: formData.get('due_date') || null,
       duration_hours: formData.get('duration_hours') ? Number(formData.get('duration_hours')) : null,
       price: formData.get('price') ? Number(formData.get('price')) : null,
       notes: formData.get('notes') || null,
@@ -196,10 +195,6 @@ export default function EditJobPage() {
               <div>
                 <label className={labelClass}>Time</label>
                 <input name="scheduled_time" type="time" defaultValue={job?.scheduled_time ?? ''} className={inputClass} />
-              </div>
-              <div>
-                <label className={labelClass}>Due Date</label>
-                <input name="due_date" type="date" defaultValue={job?.due_date ?? ''} className={inputClass} />
               </div>
               <div>
                 <label className={labelClass}>Duration (hours)</label>

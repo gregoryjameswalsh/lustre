@@ -99,7 +99,6 @@ function NewJobForm() {
       status: 'scheduled',
       scheduled_date: formData.get('scheduled_date') || null,
       scheduled_time: formData.get('scheduled_time') || null,
-      due_date: formData.get('due_date') || null,
       duration_hours: formData.get('duration_hours') ? Number(formData.get('duration_hours')) : null,
       price: formData.get('price') ? Number(formData.get('price')) : null,
       notes: formData.get('notes') || null,
@@ -210,10 +209,6 @@ function NewJobForm() {
             <div>
               <label className={labelClass}>Time</label>
               <input name="scheduled_time" type="time" className={inputClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Due Date</label>
-              <input name="due_date" type="date" className={inputClass} />
             </div>
             <div>
               <label className={labelClass}>Price (£)</label>

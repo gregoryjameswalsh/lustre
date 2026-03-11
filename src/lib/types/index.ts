@@ -319,7 +319,6 @@ export interface Job {
   status: JobStatus
   scheduled_date: string
   scheduled_time: string | null
-  due_date: string | null
   duration_hours: number | null
   price: number | null
   notes: string | null
