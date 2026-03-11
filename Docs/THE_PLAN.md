@@ -431,14 +431,24 @@ Phase 2 is the enterprise feature layer, the sales team, and the third-party int
 
 *These targets are the CRO's numbers, validated by the CFO's unit economics model. The CFO notes £50K ARR by Month 6 (~33 accounts) as the operational breakeven and £1M ARR as Series A readiness threshold.*
 
-### Pricing (Final — Aligned Across CRO + CFO + CCO)
+### Pricing (Final — Aligned Across CRO + CFO + CCO + CEO Decision on Solo Tier)
 
 | Tier | Annual | Monthly | Users | Key Gate |
 |---|---|---|---|---|
-| **Starter** | £39/mo | £49/mo | Up to 3 | Core CRM + 5 quotes/mo |
+| **Solo** | £19/mo (annual only) | — | 1 | Core CRM, 50 clients max, 10 quotes/mo, "Powered by Lustre" mandatory |
+| **Starter** | £39/mo | £49/mo | Up to 3 | Core CRM, unlimited clients/quotes |
 | **Professional** | £119/mo | £149/mo | Up to 15 | Custom fields, tags, unlimited quotes |
 | **Business** | £319/mo | £399/mo | Up to 50 | RBAC, API, email sync, custom reports |
 | **Enterprise** | From £1,500/mo | Negotiated | Unlimited | SSO, multi-branch, CSM, SLA, contracts |
+
+**Solo tier — CEO decision notes:**
+- Annual billing only (no monthly option). £228/yr is the entry commitment. Prevents churn arbitrage.
+- Hard limits (50 clients, 10 quotes/mo, 1 user) create natural upgrade moments — product surfaces Starter when limits are approached.
+- "Powered by Lustre" link on all public quote footers is **non-removable** at Solo tier. This is the commercial return on subsidising solo operators: every quote is a brand impression in front of exactly the right audience.
+- Support is help centre only. No email support. This is the primary mechanism that keeps the unit economics healthy.
+- Solo tier launches in **Phase 2 (Month 5–6)** — after Starter conversion data exists and self-serve support infrastructure (help centre 30+ articles) is in place. It is NOT a Phase 1 feature.
+- Floor analysis: infrastructure cost ~£1.60/tenant at 500 accounts, Stripe fees ~£0.49/transaction, support ~£1.50/mo = ~£3.80 total cost floor. £19/mo = ~80–92% gross margin at scale.
+- No free tier until Phase 2 self-serve infrastructure (in-app tours, 30+ help articles, zero-touch onboarding) is in place.
 
 **Enterprise deal structure (CRO standard):**
 - 12-month minimum, invoiced annually upfront
