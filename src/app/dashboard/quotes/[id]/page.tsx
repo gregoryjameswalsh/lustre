@@ -45,6 +45,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
       .from('invoices')
       .select('id')
       .eq('quote_id', id)
+      .neq('status', 'void')
       .maybeSingle()
     invoiceId = inv?.id ?? null
   }
