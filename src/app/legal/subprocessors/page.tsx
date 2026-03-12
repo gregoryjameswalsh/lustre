@@ -19,9 +19,9 @@ const subprocessors: Subprocessor[] = [
   {
     name: 'Supabase',
     purpose: 'Database, authentication, and file storage',
-    location: 'USA (AWS us-east-1)',
+    location: 'EU (AWS eu-west-1)',
     dpaLink: 'https://supabase.com/legal/dpa',
-    dpaType: 'standard',
+    dpaType: 'signed',
   },
   {
     name: 'Stripe',
@@ -61,7 +61,7 @@ const subprocessors: Subprocessor[] = [
   {
     name: 'Vercel',
     purpose: 'Application hosting and edge network',
-    location: 'USA / Global CDN',
+    location: 'EU / Global CDN',
     dpaLink: 'https://vercel.com/legal/dpa',
     dpaType: 'standard',
   },
