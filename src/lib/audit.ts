@@ -43,6 +43,7 @@ export type AuditAction =
   | 'reactivate_checklist_template'
   | 'delete_checklist_template'
   | 'duplicate_checklist_template'
+  | 'upload_org_logo'
   // RBAC
   | 'create_role'
   | 'update_role'
