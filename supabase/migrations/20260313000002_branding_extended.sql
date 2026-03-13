@@ -15,6 +15,8 @@ ALTER TABLE organisations
 
 -- 3. Update cron_invoice_dunning to include branding fields so the cron job
 -- can send fully branded overdue reminder emails.
+-- DROP first because CREATE OR REPLACE cannot change a function's return type.
+DROP FUNCTION IF EXISTS public.cron_invoice_dunning();
 CREATE OR REPLACE FUNCTION public.cron_invoice_dunning()
 RETURNS TABLE (
   invoice_id        UUID,
