@@ -44,7 +44,7 @@ export async function GET(
       clients ( first_name, last_name, email, phone ),
       properties ( address_line1, address_line2, town, postcode ),
       quote_line_items ( description, quantity, unit_price, amount, is_addon, sort_order ),
-      organisations ( name, email, phone, address, vat_registered, vat_number )
+      organisations ( name, email, phone, address, vat_registered, vat_number, logo_url, brand_color )
     `)
     .eq('id', id)
     .eq('organisation_id', profile.organisation_id)
@@ -99,11 +99,13 @@ export async function GET(
     } : null,
     lineItems,
     org: {
-      name:      org?.name ?? '',
-      email:     org?.email ?? null,
-      phone:     org?.phone ?? null,
-      address:   org?.address ?? null,
-      vatNumber: org?.vat_number ?? null,
+      name:       org?.name ?? '',
+      email:      org?.email ?? null,
+      phone:      org?.phone ?? null,
+      address:    org?.address ?? null,
+      vatNumber:  org?.vat_number ?? null,
+      logoUrl:    org?.logo_url ?? null,
+      brandColor: org?.brand_color ?? null,
     },
   }
 

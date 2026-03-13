@@ -10,9 +10,10 @@ interface Props {
   token: string
   orgName: string
   initialStatus: string
+  brandColor?: string
 }
 
-export default function QuoteResponseButtons({ token, orgName, initialStatus }: Props) {
+export default function QuoteResponseButtons({ token, orgName, initialStatus, brandColor = '#4a5c4e' }: Props) {
   const [response, setResponse] = useState<'accepted' | 'declined' | null>(null)
   const [acting, setActing]     = useState(false)
   const [error, setError]       = useState<string | null>(null)
@@ -70,7 +71,8 @@ export default function QuoteResponseButtons({ token, orgName, initialStatus }: 
           <button
             onClick={() => handleRespond('accepted')}
             disabled={acting}
-            className="rounded-full bg-[#4a5c4e] px-8 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            style={{ backgroundColor: brandColor }}
+            className="rounded-full px-8 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {acting ? '…' : 'Accept quote'}
           </button>

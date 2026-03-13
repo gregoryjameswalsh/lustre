@@ -11,6 +11,7 @@ import EmailSettingsForm   from './_components/EmailSettingsForm'
 import InlineEditName      from './_components/InlineEditName'
 import InlineEditEmail     from './_components/InlineEditEmail'
 import StripeConnectCard   from './_components/StripeConnectCard'
+import BrandingForm        from './_components/BrandingForm'
 
 // Chevron icon used in link-only cards
 function Chevron() {
@@ -60,7 +61,7 @@ async function getPageData() {
   ] = await Promise.all([
     supabase
       .from('organisations')
-      .select('name, email, phone, vat_registered, vat_rate, vat_number, plan, subscription_status, trial_ends_at, email_domain_status, email_domain_name, custom_from_email, stripe_account_id, stripe_connect_status')
+      .select('name, email, phone, vat_registered, vat_rate, vat_number, plan, subscription_status, trial_ends_at, email_domain_status, email_domain_name, custom_from_email, stripe_account_id, stripe_connect_status, logo_url, brand_color')
       .eq('id', profile.organisation_id)
       .single(),
     supabase
@@ -83,6 +84,7 @@ async function getPageData() {
 
   return {
     org,
+    orgId:          profile.organisation_id,
     isAdmin,
     userEmail:      user.email ?? '',
     userName:       profile.full_name ?? '',
@@ -96,6 +98,7 @@ async function getPageData() {
 export default async function SettingsPage() {
   const {
     org,
+    orgId,
     isAdmin,
     userEmail,
     userName,
@@ -220,6 +223,26 @@ export default async function SettingsPage() {
                 vatRegistered={org.vat_registered ?? false}
                 vatRate={org.vat_rate ?? 20}
                 vatNumber={org.vat_number ?? ''}
+                isAdmin={isAdmin}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* ── Branding — admin only ────────────────────────────────────── */}
+        {isAdmin && (
+          <div className="rounded-xl border border-zinc-200 bg-white">
+            <div className="border-b border-zinc-100 px-5 py-4">
+              <h2 className="text-sm font-medium text-zinc-900">Branding</h2>
+              <p className="mt-0.5 text-xs text-zinc-400">
+                Logo and brand colour appear on quotes, invoices, and emails sent to clients.
+              </p>
+            </div>
+            <div className="p-5">
+              <BrandingForm
+                orgId={orgId}
+                logoUrl={org.logo_url ?? null}
+                brandColor={org.brand_color ?? null}
                 isAdmin={isAdmin}
               />
             </div>

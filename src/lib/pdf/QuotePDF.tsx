@@ -5,7 +5,7 @@
 // =============================================================================
 
 import {
-  Document, Page, Text, View, StyleSheet
+  Document, Page, Text, View, StyleSheet, Image
 } from '@react-pdf/renderer'
 
 // -----------------------------------------------------------------------------
@@ -56,6 +56,8 @@ export interface QuotePDFData {
     phone: string | null
     address: string | null
     vatNumber: string | null
+    logoUrl: string | null
+    brandColor: string | null
   }
 }
 
@@ -78,12 +80,13 @@ function formatDate(date: string | null) {
 // Styles
 // -----------------------------------------------------------------------------
 
-const SAGE  = '#4a5c4e'
+const DEFAULT_BRAND = '#4a5c4e'
 const BLACK = '#0c0c0b'
 const GREY  = '#6b7280'
 const LIGHT = '#f9f8f5'
 const RULE  = '#e5e7eb'
 
+// Base styles that don't depend on the brand colour
 const styles = StyleSheet.create({
   page: {
     fontFamily: 'Helvetica',
@@ -95,7 +98,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 48,
   },
 
-  // Header
+  // Header (border + org name colour applied dynamically via brandColor)
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -103,12 +106,12 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     paddingBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: SAGE,
+    borderBottomColor: DEFAULT_BRAND,
   },
   orgName: {
     fontSize: 16,
     fontFamily: 'Helvetica-Bold',
-    color: SAGE,
+    color: DEFAULT_BRAND,
     letterSpacing: 1.5,
     textTransform: 'uppercase',
   },
@@ -175,7 +178,7 @@ const styles = StyleSheet.create({
   },
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: SAGE,
+    backgroundColor: DEFAULT_BRAND,
     paddingVertical: 7,
     paddingHorizontal: 10,
   },
@@ -303,6 +306,8 @@ const styles = StyleSheet.create({
 export function QuotePDF({ data }: { data: QuotePDFData }) {
   const { org, client, property, lineItems, taxRate } = data
 
+  const brand = org.brandColor ?? DEFAULT_BRAND
+
   const coreItems  = lineItems.filter(i => !i.isAddon)
   const addonItems = lineItems.filter(i => i.isAddon)
 
@@ -316,9 +321,17 @@ export function QuotePDF({ data }: { data: QuotePDFData }) {
       <Page size="A4" style={styles.page}>
 
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { borderBottomColor: brand }]}>
           <View>
-            <Text style={styles.orgName}>{org.name}</Text>
+            {org.logoUrl ? (
+              // eslint-disable-next-line jsx-a11y/alt-text
+              <Image
+                src={org.logoUrl}
+                style={{ maxWidth: 140, maxHeight: 48, objectFit: 'contain', marginBottom: 6 }}
+              />
+            ) : (
+              <Text style={[styles.orgName, { color: brand }]}>{org.name}</Text>
+            )}
             {orgAddressLines ? <Text style={styles.orgDetails}>{orgAddressLines}</Text> : null}
             {vatLine ? <Text style={styles.orgDetails}>{vatLine}</Text> : null}
           </View>
@@ -363,7 +376,7 @@ export function QuotePDF({ data }: { data: QuotePDFData }) {
         {/* Pricing — fixed */}
         {data.pricingType === 'fixed' ? (
           <View style={styles.table}>
-            <View style={styles.tableHeader}>
+            <View style={[styles.tableHeader, { backgroundColor: brand }]}>
               <Text style={[styles.tableHeaderText, styles.colDescription]}>Description</Text>
               <Text style={[styles.tableHeaderText, styles.colAmount]}>Amount</Text>
             </View>
@@ -377,7 +390,7 @@ export function QuotePDF({ data }: { data: QuotePDFData }) {
         ) : (
           /* Pricing — itemised */
           <View style={styles.table}>
-            <View style={styles.tableHeader}>
+            <View style={[styles.tableHeader, { backgroundColor: brand }]}>
               <Text style={[styles.tableHeaderText, styles.colDescription]}>Description</Text>
               <Text style={[styles.tableHeaderText, styles.colQty]}>Qty</Text>
               <Text style={[styles.tableHeaderText, styles.colUnitPrice]}>Unit price</Text>

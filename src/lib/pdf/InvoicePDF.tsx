@@ -4,7 +4,7 @@
 // Uses @react-pdf/renderer — no headless Chrome needed
 // =============================================================================
 
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer'
 
 // -----------------------------------------------------------------------------
 // Types
@@ -47,6 +47,8 @@ export interface InvoicePDFData {
     phone:   string | null
     address: string | null
     vatNumber: string | null
+    logoUrl:   string | null
+    brandColor: string | null
   }
 }
 
@@ -69,7 +71,7 @@ function formatDate(date: string | null) {
 // Styles — deliberately close to QuotePDF for brand consistency
 // -----------------------------------------------------------------------------
 
-const SAGE  = '#4a5c4e'
+const DEFAULT_BRAND = '#4a5c4e'
 const BLACK = '#0c0c0b'
 const GREY  = '#6b7280'
 const LIGHT = '#f9f8f5'
@@ -92,12 +94,12 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     paddingBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: SAGE,
+    borderBottomColor: DEFAULT_BRAND,
   },
   orgName: {
     fontSize: 16,
     fontFamily: 'Helvetica-Bold',
-    color: SAGE,
+    color: DEFAULT_BRAND,
     letterSpacing: 1.5,
     textTransform: 'uppercase',
   },
@@ -148,7 +150,7 @@ const styles = StyleSheet.create({
   table: { marginBottom: 4 },
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: SAGE,
+    backgroundColor: DEFAULT_BRAND,
     paddingVertical: 7,
     paddingHorizontal: 10,
   },
@@ -212,6 +214,8 @@ const styles = StyleSheet.create({
 export function InvoicePDF({ data }: { data: InvoicePDFData }) {
   const { org, client, lineItems } = data
 
+  const brand = org.brandColor ?? DEFAULT_BRAND
+
   const orgContactLine = [org.address, org.email, org.phone].filter(Boolean).join('  ·  ')
   const vatLine = data.vatRegistered && org.vatNumber ? `VAT No. ${org.vatNumber}` : null
 
@@ -222,9 +226,17 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
       <Page size="A4" style={styles.page}>
 
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { borderBottomColor: brand }]}>
           <View>
-            <Text style={styles.orgName}>{org.name}</Text>
+            {org.logoUrl ? (
+              // eslint-disable-next-line jsx-a11y/alt-text
+              <Image
+                src={org.logoUrl}
+                style={{ maxWidth: 140, maxHeight: 48, objectFit: 'contain', marginBottom: 6 }}
+              />
+            ) : (
+              <Text style={[styles.orgName, { color: brand }]}>{org.name}</Text>
+            )}
             {orgContactLine ? <Text style={styles.orgDetails}>{orgContactLine}</Text> : null}
             {vatLine ? <Text style={styles.orgDetails}>{vatLine}</Text> : null}
           </View>
@@ -263,7 +275,7 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
 
         {/* Line items table */}
         <View style={styles.table}>
-          <View style={styles.tableHeader}>
+          <View style={[styles.tableHeader, { backgroundColor: brand }]}>
             <Text style={[styles.tableHeaderText, styles.colDescription]}>Description</Text>
             <Text style={[styles.tableHeaderText, styles.colQty]}>Qty</Text>
             <Text style={[styles.tableHeaderText, styles.colUnitPrice]}>Unit price</Text>

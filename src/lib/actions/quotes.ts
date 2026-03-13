@@ -354,7 +354,7 @@ async function sendQuoteToClient(quoteId: string, supabase: SupabaseClient): Pro
     .select(`
       quote_number, title, total, valid_until, accept_token,
       clients ( first_name, last_name, email ),
-      organisations ( name, email, phone, custom_from_email )
+      organisations ( name, email, phone, custom_from_email, logo_url, brand_color )
     `)
     .eq('id', quoteId)
     .single()
@@ -388,6 +388,8 @@ async function sendQuoteToClient(quoteId: string, supabase: SupabaseClient): Pro
     orgEmail:        org?.email,
     orgPhone:        org?.phone,
     customFromEmail: org?.custom_from_email ?? undefined,
+    orgLogoUrl:      org?.logo_url ?? null,
+    orgBrandColor:   org?.brand_color ?? null,
   })
 }
 

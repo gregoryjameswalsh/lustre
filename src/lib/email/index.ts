@@ -37,6 +37,8 @@ export interface SendQuoteEmailParams {
   orgEmail: string         // reply-to
   orgPhone: string | null
   customFromEmail?: string // if set and DNS-verified, used as the from address
+  orgLogoUrl?: string | null
+  orgBrandColor?: string | null
 }
 
 export interface SendOperatorResponseNotificationParams {
@@ -81,8 +83,11 @@ function formatDate(date: string | null) {
 function quoteEmailHtml(params: SendQuoteEmailParams): string {
   const {
     clientName, quoteNumber, quoteTitle, quoteTotal,
-    quoteValidUntil, acceptUrl, orgName, orgPhone
+    quoteValidUntil, acceptUrl, orgName, orgPhone,
+    orgLogoUrl, orgBrandColor,
   } = params
+
+  const brand = orgBrandColor ?? '#4a5c4e'
 
   const validUntilLine = quoteValidUntil
     ? `<p style="margin:0 0 8px;color:#6b7280;font-size:14px;">This quote is valid until <strong>${formatDate(quoteValidUntil)}</strong>.</p>`
@@ -91,6 +96,10 @@ function quoteEmailHtml(params: SendQuoteEmailParams): string {
   const phoneLine = orgPhone
     ? `<p style="margin:4px 0 0;color:#6b7280;font-size:13px;">${orgPhone}</p>`
     : ''
+
+  const headerContent = orgLogoUrl
+    ? `<img src="${orgLogoUrl}" alt="${orgName}" style="max-height:48px;max-width:180px;display:block;object-fit:contain;" />`
+    : `<p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:${brand};">${orgName}</p>`
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -108,9 +117,7 @@ function quoteEmailHtml(params: SendQuoteEmailParams): string {
           <!-- Header -->
           <tr>
             <td style="padding-bottom:24px;">
-              <p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:#4a5c4e;">
-                ${orgName}
-              </p>
+              ${headerContent}
             </td>
           </tr>
 
@@ -149,7 +156,7 @@ function quoteEmailHtml(params: SendQuoteEmailParams): string {
                 <tr>
                   <td align="center">
                     <a href="${acceptUrl}"
-                       style="display:inline-block;background:#4a5c4e;color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:14px 32px;border-radius:100px;">
+                       style="display:inline-block;background:${brand};color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:14px 32px;border-radius:100px;">
                       View &amp; Accept Quote
                     </a>
                   </td>
