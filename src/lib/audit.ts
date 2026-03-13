@@ -70,6 +70,7 @@ export type AuditAction =
   | 'upload_org_logo'
   | 'delete_org_logo'
   | 'update_brand_color'
+  | 'update_brand_color_secondary'
 
 export async function logAuditEvent(
   supabase: SupabaseClient,
