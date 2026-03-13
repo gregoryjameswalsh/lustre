@@ -43,7 +43,6 @@ export type AuditAction =
   | 'reactivate_checklist_template'
   | 'delete_checklist_template'
   | 'duplicate_checklist_template'
-  | 'upload_org_logo'
   // RBAC
   | 'create_role'
   | 'update_role'
@@ -67,6 +66,9 @@ export type AuditAction =
   | 'send_invoice'
   | 'void_invoice'
   | 'record_manual_payment'
+  // Branding
+  | 'upload_org_logo'
+  | 'delete_org_logo'
 
 export async function logAuditEvent(
   supabase: SupabaseClient,
