@@ -69,6 +69,7 @@ export type AuditAction =
   // Branding
   | 'upload_org_logo'
   | 'delete_org_logo'
+  | 'update_brand_color'
 
 export async function logAuditEvent(
   supabase: SupabaseClient,
