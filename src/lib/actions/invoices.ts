@@ -329,7 +329,7 @@ export async function sendInvoice(invoiceId: string): Promise<InvoiceFormState> 
     .select(`
       id, invoice_number, total, amount_paid, due_date, view_token, status, notes,
       clients ( first_name, last_name, email ),
-      organisations ( name, email, phone, custom_from_email, stripe_account_id, platform_fee_bps )
+      organisations ( name, email, phone, custom_from_email, stripe_account_id, platform_fee_bps, logo_url, brand_color )
     `)
     .eq('id', invoiceId)
     .eq('organisation_id', orgId)
@@ -409,10 +409,12 @@ export async function sendInvoice(invoiceId: string): Promise<InvoiceFormState> 
     total:         invoice.total,
     dueDate:       invoice.due_date,
     invoiceUrl,
-    orgName:       org.name,
-    orgEmail:      org.email,
-    orgPhone:      org.phone,
+    orgName:         org.name,
+    orgEmail:        org.email,
+    orgPhone:        org.phone,
     customFromEmail: org.custom_from_email,
+    orgLogoUrl:      org.logo_url   ?? null,
+    orgBrandColor:   org.brand_color ?? null,
   })
 
   // Update status to 'sent' (and store payment link if generated)

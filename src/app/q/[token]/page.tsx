@@ -6,10 +6,29 @@
 // the DB function enforces its own access rules.
 // =============================================================================
 
+import type { Metadata } from 'next'
+import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { createAnonClient } from '@/lib/supabase/anon'
 import { markQuoteViewed } from '@/lib/actions/quotes'
 import QuoteResponseButtons from './_components/QuoteResponseButtons'
+
+const DEFAULT_BRAND = '#4a5c4e'
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ token: string }> }
+): Promise<Metadata> {
+  const { token } = await params
+  const supabase  = createAnonClient()
+  const { data: quote } = await supabase.rpc('public_get_quote_by_token', { p_token: token })
+  if (!quote) return { title: 'Quote' }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const org = quote.organisations as any
+  return {
+    title: `Quote ${quote.quote_number} — ${org?.name ?? 'Lustre'}`,
+  }
+}
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(amount)
@@ -35,7 +54,8 @@ export default async function PublicQuotePage({ params }: { params: Promise<{ to
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const org      = quote.organisations as any
+  const org       = quote.organisations as any
+  const brand     = (org?.brand_color as string | null) ?? DEFAULT_BRAND
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const client   = quote.clients as any
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -53,9 +73,19 @@ export default async function PublicQuotePage({ params }: { params: Promise<{ to
       {/* Header */}
       <header className="border-b border-zinc-100 bg-white px-4 py-4 sm:px-6 sm:py-5">
         <div className="mx-auto max-w-2xl">
-          <p className="font-['Urbanist'] text-lg font-light tracking-widest text-[#0c0c0b]">
-            {org.name}
-          </p>
+          {org.logo_url ? (
+            <Image
+              src={org.logo_url}
+              alt={org.name}
+              width={160}
+              height={48}
+              className="h-10 w-auto object-contain"
+            />
+          ) : (
+            <p className="font-['Urbanist'] text-lg font-light tracking-widest text-[#0c0c0b]">
+              {org.name}
+            </p>
+          )}
           {(org.phone || org.email) && (
             <p className="mt-0.5 text-xs text-zinc-400">
               {[org.phone, org.email].filter(Boolean).join(' · ')}
@@ -129,7 +159,7 @@ export default async function PublicQuotePage({ params }: { params: Promise<{ to
             )}
             <div className="flex justify-between">
               <span className="font-medium text-[#0c0c0b]">Total</span>
-              <span className="text-xl font-medium text-[#0c0c0b]">{formatCurrency(quote.total)}</span>
+              <span className="text-xl font-medium" style={{ color: brand }}>{formatCurrency(quote.total)}</span>
             </div>
           </div>
         </div>
@@ -152,6 +182,7 @@ export default async function PublicQuotePage({ params }: { params: Promise<{ to
             token={token}
             orgName={org.name}
             initialStatus={quote.status}
+            brandColor={brand}
           />
         )}
 

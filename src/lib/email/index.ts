@@ -37,26 +37,30 @@ export interface SendQuoteEmailParams {
   orgEmail: string         // reply-to
   orgPhone: string | null
   customFromEmail?: string // if set and DNS-verified, used as the from address
+  orgLogoUrl?: string | null
+  orgBrandColor?: string | null
 }
 
 export interface SendOperatorResponseNotificationParams {
-  orgEmail:    string          // to: the operator's contact email
-  orgName:     string
-  clientName:  string
-  quoteNumber: string
-  quoteTitle:  string
-  quoteTotal:  number
-  response:    'accepted' | 'declined'
-  dashboardUrl: string         // link to the quote in the operator dashboard
+  orgEmail:      string          // to: the operator's contact email
+  orgName:       string
+  clientName:    string
+  quoteNumber:   string
+  quoteTitle:    string
+  quoteTotal:    number
+  response:      'accepted' | 'declined'
+  dashboardUrl:  string          // link to the quote in the operator dashboard
+  orgBrandColor?: string | null
 }
 
 export interface SendOperatorViewedNotificationParams {
-  orgEmail:    string
-  orgName:     string
-  clientName:  string
-  quoteNumber: string
-  quoteTitle:  string
-  dashboardUrl: string
+  orgEmail:      string
+  orgName:       string
+  clientName:    string
+  quoteNumber:   string
+  quoteTitle:    string
+  dashboardUrl:  string
+  orgBrandColor?: string | null
 }
 
 // -----------------------------------------------------------------------------
@@ -81,8 +85,11 @@ function formatDate(date: string | null) {
 function quoteEmailHtml(params: SendQuoteEmailParams): string {
   const {
     clientName, quoteNumber, quoteTitle, quoteTotal,
-    quoteValidUntil, acceptUrl, orgName, orgPhone
+    quoteValidUntil, acceptUrl, orgName, orgPhone,
+    orgLogoUrl, orgBrandColor,
   } = params
+
+  const brand = orgBrandColor ?? '#4a5c4e'
 
   const validUntilLine = quoteValidUntil
     ? `<p style="margin:0 0 8px;color:#6b7280;font-size:14px;">This quote is valid until <strong>${formatDate(quoteValidUntil)}</strong>.</p>`
@@ -91,6 +98,10 @@ function quoteEmailHtml(params: SendQuoteEmailParams): string {
   const phoneLine = orgPhone
     ? `<p style="margin:4px 0 0;color:#6b7280;font-size:13px;">${orgPhone}</p>`
     : ''
+
+  const headerContent = orgLogoUrl
+    ? `<img src="${orgLogoUrl}" alt="${orgName}" style="max-height:48px;max-width:180px;display:block;object-fit:contain;" />`
+    : `<p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:${brand};">${orgName}</p>`
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -108,9 +119,7 @@ function quoteEmailHtml(params: SendQuoteEmailParams): string {
           <!-- Header -->
           <tr>
             <td style="padding-bottom:24px;">
-              <p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:#4a5c4e;">
-                ${orgName}
-              </p>
+              ${headerContent}
             </td>
           </tr>
 
@@ -149,7 +158,7 @@ function quoteEmailHtml(params: SendQuoteEmailParams): string {
                 <tr>
                   <td align="center">
                     <a href="${acceptUrl}"
-                       style="display:inline-block;background:#4a5c4e;color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:14px 32px;border-radius:100px;">
+                       style="display:inline-block;background:${brand};color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:14px 32px;border-radius:100px;">
                       View &amp; Accept Quote
                     </a>
                   </td>
@@ -244,8 +253,9 @@ export async function sendQuoteEmail(params: SendQuoteEmailParams): Promise<{ er
 // -----------------------------------------------------------------------------
 
 function operatorResponseHtml(params: SendOperatorResponseNotificationParams): string {
-  const { clientName, quoteNumber, quoteTitle, quoteTotal, response, orgName, dashboardUrl } = params
+  const { clientName, quoteNumber, quoteTitle, quoteTotal, response, orgName, dashboardUrl, orgBrandColor } = params
   const accepted = response === 'accepted'
+  const brand = orgBrandColor ?? '#4a5c4e'
 
   const statusBadge = accepted
     ? `<span style="display:inline-block;background:#d1fae5;color:#065f46;font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:3px 10px;border-radius:100px;">Accepted</span>`
@@ -270,7 +280,7 @@ function operatorResponseHtml(params: SendOperatorResponseNotificationParams): s
 
           <tr>
             <td style="padding-bottom:24px;">
-              <p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:#4a5c4e;">
+              <p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:${brand};">
                 ${orgName}
               </p>
             </td>
@@ -301,7 +311,7 @@ function operatorResponseHtml(params: SendOperatorResponseNotificationParams): s
                 <tr>
                   <td align="center">
                     <a href="${dashboardUrl}"
-                       style="display:inline-block;background:#4a5c4e;color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:14px 32px;border-radius:100px;">
+                       style="display:inline-block;background:${brand};color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:14px 32px;border-radius:100px;">
                       View in dashboard
                     </a>
                   </td>
@@ -326,7 +336,8 @@ function operatorResponseHtml(params: SendOperatorResponseNotificationParams): s
 }
 
 function operatorViewedHtml(params: SendOperatorViewedNotificationParams): string {
-  const { clientName, quoteNumber, quoteTitle, orgName, dashboardUrl } = params
+  const { clientName, quoteNumber, quoteTitle, orgName, dashboardUrl, orgBrandColor } = params
+  const brand = orgBrandColor ?? '#4a5c4e'
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -343,7 +354,7 @@ function operatorViewedHtml(params: SendOperatorViewedNotificationParams): strin
 
           <tr>
             <td style="padding-bottom:24px;">
-              <p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:#4a5c4e;">
+              <p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:${brand};">
                 ${orgName}
               </p>
             </td>
@@ -371,7 +382,7 @@ function operatorViewedHtml(params: SendOperatorViewedNotificationParams): strin
                 <tr>
                   <td align="center">
                     <a href="${dashboardUrl}"
-                       style="display:inline-block;background:#4a5c4e;color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:14px 32px;border-radius:100px;">
+                       style="display:inline-block;background:${brand};color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:14px 32px;border-radius:100px;">
                       View in dashboard
                     </a>
                   </td>
@@ -997,24 +1008,32 @@ function trialEmailText(params: SendTrialEmailParams): string {
 // =============================================================================
 
 export interface SendInvoiceEmailParams {
-  clientEmail:     string
-  clientName:      string
-  invoiceNumber:   string
-  total:           number
-  dueDate:         string
-  invoiceUrl:      string
-  orgName:         string
-  orgEmail:        string
-  orgPhone:        string | null
+  clientEmail:      string
+  clientName:       string
+  invoiceNumber:    string
+  total:            number
+  dueDate:          string
+  invoiceUrl:       string
+  orgName:          string
+  orgEmail:         string
+  orgPhone:         string | null
   customFromEmail?: string
+  orgLogoUrl?:      string | null
+  orgBrandColor?:   string | null
 }
 
 function invoiceEmailHtml(params: SendInvoiceEmailParams): string {
-  const { clientName, invoiceNumber, total, dueDate, invoiceUrl, orgName, orgPhone } = params
+  const { clientName, invoiceNumber, total, dueDate, invoiceUrl, orgName, orgPhone, orgLogoUrl, orgBrandColor } = params
+
+  const brand = orgBrandColor ?? '#4a5c4e'
 
   const phoneLine = orgPhone
     ? `<p style="margin:4px 0 0;color:#6b7280;font-size:13px;">${orgPhone}</p>`
     : ''
+
+  const headerContent = orgLogoUrl
+    ? `<img src="${orgLogoUrl}" alt="${orgName}" style="max-height:48px;max-width:140px;display:block;" />`
+    : `<p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:${brand};">${orgName}</p>`
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -1031,7 +1050,7 @@ function invoiceEmailHtml(params: SendInvoiceEmailParams): string {
 
           <tr>
             <td style="padding-bottom:24px;">
-              <p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:#4a5c4e;">${orgName}</p>
+              ${headerContent}
             </td>
           </tr>
 
@@ -1057,7 +1076,7 @@ function invoiceEmailHtml(params: SendInvoiceEmailParams): string {
                 <tr>
                   <td align="center">
                     <a href="${invoiceUrl}"
-                       style="display:inline-block;background:#4a5c4e;color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:14px 32px;border-radius:100px;">
+                       style="display:inline-block;background:${brand};color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:14px 32px;border-radius:100px;">
                       View &amp; Pay Invoice
                     </a>
                   </td>
@@ -1136,13 +1155,20 @@ export interface SendInvoiceOverdueReminderParams {
   orgEmail:         string
   customFromEmail?: string
   dunningStep:      number   // 1 = first reminder, 2 = follow-up, 3 = final
+  orgLogoUrl?:      string | null
+  orgBrandColor?:   string | null
 }
 
 function overdueReminderHtml(params: SendInvoiceOverdueReminderParams): string {
   const {
     clientName, invoiceNumber, total, amountPaid, dueDate,
-    invoiceUrl, orgName, dunningStep,
+    invoiceUrl, orgName, dunningStep, orgLogoUrl, orgBrandColor,
   } = params
+
+  const brand = orgBrandColor ?? '#4a5c4e'
+  const headerContent = orgLogoUrl
+    ? `<img src="${orgLogoUrl}" alt="${orgName}" style="max-height:48px;max-width:140px;display:block;" />`
+    : `<p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:${brand};">${orgName}</p>`
 
   const outstanding = Math.max(0, total - amountPaid)
   const urgency =
@@ -1170,7 +1196,7 @@ function overdueReminderHtml(params: SendInvoiceOverdueReminderParams): string {
 
           <tr>
             <td style="padding-bottom:24px;">
-              <p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:#4a5c4e;">${orgName}</p>
+              ${headerContent}
             </td>
           </tr>
 
