@@ -12,6 +12,7 @@ import StepBusinessProfile from './_steps/StepBusinessProfile'
 import StepServices from './_steps/StepServices'
 import StepTeam from './_steps/StepTeam'
 import StepFirstClient from './_steps/StepFirstClient'
+import StepBranding from './_steps/StepBranding'
 
 // Step metadata
 const STEPS = [
@@ -19,6 +20,7 @@ const STEPS = [
   { number: 2, label: 'Services'         },
   { number: 3, label: 'Your team'        },
   { number: 4, label: 'First client'     },
+  { number: 5, label: 'Branding'         },
 ]
 
 // -----------------------------------------------------------------------------
@@ -118,7 +120,7 @@ export default async function OnboardingPage({
   // URL param takes precedence but can't go backwards past completed steps
   const resolvedParams = await (searchParams as unknown as Promise<{ step?: string }>)
   const requestedStep = parseInt(resolvedParams.step ?? '1', 10)
-  const currentStep = (Math.min(Math.max(requestedStep, 1), 4)) as 1 | 2 | 3 | 4
+  const currentStep = (Math.min(Math.max(requestedStep, 1), 5)) as 1 | 2 | 3 | 4 | 5
 
   return (
     <div className="min-h-screen bg-[#f9f8f5]">
@@ -138,6 +140,7 @@ export default async function OnboardingPage({
         {currentStep === 2 && <StepServices />}
         {currentStep === 3 && <StepTeam organisationId={org.id} />}
         {currentStep === 4 && <StepFirstClient organisationId={org.id} />}
+        {currentStep === 5 && <StepBranding orgId={org.id} />}
       </main>
     </div>
   )

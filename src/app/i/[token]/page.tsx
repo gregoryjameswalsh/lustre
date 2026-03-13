@@ -4,8 +4,31 @@
 // Mirrors the pattern used by /q/[token] for public quotes.
 // =============================================================================
 
+import type { Metadata } from 'next'
+import Image              from 'next/image'
 import { notFound }       from 'next/navigation'
 import { createAnonClient } from '@/lib/supabase/anon'
+
+const DEFAULT_BRAND = '#4a5c4e'
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ token: string }> }
+): Promise<Metadata> {
+  const { token } = await params
+  const supabase  = createAnonClient()
+  const { data: invoiceRaw } = await supabase
+    .rpc('public_get_invoice_by_token', { p_token: token })
+    .single()
+  if (!invoiceRaw) return { title: 'Invoice' }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const inv = invoiceRaw as any
+  const [{ data: org }] = await Promise.all([
+    supabase.from('organisations').select('name').eq('id', inv.organisation_id).single(),
+  ])
+  return {
+    title: `Invoice ${inv.invoice_number} — ${org?.name ?? 'Lustre'}`,
+  }
+}
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(amount)
@@ -52,7 +75,7 @@ export default async function PublicInvoicePage({ params }: { params: Promise<{ 
   const [{ data: org }, { data: client }, { data: lineItems }] = await Promise.all([
     supabase
       .from('organisations')
-      .select('name, email, phone, address, vat_registered, vat_number')
+      .select('name, email, phone, address, vat_registered, vat_number, logo_url, brand_color')
       .eq('id', invoice.organisation_id)
       .single(),
     supabase
@@ -76,6 +99,7 @@ export default async function PublicInvoicePage({ params }: { params: Promise<{ 
   const isPaid      = invoice.status === 'paid'
   const isOverdue   = invoice.status === 'overdue'
   const outstanding = Math.max(0, invoice.total - invoice.amount_paid)
+  const brand       = (org?.brand_color as string | null) ?? DEFAULT_BRAND
 
   return (
     <div className="min-h-screen bg-[#f9f8f5]">
@@ -83,9 +107,19 @@ export default async function PublicInvoicePage({ params }: { params: Promise<{ 
       {/* Header */}
       <header className="border-b border-zinc-100 bg-white px-4 py-4 sm:px-6 sm:py-5">
         <div className="mx-auto max-w-2xl">
-          <p className="font-['Urbanist'] text-lg font-light tracking-widest text-[#0c0c0b]">
-            {org?.name ?? ''}
-          </p>
+          {org?.logo_url ? (
+            <Image
+              src={org.logo_url}
+              alt={org?.name ?? ''}
+              width={160}
+              height={48}
+              className="h-10 w-auto object-contain"
+            />
+          ) : (
+            <p className="font-['Urbanist'] text-lg font-light tracking-widest text-[#0c0c0b]">
+              {org?.name ?? ''}
+            </p>
+          )}
           {(org?.phone || org?.email) && (
             <p className="mt-0.5 text-xs text-zinc-400">
               {[org?.phone, org?.email].filter(Boolean).join('  ·  ')}
@@ -193,7 +227,8 @@ export default async function PublicInvoicePage({ params }: { params: Promise<{ 
             <div className="border-t border-zinc-100 px-6 py-5">
               <a
                 href={invoice.stripe_payment_link_url}
-                className="block w-full text-center rounded-xl bg-[#1A3329] px-6 py-3.5 text-sm font-medium uppercase tracking-widest text-white hover:opacity-90 transition-opacity"
+                style={{ backgroundColor: brand }}
+                className="block w-full text-center rounded-xl px-6 py-3.5 text-sm font-medium uppercase tracking-widest text-white hover:opacity-90 transition-opacity"
               >
                 Pay {formatCurrency(outstanding > 0 ? outstanding : invoice.total)} now
               </a>

@@ -66,6 +66,12 @@ export type AuditAction =
   | 'send_invoice'
   | 'void_invoice'
   | 'record_manual_payment'
+  // Branding
+  | 'upload_org_logo'
+  | 'delete_org_logo'
+  | 'update_brand_color'
+  | 'update_brand_color_secondary'
+  | 'update_tagline'
 
 export async function logAuditEvent(
   supabase: SupabaseClient,

@@ -199,20 +199,22 @@ async function runInvoiceDunning(
   let failed = 0
 
   type DunningRow = {
-    invoice_id:       string
-    invoice_number:   string
-    total:            number
-    amount_paid:      number
-    due_date:         string
-    view_token:       string
-    dunning_step:     number
-    client_email:     string
-    client_first:     string
-    client_last:      string
-    org_id:           string
-    org_name:         string
-    org_email:        string
+    invoice_id:        string
+    invoice_number:    string
+    total:             number
+    amount_paid:       number
+    due_date:          string
+    view_token:        string
+    dunning_step:      number
+    client_email:      string
+    client_first:      string
+    client_last:       string
+    org_id:            string
+    org_name:          string
+    org_email:         string
     custom_from_email: string | null
+    org_logo_url:      string | null
+    org_brand_color:   string | null
   }
 
   const { data, error } = await supabase.rpc('cron_invoice_dunning')
@@ -236,6 +238,8 @@ async function runInvoiceDunning(
         orgEmail:        row.org_email,
         customFromEmail: row.custom_from_email ?? undefined,
         dunningStep:     row.dunning_step,
+        orgLogoUrl:      row.org_logo_url   ?? null,
+        orgBrandColor:   row.org_brand_color ?? null,
       })
       if (emailError) {
         console.error(`[cron/daily] dunning email failed for invoice ${row.invoice_id}:`, emailError)

@@ -354,7 +354,7 @@ async function sendQuoteToClient(quoteId: string, supabase: SupabaseClient): Pro
     .select(`
       quote_number, title, total, valid_until, accept_token,
       clients ( first_name, last_name, email ),
-      organisations ( name, email, phone, custom_from_email )
+      organisations ( name, email, phone, custom_from_email, logo_url, brand_color )
     `)
     .eq('id', quoteId)
     .single()
@@ -388,6 +388,8 @@ async function sendQuoteToClient(quoteId: string, supabase: SupabaseClient): Pro
     orgEmail:        org?.email,
     orgPhone:        org?.phone,
     customFromEmail: org?.custom_from_email ?? undefined,
+    orgLogoUrl:      org?.logo_url ?? null,
+    orgBrandColor:   org?.brand_color ?? null,
   })
 }
 
@@ -523,14 +525,15 @@ async function notifyOperatorOfResponse(
 
   const { sendOperatorResponseNotification } = await import('@/lib/email')
   await sendOperatorResponseNotification({
-    orgEmail:     org.email,
-    orgName:      org.name ?? '',
-    clientName:   `${cl.first_name ?? ''} ${cl.last_name ?? ''}`.trim(),
-    quoteNumber:  String(q.quote_number ?? ''),
-    quoteTitle:   String(q.title ?? ''),
-    quoteTotal:   Number(q.total ?? 0),
+    orgEmail:      org.email,
+    orgName:       org.name ?? '',
+    clientName:    `${cl.first_name ?? ''} ${cl.last_name ?? ''}`.trim(),
+    quoteNumber:   String(q.quote_number ?? ''),
+    quoteTitle:    String(q.title ?? ''),
+    quoteTotal:    Number(q.total ?? 0),
     response,
-    dashboardUrl: `${appUrl}/dashboard/quotes/${q.id}`,
+    dashboardUrl:  `${appUrl}/dashboard/quotes/${q.id}`,
+    orgBrandColor: (org.brand_color as string | null | undefined) ?? null,
   })
 }
 
@@ -573,11 +576,12 @@ async function notifyOperatorOfViewed(
 
   const { sendOperatorViewedNotification } = await import('@/lib/email')
   await sendOperatorViewedNotification({
-    orgEmail:     org.email,
-    orgName:      org.name ?? '',
-    clientName:   `${cl.first_name ?? ''} ${cl.last_name ?? ''}`.trim(),
-    quoteNumber:  String(q.quote_number ?? ''),
-    quoteTitle:   String(q.title ?? ''),
-    dashboardUrl: `${appUrl}/dashboard/quotes/${q.id}`,
+    orgEmail:      org.email,
+    orgName:       org.name ?? '',
+    clientName:    `${cl.first_name ?? ''} ${cl.last_name ?? ''}`.trim(),
+    quoteNumber:   String(q.quote_number ?? ''),
+    quoteTitle:    String(q.title ?? ''),
+    dashboardUrl:  `${appUrl}/dashboard/quotes/${q.id}`,
+    orgBrandColor: (org.brand_color as string | null | undefined) ?? null,
   })
 }
