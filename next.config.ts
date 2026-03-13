@@ -9,6 +9,16 @@ const nextConfig: NextConfig = {
   // An empty object is sufficient — we don't need custom Turbopack rules.
   turbopack: {},
 
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+    ],
+  },
+
   // Proxy PostHog through our own domain so requests pass the CSP 'self'
   // allowlist and aren't blocked by ad-blockers.
   async rewrites() {

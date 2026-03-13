@@ -49,6 +49,8 @@ export interface InvoicePDFData {
     vatNumber: string | null
     logoUrl:   string | null
     brandColor: string | null
+    brandColorSecondary: string | null
+    tagline: string | null
   }
 }
 
@@ -214,7 +216,8 @@ const styles = StyleSheet.create({
 export function InvoicePDF({ data }: { data: InvoicePDFData }) {
   const { org, client, lineItems } = data
 
-  const brand = org.brandColor ?? DEFAULT_BRAND
+  const brand  = org.brandColor ?? DEFAULT_BRAND
+  const brand2 = org.brandColorSecondary ?? LIGHT
 
   const orgContactLine = [org.address, org.email, org.phone].filter(Boolean).join('  ·  ')
   const vatLine = data.vatRegistered && org.vatNumber ? `VAT No. ${org.vatNumber}` : null
@@ -282,7 +285,7 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
             <Text style={[styles.tableHeaderText, styles.colAmount]}>Amount</Text>
           </View>
           {lineItems.map((item, i) => (
-            <View key={i} style={[styles.tableRow, i % 2 === 1 ? styles.tableRowAlt : {}]}>
+            <View key={i} style={[styles.tableRow, i % 2 === 1 ? { ...styles.tableRowAlt, backgroundColor: brand2 } : {}]}>
               <Text style={[styles.tableBodyText, styles.colDescription]}>{item.description}</Text>
               <Text style={[styles.tableBodyText, styles.colQty]}>{item.quantity}</Text>
               <Text style={[styles.tableBodyText, styles.colUnitPrice]}>{formatCurrency(item.unitPrice)}</Text>
@@ -330,7 +333,10 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
 
         {/* Footer */}
         <View style={styles.footer} fixed>
-          <Text style={styles.footerText}>{org.name}  ·  {data.invoiceNumber}</Text>
+          <Text style={styles.footerText}>
+            {org.name}  ·  {data.invoiceNumber}
+            {org.tagline ? `  ·  ${org.tagline}` : ''}
+          </Text>
           <Text style={styles.footerText}>Powered by Lustre</Text>
         </View>
 

@@ -116,3 +116,73 @@ export async function saveBrandColorAction(
   revalidatePath('/dashboard/settings')
   return {}
 }
+
+// -----------------------------------------------------------------------------
+// saveBrandColorSecondaryAction
+// Persists the operator's secondary brand colour (hex string).
+// Pass null to clear.
+// -----------------------------------------------------------------------------
+
+export async function saveBrandColorSecondaryAction(
+  color: string | null,
+): Promise<{ error?: string }> {
+  const { supabase, orgId, userId } = await requireAdmin()
+
+  if (color !== null && !isValidHex(color)) {
+    return { error: 'Secondary colour must be a valid hex value (e.g. #e8f0e9).' }
+  }
+
+  const { error } = await supabase
+    .from('organisations')
+    .update({ brand_color_secondary: color })
+    .eq('id', orgId)
+
+  if (error) return { error: 'Failed to save secondary colour.' }
+
+  await logAuditEvent(supabase, {
+    orgId, actorId: userId,
+    action: 'update_brand_color_secondary',
+    resourceType: 'organisation',
+    resourceId: orgId,
+    metadata: { brand_color_secondary: color },
+  })
+
+  revalidatePath('/dashboard/settings')
+  return {}
+}
+
+// -----------------------------------------------------------------------------
+// saveTaglineAction
+// Persists the operator's tagline (short motto shown in PDF header / email footer).
+// Pass null or empty string to clear.
+// -----------------------------------------------------------------------------
+
+export async function saveTaglineAction(
+  tagline: string | null,
+): Promise<{ error?: string }> {
+  const { supabase, orgId, userId } = await requireAdmin()
+
+  const value = tagline?.trim() || null
+
+  if (value && value.length > 120) {
+    return { error: 'Tagline must be 120 characters or fewer.' }
+  }
+
+  const { error } = await supabase
+    .from('organisations')
+    .update({ tagline: value })
+    .eq('id', orgId)
+
+  if (error) return { error: 'Failed to save tagline.' }
+
+  await logAuditEvent(supabase, {
+    orgId, actorId: userId,
+    action: 'update_tagline',
+    resourceType: 'organisation',
+    resourceId: orgId,
+    metadata: { tagline: value },
+  })
+
+  revalidatePath('/dashboard/settings')
+  return {}
+}

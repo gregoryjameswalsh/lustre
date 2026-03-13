@@ -58,6 +58,8 @@ export interface QuotePDFData {
     vatNumber: string | null
     logoUrl: string | null
     brandColor: string | null
+    brandColorSecondary: string | null
+    tagline: string | null
   }
 }
 
@@ -306,7 +308,8 @@ const styles = StyleSheet.create({
 export function QuotePDF({ data }: { data: QuotePDFData }) {
   const { org, client, property, lineItems, taxRate } = data
 
-  const brand = org.brandColor ?? DEFAULT_BRAND
+  const brand   = org.brandColor ?? DEFAULT_BRAND
+  const brand2  = org.brandColorSecondary ?? LIGHT
 
   const coreItems  = lineItems.filter(i => !i.isAddon)
   const addonItems = lineItems.filter(i => i.isAddon)
@@ -397,7 +400,7 @@ export function QuotePDF({ data }: { data: QuotePDFData }) {
               <Text style={[styles.tableHeaderText, styles.colAmount]}>Amount</Text>
             </View>
             {coreItems.map((item, i) => (
-              <View key={i} style={[styles.tableRow, i % 2 === 1 ? styles.tableRowAlt : {}]}>
+              <View key={i} style={[styles.tableRow, i % 2 === 1 ? { ...styles.tableRowAlt, backgroundColor: brand2 } : {}]}>
                 <Text style={[styles.tableBodyText, styles.colDescription]}>{item.description}</Text>
                 <Text style={[styles.tableBodyText, styles.colQty]}>{item.quantity}</Text>
                 <Text style={[styles.tableBodyText, styles.colUnitPrice]}>{formatCurrency(item.unitPrice)}</Text>
@@ -408,7 +411,7 @@ export function QuotePDF({ data }: { data: QuotePDFData }) {
               <>
                 <Text style={styles.addOnLabel}>Add-ons</Text>
                 {addonItems.map((item, i) => (
-                  <View key={i} style={[styles.tableRow, styles.tableRowAlt]}>
+                  <View key={i} style={[styles.tableRow, { ...styles.tableRowAlt, backgroundColor: brand2 }]}>
                     <Text style={[styles.tableBodyMuted, styles.colDescription]}>{item.description}</Text>
                     <Text style={[styles.tableBodyMuted, styles.colQty]}>{item.quantity}</Text>
                     <Text style={[styles.tableBodyMuted, styles.colUnitPrice]}>{formatCurrency(item.unitPrice)}</Text>
@@ -453,7 +456,10 @@ export function QuotePDF({ data }: { data: QuotePDFData }) {
 
         {/* Footer */}
         <View style={styles.footer} fixed>
-          <Text style={styles.footerText}>{org.name}  ·  {data.quoteNumber}</Text>
+          <Text style={styles.footerText}>
+            {org.name}  ·  {data.quoteNumber}
+            {org.tagline ? `  ·  ${org.tagline}` : ''}
+          </Text>
           <Text style={styles.footerText}>Powered by Lustre</Text>
         </View>
 

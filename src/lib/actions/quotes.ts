@@ -525,14 +525,15 @@ async function notifyOperatorOfResponse(
 
   const { sendOperatorResponseNotification } = await import('@/lib/email')
   await sendOperatorResponseNotification({
-    orgEmail:     org.email,
-    orgName:      org.name ?? '',
-    clientName:   `${cl.first_name ?? ''} ${cl.last_name ?? ''}`.trim(),
-    quoteNumber:  String(q.quote_number ?? ''),
-    quoteTitle:   String(q.title ?? ''),
-    quoteTotal:   Number(q.total ?? 0),
+    orgEmail:      org.email,
+    orgName:       org.name ?? '',
+    clientName:    `${cl.first_name ?? ''} ${cl.last_name ?? ''}`.trim(),
+    quoteNumber:   String(q.quote_number ?? ''),
+    quoteTitle:    String(q.title ?? ''),
+    quoteTotal:    Number(q.total ?? 0),
     response,
-    dashboardUrl: `${appUrl}/dashboard/quotes/${q.id}`,
+    dashboardUrl:  `${appUrl}/dashboard/quotes/${q.id}`,
+    orgBrandColor: (org.brand_color as string | null | undefined) ?? null,
   })
 }
 
@@ -575,11 +576,12 @@ async function notifyOperatorOfViewed(
 
   const { sendOperatorViewedNotification } = await import('@/lib/email')
   await sendOperatorViewedNotification({
-    orgEmail:     org.email,
-    orgName:      org.name ?? '',
-    clientName:   `${cl.first_name ?? ''} ${cl.last_name ?? ''}`.trim(),
-    quoteNumber:  String(q.quote_number ?? ''),
-    quoteTitle:   String(q.title ?? ''),
-    dashboardUrl: `${appUrl}/dashboard/quotes/${q.id}`,
+    orgEmail:      org.email,
+    orgName:       org.name ?? '',
+    clientName:    `${cl.first_name ?? ''} ${cl.last_name ?? ''}`.trim(),
+    quoteNumber:   String(q.quote_number ?? ''),
+    quoteTitle:    String(q.title ?? ''),
+    dashboardUrl:  `${appUrl}/dashboard/quotes/${q.id}`,
+    orgBrandColor: (org.brand_color as string | null | undefined) ?? null,
   })
 }

@@ -38,18 +38,14 @@ export default function StepFirstClient({ organisationId }: { organisationId: st
       return
     }
 
-    // Mark onboarding complete
+    // Advance to branding step
     await supabase
       .from('organisations')
-      .update({
-        onboarding_step: 4,
-        onboarding_completed_at: new Date().toISOString(),
-      })
+      .update({ onboarding_step: 4 })
       .eq('id', organisationId)
 
     setSuccess(true)
-    // Short pause so they see the success state, then into the product
-    setTimeout(() => router.push('/dashboard'), 1500)
+    setTimeout(() => router.push('/onboarding?step=5'), 1000)
   }
 
   if (success) {
@@ -62,8 +58,8 @@ export default function StepFirstClient({ organisationId }: { organisationId: st
             </svg>
           </div>
         </div>
-        <h2 className="font-['Urbanist'] text-xl font-light text-[#0c0c0b]">You&apos;re all set</h2>
-        <p className="mt-2 text-sm text-zinc-500">Taking you to your dashboard…</p>
+        <h2 className="font-['Urbanist'] text-xl font-light text-[#0c0c0b]">Nice work!</h2>
+        <p className="mt-2 text-sm text-zinc-500">One more step…</p>
       </div>
     )
   }
@@ -143,7 +139,7 @@ export default function StepFirstClient({ organisationId }: { organisationId: st
             type="submit"
             className="w-full rounded-full bg-[#4a5c4e] px-6 py-3 text-xs font-medium uppercase tracking-widest text-white transition-opacity hover:opacity-90"
           >
-            Add client & go to dashboard
+            Add client &amp; continue
           </button>
         </div>
       </form>
@@ -155,12 +151,9 @@ export default function StepFirstClient({ organisationId }: { organisationId: st
             const supabase = createClient()
             await supabase
               .from('organisations')
-              .update({
-                onboarding_step: 4,
-                onboarding_completed_at: new Date().toISOString(),
-              })
+              .update({ onboarding_step: 4 })
               .eq('id', organisationId)
-            router.push('/dashboard')
+            router.push('/onboarding?step=5')
           }}
           className="text-xs text-zinc-300 hover:text-zinc-500 hover:underline"
         >

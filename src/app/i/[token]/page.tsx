@@ -4,11 +4,31 @@
 // Mirrors the pattern used by /q/[token] for public quotes.
 // =============================================================================
 
+import type { Metadata } from 'next'
 import Image              from 'next/image'
 import { notFound }       from 'next/navigation'
 import { createAnonClient } from '@/lib/supabase/anon'
 
 const DEFAULT_BRAND = '#4a5c4e'
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ token: string }> }
+): Promise<Metadata> {
+  const { token } = await params
+  const supabase  = createAnonClient()
+  const { data: invoiceRaw } = await supabase
+    .rpc('public_get_invoice_by_token', { p_token: token })
+    .single()
+  if (!invoiceRaw) return { title: 'Invoice' }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const inv = invoiceRaw as any
+  const [{ data: org }] = await Promise.all([
+    supabase.from('organisations').select('name').eq('id', inv.organisation_id).single(),
+  ])
+  return {
+    title: `Invoice ${inv.invoice_number} — ${org?.name ?? 'Lustre'}`,
+  }
+}
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(amount)
@@ -94,7 +114,6 @@ export default async function PublicInvoicePage({ params }: { params: Promise<{ 
               width={160}
               height={48}
               className="h-10 w-auto object-contain"
-              unoptimized
             />
           ) : (
             <p className="font-['Urbanist'] text-lg font-light tracking-widest text-[#0c0c0b]">

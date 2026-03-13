@@ -61,7 +61,7 @@ async function getPageData() {
   ] = await Promise.all([
     supabase
       .from('organisations')
-      .select('name, email, phone, vat_registered, vat_rate, vat_number, plan, subscription_status, trial_ends_at, email_domain_status, email_domain_name, custom_from_email, stripe_account_id, stripe_connect_status, logo_url, brand_color')
+      .select('name, email, phone, vat_registered, vat_rate, vat_number, plan, subscription_status, trial_ends_at, email_domain_status, email_domain_name, custom_from_email, stripe_account_id, stripe_connect_status, logo_url, brand_color, brand_color_secondary, tagline')
       .eq('id', profile.organisation_id)
       .single(),
     supabase
@@ -243,6 +243,8 @@ export default async function SettingsPage() {
                 orgId={orgId}
                 logoUrl={org.logo_url ?? null}
                 brandColor={org.brand_color ?? null}
+                brandColorSecondary={org.brand_color_secondary ?? null}
+                tagline={org.tagline ?? null}
                 isAdmin={isAdmin}
               />
             </div>

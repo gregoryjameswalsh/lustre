@@ -350,7 +350,7 @@ export async function advanceOnboardingStep(step: number): Promise<void> {
 
   if (!profile) redirect('/login')
 
-  const isComplete = step >= 4
+  const isComplete = step >= 5
 
   await supabase
     .from('organisations')
