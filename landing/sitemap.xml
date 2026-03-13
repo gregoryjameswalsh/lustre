@@ -12,15 +12,24 @@
 
   <url>
     <loc>https://www.simplylustre.com/blog</loc>
+    <priority>0.8</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+
+  <url>
+    <loc>https://www.simplylustre.com/blog/how-to-win-more-cleaning-contracts</loc>
+    <lastmod>2026-03-13</lastmod>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
   </url>
 
   <url>
     <loc>https://www.simplylustre.com/about</loc>
   </url>
 
-
   <url>
-    <loc>https://simplylustre.com/commercial-cleaning-quote-template</loc>
+    <loc>https://www.simplylustre.com/commercial-cleaning-quote-template</loc>
+    <priority>0.7</priority>
   </url>
 
 </urlset>
