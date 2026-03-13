@@ -51,10 +51,12 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              // unsafe-eval is only needed by the dev HMR runtime; strip it in production
+              // unsafe-eval is only needed by the dev HMR runtime; strip it in production.
+              // https://vercel.live is Vercel's toolbar/feedback widget injected on all
+              // Vercel deployments — it must be whitelisted or it produces a CSP violation.
               isDev
-                ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
-                : "script-src 'self' 'unsafe-inline'",
+                ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live"
+                : "script-src 'self' 'unsafe-inline' https://vercel.live",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https:",
               "font-src 'self' data:",
