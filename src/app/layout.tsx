@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import { createClient } from "@/lib/supabase/server";
 import { PostHogProvider } from "@/components/PostHogProvider";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const inter = Inter({
@@ -47,6 +48,7 @@ export default async function RootLayout({
         <PostHogProvider userId={user?.id} email={user?.email}>
           {children}
         </PostHogProvider>
+        <Analytics />
       </body>
     </html>
   );

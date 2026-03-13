@@ -21,6 +21,7 @@
     "@supabase/supabase-js": "^2.97.0",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.36.3",
+    "@vercel/analytics": "^2.0.0",
     "@workos-inc/node": "^8.8.0",
     "browser-image-compression": "^2.0.2",
     "class-variance-authority": "^0.7.1",

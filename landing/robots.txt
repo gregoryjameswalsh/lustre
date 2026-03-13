@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://www.simplylustre.com/sitemap.xml
+
+Disallow: /app
+Disallow: /login
+Disallow: /signup
+Disallow: /dashboard
