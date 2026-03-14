@@ -6,6 +6,7 @@
 // =============================================================================
 
 import { useActionState, useState }  from 'react'
+import Link                           from 'next/link'
 import { upsertPortalSettings }      from '@/lib/actions/client-portal'
 import type { ClientPortalSettings } from '@/lib/types'
 
@@ -14,20 +15,23 @@ interface Props {
   isAdmin:           boolean
   activeClientCount: number
   orgName:           string
+  plan:              string
 }
 
 const initialState = { error: undefined, success: undefined }
 
-export default function PortalSettingsForm({ settings, isAdmin, activeClientCount, orgName }: Props) {
+export default function PortalSettingsForm({ settings, isAdmin, activeClientCount, orgName, plan }: Props) {
   const [state, formAction, pending] = useActionState(upsertPortalSettings, initialState)
 
-  const [enabled,         setEnabled]         = useState(settings?.portal_enabled         ?? false)
-  const [showName,        setShowName]         = useState(settings?.show_team_member_name  ?? true)
-  const [showPricing,     setShowPricing]      = useState(settings?.show_job_pricing        ?? false)
-  const [shareNotes,      setShareNotes]       = useState(settings?.share_completed_notes   ?? false)
-  const [cutoff,          setCutoff]           = useState(settings?.instruction_cutoff_hours ?? 24)
-  const [slug,            setSlug]             = useState(settings?.portal_slug             ?? '')
-  const [welcomeMessage,  setWelcomeMessage]   = useState(settings?.welcome_message          ?? '')
+  const [enabled,          setEnabled]          = useState(settings?.portal_enabled         ?? false)
+  const [showName,         setShowName]          = useState(settings?.show_team_member_name  ?? true)
+  const [showPricing,      setShowPricing]       = useState(settings?.show_job_pricing        ?? false)
+  const [shareNotes,       setShareNotes]        = useState(settings?.share_completed_notes   ?? false)
+  const [cutoff,           setCutoff]            = useState(settings?.instruction_cutoff_hours ?? 24)
+  const [slug,             setSlug]              = useState(settings?.portal_slug             ?? '')
+  const [welcomeMessage,   setWelcomeMessage]    = useState(settings?.welcome_message          ?? '')
+  const [allowInvoices,    setAllowInvoices]     = useState(settings?.allow_invoice_access     ?? false)
+  const [reminderDays,     setReminderDays]      = useState(settings?.job_reminder_days?.toString() ?? '')
 
   const appUrl     = process.env.NEXT_PUBLIC_APP_URL ?? ''
   const previewUrl = slug ? `${appUrl}/portal/${slug}` : null
@@ -39,6 +43,9 @@ export default function PortalSettingsForm({ settings, isAdmin, activeClientCoun
       </div>
     )
   }
+
+  const isEnterprise = plan === 'enterprise'
+  const isBusiness   = ['business', 'enterprise'].includes(plan)
 
   return (
     <div className="space-y-6">
@@ -204,6 +211,102 @@ export default function PortalSettingsForm({ settings, isAdmin, activeClientCoun
             </p>
           </div>
         </div>
+
+        {/* Phase 3: Invoices + Reminders */}
+        <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
+          <div className="px-6 py-4 border-b border-zinc-100">
+            <p className="text-sm font-medium text-zinc-900">Invoices &amp; reminders</p>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              Enhanced features available on Business and Enterprise plans.
+            </p>
+          </div>
+
+          {/* Invoice access */}
+          <div className="px-6 py-4 border-b border-zinc-50 flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm text-zinc-700">
+                Show invoices in portal
+                {!isBusiness && (
+                  <span className="ml-2 inline-block text-[10px] font-semibold tracking-wide uppercase text-zinc-400 border border-zinc-200 rounded px-1.5 py-0.5">Business+</span>
+                )}
+              </p>
+              <p className="text-xs text-zinc-400 mt-0.5">
+                Clients can view and download their invoices from the portal.
+              </p>
+            </div>
+            {isBusiness ? (
+              <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                <input
+                  type="checkbox"
+                  name="allow_invoice_access"
+                  value="true"
+                  checked={allowInvoices}
+                  onChange={e => setAllowInvoices(e.target.checked)}
+                  className="sr-only peer"
+                />
+                {!allowInvoices && <input type="hidden" name="allow_invoice_access" value="false" />}
+                <div className="w-9 h-5 bg-zinc-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#1A3329]" />
+              </label>
+            ) : (
+              <>
+                <input type="hidden" name="allow_invoice_access" value="false" />
+                <div className="w-9 h-5 bg-zinc-100 rounded-full opacity-50 cursor-not-allowed flex-shrink-0" />
+              </>
+            )}
+          </div>
+
+          {/* Job reminder days */}
+          <div className="px-6 py-5">
+            <label className="block text-xs font-medium text-zinc-500 mb-1.5 uppercase tracking-[0.12em]">
+              Job reminder email
+              {!isBusiness && (
+                <span className="ml-2 inline-block normal-case text-[10px] font-semibold tracking-wide uppercase text-zinc-400 border border-zinc-200 rounded px-1.5 py-0.5">Business+</span>
+              )}
+            </label>
+            {isBusiness ? (
+              <div className="flex items-center gap-3">
+                <input
+                  type="number"
+                  name="job_reminder_days"
+                  value={reminderDays}
+                  onChange={e => setReminderDays(e.target.value)}
+                  min={1}
+                  max={14}
+                  placeholder="—"
+                  className="w-20 border border-zinc-200 rounded-lg px-3 py-2.5 text-sm text-zinc-900 focus:outline-none focus:border-zinc-400 transition-colors"
+                />
+                <span className="text-sm text-zinc-500">days before the visit (leave blank to disable)</span>
+              </div>
+            ) : (
+              <input
+                type="hidden"
+                name="job_reminder_days"
+                value=""
+              />
+            )}
+            <p className="text-xs text-zinc-400 mt-1.5">
+              An email reminder is sent to clients with an active portal account this many days before their scheduled visit.
+            </p>
+          </div>
+        </div>
+
+        {/* Phase 3: Bulk invitations */}
+        {isEnterprise && (
+          <div className="rounded-xl border border-zinc-200 bg-white px-6 py-5 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-zinc-900">Bulk invitations</p>
+              <p className="text-xs text-zinc-400 mt-0.5">
+                Invite multiple clients to the portal at once.
+              </p>
+            </div>
+            <Link
+              href="/dashboard/settings/client-portal/bulk-invite"
+              className="text-xs font-medium tracking-[0.12em] uppercase border border-zinc-200 text-zinc-600 px-4 py-2 rounded-lg hover:border-zinc-400 transition-colors flex-shrink-0"
+            >
+              Bulk invite →
+            </Link>
+          </div>
+        )}
 
         {/* Feedback */}
         {state?.error && (

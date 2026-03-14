@@ -12,14 +12,19 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter }    from 'next/navigation'
 
 interface Props {
-  slug:             string
-  orgName:          string
-  orgLogoUrl:       string | null
-  orgBrandColor:    string | null
-  clientFirstName:  string
+  slug:               string
+  orgName:            string
+  orgLogoUrl:         string | null
+  orgBrandColor:      string | null
+  clientFirstName:    string
+  allowInvoiceAccess: boolean
+  calendarToken:      string | null
 }
 
-export default function PortalNav({ slug, orgName, orgLogoUrl, orgBrandColor, clientFirstName }: Props) {
+export default function PortalNav({
+  slug, orgName, orgLogoUrl, orgBrandColor, clientFirstName,
+  allowInvoiceAccess, calendarToken,
+}: Props) {
   const pathname = usePathname()
   const router   = useRouter()
   const brand    = orgBrandColor ?? '#1A3329'
@@ -30,7 +35,10 @@ export default function PortalNav({ slug, orgName, orgLogoUrl, orgBrandColor, cl
     { href: `${base}/history`,       label: 'History'  },
     { href: `${base}/properties`,    label: 'Properties' },
     { href: `${base}/requests`,      label: 'Requests' },
+    ...(allowInvoiceAccess ? [{ href: `${base}/invoices`, label: 'Invoices' }] : []),
   ]
+
+  const appUrl = typeof window !== 'undefined' ? window.location.origin : ''
 
   async function handleSignOut() {
     const supabase = createClient()
@@ -83,6 +91,16 @@ export default function PortalNav({ slug, orgName, orgLogoUrl, orgBrandColor, cl
             <span className="hidden sm:block text-xs text-zinc-400">
               Hi, {clientFirstName}
             </span>
+            {calendarToken && (
+              <a
+                href={`/api/portal/calendar/${calendarToken}`}
+                download="visits.ics"
+                title="Export calendar"
+                className="hidden sm:flex text-xs text-zinc-300 hover:text-zinc-500 transition-colors"
+              >
+                📅
+              </a>
+            )}
             <button
               onClick={handleSignOut}
               className="text-xs text-zinc-300 hover:text-zinc-500 transition-colors uppercase tracking-widest"

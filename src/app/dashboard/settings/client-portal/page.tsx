@@ -91,6 +91,7 @@ export default async function ClientPortalSettingsPage() {
             isAdmin={isAdmin}
             activeClientCount={activeClientCount ?? 0}
             orgName={org?.name ?? ''}
+            plan={org?.plan ?? ''}
           />
         )}
       </main>

@@ -546,8 +546,22 @@ export interface ClientPortalSettings {
   share_completed_notes:    boolean
   instruction_cutoff_hours: number
   welcome_message:          string | null
+  allow_invoice_access:     boolean
+  job_reminder_days:        number | null
   created_at:               string
   updated_at:               string
+}
+
+/** Shape returned by portal_get_invoices() */
+export interface PortalInvoice {
+  id:             string
+  invoice_number: string
+  status:         string
+  total:          number
+  amount_paid:    number
+  due_date:       string
+  issued_at:      string
+  view_token:     string
 }
 
 export interface ClientPortalInvitation {
@@ -577,6 +591,9 @@ export interface PortalClientContext {
   share_completed_notes:   boolean
   instruction_cutoff_hours: number
   welcome_message:         string | null
+  // Phase 3
+  allow_invoice_access:    boolean
+  calendar_token:          string | null
 }
 
 /** Shape returned by portal_get_upcoming_jobs() / portal_get_job_history() */

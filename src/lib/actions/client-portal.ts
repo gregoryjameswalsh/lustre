@@ -271,6 +271,10 @@ export async function upsertPortalSettings(
   const cutoffRaw              = parseInt(formData.get('instruction_cutoff_hours') as string ?? '24', 10)
   const instructionCutoffHours = isNaN(cutoffRaw) || cutoffRaw < 0 ? 24 : Math.min(cutoffRaw, 168)
   const welcomeMessage         = (formData.get('welcome_message') as string)?.trim() || null
+  // Phase 3 additions
+  const allowInvoiceAccess     = formData.get('allow_invoice_access') === 'true'
+  const reminderRaw            = formData.get('job_reminder_days') as string
+  const jobReminderDays        = reminderRaw && reminderRaw !== '' ? Math.max(1, Math.min(14, parseInt(reminderRaw, 10) || 1)) : null
   let   portalSlug             = (formData.get('portal_slug') as string)?.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || null
 
   if (portalEnabled && !portalSlug) {
@@ -293,6 +297,8 @@ export async function upsertPortalSettings(
     share_completed_notes:    shareCompletedNotes,
     instruction_cutoff_hours: instructionCutoffHours,
     welcome_message:          welcomeMessage,
+    allow_invoice_access:     allowInvoiceAccess,
+    job_reminder_days:        jobReminderDays,
   }
 
   const { error } = await supabase
@@ -353,4 +359,155 @@ export async function acknowledgeClientInstruction(
   })
 
   return {}
+}
+
+
+// ---------------------------------------------------------------------------
+// Bulk invite clients to the portal (Enterprise plan only)
+// ---------------------------------------------------------------------------
+
+export type BulkInviteState = {
+  sent:    number
+  failed:  number
+  errors:  string[]
+  success?: boolean
+}
+
+export async function bulkInviteClientsToPortal(
+  clientIds: string[]
+): Promise<BulkInviteState> {
+  const result: BulkInviteState = { sent: 0, failed: 0, errors: [] }
+
+  if (!clientIds.length) {
+    result.errors.push('No clients selected.')
+    return result
+  }
+
+  let ctx
+  try {
+    ctx = await requireAdmin()
+  } catch {
+    result.errors.push('Only admins can invite clients to the portal.')
+    return result
+  }
+
+  const { supabase, orgId, userId } = ctx
+
+  // Plan gate — Enterprise only
+  const { data: org } = await supabase
+    .from('organisations')
+    .select('name, email, logo_url, brand_color, plan')
+    .eq('id', orgId)
+    .single()
+
+  if (!org) {
+    result.errors.push('Organisation not found.')
+    return result
+  }
+
+  if (org.plan !== 'enterprise') {
+    result.errors.push('Bulk invitations require an Enterprise plan.')
+    return result
+  }
+
+  const { data: settings } = await supabase
+    .from('client_portal_settings')
+    .select('portal_enabled, portal_slug')
+    .eq('organisation_id', orgId)
+    .maybeSingle()
+
+  if (!settings?.portal_enabled || !settings.portal_slug) {
+    result.errors.push('The portal must be enabled with a URL set before inviting clients.')
+    return result
+  }
+
+  const { data: clients } = await supabase
+    .from('clients')
+    .select('id, first_name, last_name, email, portal_status')
+    .eq('organisation_id', orgId)
+    .in('id', clientIds)
+
+  if (!clients?.length) {
+    result.errors.push('No valid clients found.')
+    return result
+  }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+
+  for (const client of clients) {
+    if (!client.email) {
+      result.failed++
+      result.errors.push(`${client.first_name} ${client.last_name} has no email address.`)
+      continue
+    }
+    if (client.portal_status === 'active') {
+      // Already active — skip silently
+      continue
+    }
+
+    // Expire outstanding invites
+    await supabase
+      .from('client_portal_invitations')
+      .delete()
+      .eq('client_id', client.id)
+      .is('used_at', null)
+
+    // Create invitation
+    const { data: invitation, error: inviteError } = await supabase
+      .from('client_portal_invitations')
+      .insert({
+        organisation_id: orgId,
+        client_id:       client.id,
+        email:           client.email,
+        created_by:      userId,
+      })
+      .select('token, expires_at')
+      .single()
+
+    if (inviteError || !invitation) {
+      result.failed++
+      result.errors.push(`Failed to create invitation for ${client.first_name} ${client.last_name}.`)
+      continue
+    }
+
+    // Update status
+    await supabase
+      .from('clients')
+      .update({ portal_status: 'invited', portal_invited_at: new Date().toISOString() })
+      .eq('id', client.id)
+
+    // Send email
+    const activationUrl = `${appUrl}/portal/${settings.portal_slug}/invite/${invitation.token}`
+    const { error: emailError } = await sendPortalInvitationEmail({
+      clientEmail:     client.email,
+      clientFirstName: client.first_name,
+      orgName:         org.name,
+      orgBrandColor:   org.brand_color,
+      orgLogoUrl:      org.logo_url,
+      activationUrl,
+      expiresAt:       invitation.expires_at,
+    })
+
+    if (emailError) {
+      await supabase.from('client_portal_invitations').delete().eq('token', invitation.token)
+      await supabase.from('clients').update({ portal_status: 'not_invited', portal_invited_at: null }).eq('id', client.id)
+      result.failed++
+      result.errors.push(`Failed to send email to ${client.email}.`)
+      continue
+    }
+
+    await logAuditEvent(supabase, {
+      orgId,
+      actorId:      userId,
+      action:       'portal_invite_client',
+      resourceType: 'client',
+      resourceId:   client.id,
+      metadata:     { email: client.email, bulk: true },
+    })
+
+    result.sent++
+  }
+
+  if (result.sent > 0) result.success = true
+  return result
 }

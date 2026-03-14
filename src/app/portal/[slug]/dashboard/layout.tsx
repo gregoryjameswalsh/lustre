@@ -26,6 +26,8 @@ export default async function PortalDashboardLayout({
         orgLogoUrl={context.org_logo_url}
         orgBrandColor={context.org_brand_color}
         clientFirstName={context.client_first_name}
+        allowInvoiceAccess={context.allow_invoice_access}
+        calendarToken={context.calendar_token}
       />
       <main className="max-w-4xl mx-auto px-4 pt-6 pb-12 sm:px-6 md:pt-8">
         {children}
