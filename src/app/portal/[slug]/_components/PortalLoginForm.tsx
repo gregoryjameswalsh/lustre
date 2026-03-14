@@ -1,0 +1,158 @@
+'use client'
+
+// src/app/portal/[slug]/_components/PortalLoginForm.tsx
+// =============================================================================
+// LUSTRE — Portal Magic Link Login Form
+// =============================================================================
+
+import { useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+
+interface Props {
+  slug:           string
+  orgName?:       string
+  orgBrandColor?: string | null
+  orgLogoUrl?:    string | null
+  welcomeMessage?: string | null
+}
+
+export default function PortalLoginForm({
+  slug,
+  orgName,
+  orgBrandColor,
+  orgLogoUrl,
+  welcomeMessage,
+}: Props) {
+  const [email,   setEmail]   = useState('')
+  const [sent,    setSent]    = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error,   setError]   = useState<string | null>(null)
+
+  const brand = orgBrandColor ?? '#1A3329'
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    const supabase = createClient()
+    const callbackUrl = `${window.location.origin}/portal/${slug}/auth/callback`
+
+    const { error: otpError } = await supabase.auth.signInWithOtp({
+      email: email.trim().toLowerCase(),
+      options: {
+        emailRedirectTo: callbackUrl,
+        shouldCreateUser: false, // Portal clients must have been invited first
+      },
+    })
+
+    if (otpError) {
+      // Supabase returns a generic error; provide a friendly message
+      setError('We couldn\'t find a portal account for that email address. Please check you\'re using the email your service provider has on file.')
+      setLoading(false)
+      return
+    }
+
+    setSent(true)
+    setLoading(false)
+  }
+
+  const displayName = orgName ?? 'Your Client Portal'
+
+  return (
+    <div className="flex min-h-screen items-center justify-center px-4 py-12">
+      <div className="w-full max-w-sm">
+
+        {/* Branding */}
+        <div className="mb-8 text-center">
+          {orgLogoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={orgLogoUrl}
+              alt={displayName}
+              className="mx-auto mb-4 max-h-12 max-w-[180px] object-contain"
+            />
+          ) : (
+            <p
+              className="text-xs font-semibold uppercase tracking-[0.2em] mb-4"
+              style={{ color: brand }}
+            >
+              {displayName}
+            </p>
+          )}
+          <h1 className="text-2xl font-light tracking-tight text-zinc-900">
+            Client Portal
+          </h1>
+          {welcomeMessage && (
+            <p className="mt-2 text-sm text-zinc-500 leading-relaxed">{welcomeMessage}</p>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
+
+          {sent ? (
+            <div className="text-center">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50">
+                <svg className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <p className="text-sm font-medium text-zinc-900">Check your inbox</p>
+              <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
+                We sent a login link to <strong className="text-zinc-600">{email}</strong>.
+                The link is valid for 1 hour.
+              </p>
+              <button
+                onClick={() => { setSent(false); setEmail('') }}
+                className="mt-6 text-xs font-medium uppercase tracking-widest text-zinc-400 hover:text-zinc-600 transition-colors"
+              >
+                Use a different email
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="email" className="block text-xs font-medium text-zinc-500 mb-1.5">
+                  Email address
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  autoComplete="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full rounded-lg border border-zinc-200 px-3 py-2.5 text-sm text-zinc-900 placeholder-zinc-300 focus:border-zinc-400 focus:outline-none transition-colors"
+                />
+              </div>
+
+              {error && (
+                <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-3">
+                  <p className="text-xs text-red-600">{error}</p>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading || !email}
+                style={{ backgroundColor: brand }}
+                className="w-full rounded-full px-6 py-3 text-xs font-semibold uppercase tracking-widest text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {loading ? 'Sending…' : 'Send login link'}
+              </button>
+
+              <p className="text-center text-xs text-zinc-400 leading-relaxed">
+                We&apos;ll send a secure, one-time link to your inbox. No password needed.
+              </p>
+            </form>
+          )}
+        </div>
+
+        <p className="mt-6 text-center text-xs text-zinc-300">
+          Powered by Lustre
+        </p>
+      </div>
+    </div>
+  )
+}

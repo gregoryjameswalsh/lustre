@@ -532,6 +532,88 @@ export interface InvoiceWithRelations extends Invoice {
 }
 
 // -----------------------------------------------------------------------------
+// Client Portal
+// -----------------------------------------------------------------------------
+
+export type PortalStatus = 'not_invited' | 'invited' | 'active' | 'suspended'
+
+export interface ClientPortalSettings {
+  organisation_id:          string
+  portal_enabled:           boolean
+  portal_slug:              string | null
+  show_team_member_name:    boolean
+  show_job_pricing:         boolean
+  share_completed_notes:    boolean
+  instruction_cutoff_hours: number
+  welcome_message:          string | null
+  created_at:               string
+  updated_at:               string
+}
+
+export interface ClientPortalInvitation {
+  id:              string
+  organisation_id: string
+  client_id:       string
+  email:           string
+  token:           string
+  expires_at:      string
+  used_at:         string | null
+  created_by:      string | null
+  created_at:      string
+}
+
+/** Shape returned by portal_get_client_context() RPC */
+export interface PortalClientContext {
+  client_id:               string
+  client_first_name:       string
+  client_last_name:        string
+  client_email:            string | null
+  org_id:                  string
+  org_name:                string
+  org_brand_color:         string | null
+  org_logo_url:            string | null
+  show_team_member_name:   boolean
+  show_job_pricing:        boolean
+  share_completed_notes:   boolean
+  instruction_cutoff_hours: number
+  welcome_message:         string | null
+}
+
+/** Shape returned by portal_get_upcoming_jobs() / portal_get_job_history() */
+export interface PortalJob {
+  id:                    string
+  status:                JobStatus
+  scheduled_date:        string | null
+  scheduled_time:        string | null
+  duration_hours:        number | null
+  completed_at:          string | null
+  job_type_name:         string | null
+  property_id:           string | null
+  property_address:      string | null
+  property_town:         string | null
+  property_postcode:     string | null
+  client_instruction:    string | null
+  client_instruction_at: string | null
+  instruction_cutoff_at: string | null
+  assigned_name:         string | null
+  price:                 number | null
+  notes:                 string | null
+}
+
+/** Shape returned by portal_get_properties() */
+export interface PortalProperty {
+  id:            string
+  address_line1: string
+  address_line2: string | null
+  town:          string | null
+  county:        string | null
+  postcode:      string | null
+  property_type: string | null
+  bedrooms:      number | null
+  bathrooms:     number | null
+}
+
+// -----------------------------------------------------------------------------
 // Joined / relational types
 // -----------------------------------------------------------------------------
 

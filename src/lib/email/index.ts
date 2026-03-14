@@ -1320,3 +1320,277 @@ export async function sendTrialEmail(params: SendTrialEmailParams): Promise<{ er
     return { error: `Failed to send trial email (${key}).` }
   }
 }
+
+
+// =============================================================================
+// Client Portal — Email Templates
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// Portal invitation email (sent to client when operator invites them)
+// -----------------------------------------------------------------------------
+
+export interface SendPortalInvitationEmailParams {
+  clientEmail:    string
+  clientFirstName: string
+  orgName:        string
+  orgBrandColor?: string | null
+  orgLogoUrl?:    string | null
+  activationUrl:  string
+  expiresAt:      string   // ISO date string
+}
+
+function portalInvitationEmailHtml(params: SendPortalInvitationEmailParams): string {
+  const { clientFirstName, orgName, activationUrl, orgLogoUrl, orgBrandColor } = params
+  const brand = orgBrandColor ?? '#4a5c4e'
+
+  const headerContent = orgLogoUrl
+    ? `<img src="${orgLogoUrl}" alt="${orgName}" style="max-height:48px;max-width:180px;display:block;object-fit:contain;" />`
+    : `<p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:${brand};">${orgName}</p>`
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your client portal is ready</title>
+</head>
+<body style="margin:0;padding:0;background:#f9f8f5;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f8f5;padding:40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+
+          <tr>
+            <td style="padding-bottom:24px;">${headerContent}</td>
+          </tr>
+
+          <tr>
+            <td style="background:#ffffff;border-radius:12px;border:1px solid #e5e7eb;padding:32px;">
+
+              <p style="margin:0 0 16px;font-size:16px;color:#0c0c0b;">
+                Hi ${clientFirstName},
+              </p>
+              <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">
+                <strong>${orgName}</strong> has set up a client portal for you. You can use it to view your upcoming appointments and leave special instructions for your cleaner.
+              </p>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+                <tr>
+                  <td align="center">
+                    <a href="${activationUrl}"
+                       style="display:inline-block;background:${brand};color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:14px 32px;border-radius:100px;">
+                      Activate my account
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0;font-size:13px;color:#9ca3af;text-align:center;line-height:1.5;">
+                This link expires in 7 days. If you didn&apos;t expect this email, you can safely ignore it.
+              </p>
+
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding-top:24px;text-align:center;">
+              <p style="margin:0;color:#9ca3af;font-size:12px;">${orgName}</p>
+              <p style="margin:8px 0 0;color:#d1d5db;font-size:11px;">Powered by Lustre</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+}
+
+function portalInvitationEmailText(params: SendPortalInvitationEmailParams): string {
+  const { clientFirstName, orgName, activationUrl } = params
+  return [
+    `Hi ${clientFirstName},`,
+    '',
+    `${orgName} has set up a client portal for you.`,
+    '',
+    `You can use it to view your upcoming appointments and leave special instructions for your cleaner.`,
+    '',
+    `Activate your account here:`,
+    activationUrl,
+    '',
+    `This link expires in 7 days.`,
+    '',
+    `— ${orgName}`,
+  ].join('\n')
+}
+
+export async function sendPortalInvitationEmail(
+  params: SendPortalInvitationEmailParams
+): Promise<{ error?: string }> {
+  const { clientEmail, orgName } = params
+  const safeName = orgName.replace(/[\r\n]/g, ' ').trim()
+
+  try {
+    const { error } = await resend.emails.send({
+      from:    `${safeName} <hello@simplylustre.com>`,
+      to:      clientEmail,
+      subject: `Your client portal is ready — ${safeName}`,
+      html:    portalInvitationEmailHtml(params),
+      text:    portalInvitationEmailText(params),
+    })
+
+    if (error) {
+      console.error('Portal invitation email error:', error)
+      return { error: 'Failed to send portal invitation email.' }
+    }
+
+    return {}
+  } catch (err) {
+    console.error('Portal invitation email exception:', err)
+    return { error: 'Failed to send portal invitation email.' }
+  }
+}
+
+
+// -----------------------------------------------------------------------------
+// Operator notification: client submitted a job instruction
+// -----------------------------------------------------------------------------
+
+export interface SendClientInstructionNotificationParams {
+  operatorEmail:    string
+  orgName:          string
+  orgBrandColor?:   string | null
+  clientName:       string
+  jobTypeName:      string | null
+  scheduledDate:    string | null
+  propertyAddress:  string | null
+  instruction:      string
+  dashboardUrl:     string
+}
+
+function clientInstructionNotificationHtml(params: SendClientInstructionNotificationParams): string {
+  const { orgName, clientName, jobTypeName, scheduledDate, propertyAddress, instruction, dashboardUrl, orgBrandColor } = params
+  const brand = orgBrandColor ?? '#4a5c4e'
+  const dateStr = scheduledDate
+    ? new Date(scheduledDate).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+    : null
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client instruction received</title>
+</head>
+<body style="margin:0;padding:0;background:#f9f8f5;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f8f5;padding:40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+
+          <tr>
+            <td style="padding-bottom:24px;">
+              <p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:${brand};">
+                ${orgName}
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="background:#ffffff;border-radius:12px;border:1px solid #e5e7eb;padding:32px;">
+
+              <p style="margin:0 0 6px;">
+                <span style="display:inline-block;background:#eff6ff;color:#1d4ed8;font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:3px 10px;border-radius:100px;">
+                  Client instruction
+                </span>
+              </p>
+
+              <p style="margin:16px 0;font-size:15px;color:#374151;line-height:1.6;">
+                <strong>${clientName}</strong> has left a special instruction for their upcoming visit.
+              </p>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f8f5;border-radius:8px;margin-bottom:24px;">
+                <tr>
+                  <td style="padding:20px 24px;">
+                    ${jobTypeName ? `<p style="margin:0 0 4px;font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#9ca3af;">${jobTypeName}</p>` : ''}
+                    ${dateStr ? `<p style="margin:0 0 12px;font-size:13px;color:#6b7280;">${dateStr}${propertyAddress ? ` · ${propertyAddress}` : ''}</p>` : ''}
+                    <p style="margin:0;font-size:15px;color:#0c0c0b;line-height:1.6;font-style:italic;">&ldquo;${instruction}&rdquo;</p>
+                  </td>
+                </tr>
+              </table>
+
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <a href="${dashboardUrl}"
+                       style="display:inline-block;background:${brand};color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:14px 32px;border-radius:100px;">
+                      View job
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding-top:24px;text-align:center;">
+              <p style="margin:0;color:#d1d5db;font-size:11px;">Lustre · client portal notifications</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+}
+
+function clientInstructionNotificationText(params: SendClientInstructionNotificationParams): string {
+  const { orgName, clientName, jobTypeName, scheduledDate, instruction, dashboardUrl } = params
+  const dateStr = scheduledDate
+    ? new Date(scheduledDate).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+    : null
+  return [
+    `${orgName} — Client Instruction`,
+    '',
+    `${clientName} has left a special instruction for their upcoming visit.`,
+    jobTypeName ? `Service: ${jobTypeName}` : '',
+    dateStr ? `Date: ${dateStr}` : '',
+    '',
+    `"${instruction}"`,
+    '',
+    `View the job in your dashboard:`,
+    dashboardUrl,
+  ].filter(Boolean).join('\n')
+}
+
+export async function sendClientInstructionNotification(
+  params: SendClientInstructionNotificationParams
+): Promise<{ error?: string }> {
+  const { operatorEmail, orgName } = params
+  const safeName = orgName.replace(/[\r\n]/g, ' ').trim()
+
+  try {
+    const { error } = await resend.emails.send({
+      from:    `${safeName} <hello@simplylustre.com>`,
+      to:      operatorEmail,
+      subject: `Client instruction from ${params.clientName}`,
+      html:    clientInstructionNotificationHtml(params),
+      text:    clientInstructionNotificationText(params),
+    })
+
+    if (error) {
+      console.error('Client instruction notification error:', error)
+      return { error: 'Failed to send notification.' }
+    }
+
+    return {}
+  } catch (err) {
+    console.error('Client instruction notification exception:', err)
+    return { error: 'Failed to send notification.' }
+  }
+}
