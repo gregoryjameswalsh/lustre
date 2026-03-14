@@ -25,9 +25,11 @@ import {
   sendFollowUpDigest,
   sendTrialEmail,
   sendInvoiceOverdueReminder,
+  sendStaleBookingRequestsDigest,
   type ExpiredQuote,
   type DueFollowUp,
   type TrialEmailKey,
+  type StaleBookingRequest,
 } from '@/lib/email'
 
 // ---------------------------------------------------------------------------
@@ -254,6 +256,59 @@ async function runInvoiceDunning(
 }
 
 // ---------------------------------------------------------------------------
+// Job 5 — Stale booking request reminders (>7 days, no operator response)
+// ---------------------------------------------------------------------------
+
+async function runStaleBookingRequestReminders(
+  supabase: ReturnType<typeof createAnonClient>,
+  appUrl: string
+): Promise<number> {
+  type Row = {
+    request_id:        string
+    org_id:            string
+    org_name:          string
+    org_email:         string
+    client_first:      string
+    client_last:       string
+    requested_date:    string | null
+    job_type_name:     string | null
+    dashboard_url_key: string
+  }
+
+  const { data, error } = await supabase.rpc('cron_flag_stale_booking_requests')
+
+  if (error) {
+    console.error('[cron/daily] cron_flag_stale_booking_requests error:', error)
+    return 0
+  }
+  if (!data || data.length === 0) return 0
+
+  // Group by org
+  const byOrg = new Map<string, { orgEmail: string; orgName: string; requests: StaleBookingRequest[] }>()
+
+  for (const row of data as Row[]) {
+    if (!byOrg.has(row.org_id)) {
+      byOrg.set(row.org_id, { orgEmail: row.org_email, orgName: row.org_name, requests: [] })
+    }
+    byOrg.get(row.org_id)!.requests.push({
+      clientName:    `${row.client_first} ${row.client_last}`.trim(),
+      requestedDate: row.requested_date,
+      jobTypeName:   row.job_type_name,
+      dashboardUrl:  `${appUrl}/dashboard/booking-requests/${row.dashboard_url_key}`,
+    })
+  }
+
+  await Promise.all(
+    Array.from(byOrg.values()).map(({ orgEmail, orgName, requests }) =>
+      sendStaleBookingRequestsDigest({ operatorEmail: orgEmail, orgName, requests })
+    )
+  )
+
+  return data.length
+}
+
+
+// ---------------------------------------------------------------------------
 // Route handler
 // ---------------------------------------------------------------------------
 
@@ -271,24 +326,27 @@ export async function GET(request: Request) {
   const supabase    = createAnonClient()
   const upgradeUrl  = `${appUrl}/billing`
 
-  const [expiredCount, followUpCount, trialEmails, dunning] = await Promise.all([
+  const [expiredCount, followUpCount, trialEmails, dunning, staleRequestCount] = await Promise.all([
     runExpireQuotes(supabase, appUrl),
     runFollowUpReminders(supabase, appUrl),
     runTrialEmails(supabase, upgradeUrl),
     runInvoiceDunning(supabase, appUrl),
+    runStaleBookingRequestReminders(supabase, appUrl),
   ])
 
   console.log(
     `[cron/daily] done — expired: ${expiredCount}, follow-ups: ${followUpCount}, ` +
     `trial emails sent: ${trialEmails.sent}, failed: ${trialEmails.failed}, ` +
-    `dunning sent: ${dunning.sent}, failed: ${dunning.failed}`
+    `dunning sent: ${dunning.sent}, failed: ${dunning.failed}, ` +
+    `stale booking requests: ${staleRequestCount}`
   )
   return NextResponse.json({
-    expired:            expiredCount,
-    followUpsNotified:  followUpCount,
-    trialEmailsSent:    trialEmails.sent,
-    trialEmailsFailed:  trialEmails.failed,
-    dunningRemindersSent:   dunning.sent,
-    dunningRemindersFailed: dunning.failed,
+    expired:                  expiredCount,
+    followUpsNotified:        followUpCount,
+    trialEmailsSent:          trialEmails.sent,
+    trialEmailsFailed:        trialEmails.failed,
+    dunningRemindersSent:     dunning.sent,
+    dunningRemindersFailed:   dunning.failed,
+    staleBookingRequestsAlerted: staleRequestCount,
   })
 }

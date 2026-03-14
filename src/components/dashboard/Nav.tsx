@@ -34,13 +34,14 @@ function Avatar({ name }: { name: string }) {
 }
 
 const navLinks = [
-  { href: '/dashboard',           label: 'Dashboard' },
-  { href: '/dashboard/pipeline',  label: 'Pipeline' },
-  { href: '/dashboard/clients',   label: 'Clients' },
-  { href: '/dashboard/jobs',      label: 'Jobs' },
-  { href: '/dashboard/quotes',    label: 'Quotes' },
-  { href: '/dashboard/invoices',  label: 'Invoices' },
-  { href: '/dashboard/reports',   label: 'Reports' },
+  { href: '/dashboard',                    label: 'Dashboard' },
+  { href: '/dashboard/pipeline',           label: 'Pipeline' },
+  { href: '/dashboard/clients',            label: 'Clients' },
+  { href: '/dashboard/jobs',               label: 'Jobs' },
+  { href: '/dashboard/booking-requests',   label: 'Requests' },
+  { href: '/dashboard/quotes',             label: 'Quotes' },
+  { href: '/dashboard/invoices',           label: 'Invoices' },
+  { href: '/dashboard/reports',            label: 'Reports' },
 ]
 
 /** Primary tabs always visible in the mobile bottom bar */

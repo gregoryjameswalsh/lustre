@@ -79,6 +79,13 @@ export type AuditAction =
   | 'portal_settings_updated'
   | 'portal_client_instruction_submitted'
   | 'portal_client_instruction_acknowledged'
+  // Booking Requests
+  | 'booking_request_submitted'
+  | 'booking_request_cancelled_by_client'
+  | 'booking_request_approved'
+  | 'booking_request_declined'
+  | 'booking_request_alternative_proposed'
+  | 'booking_request_client_responded'
 
 export async function logAuditEvent(
   supabase: SupabaseClient,

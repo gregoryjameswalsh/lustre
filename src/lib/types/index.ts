@@ -600,6 +600,72 @@ export interface PortalJob {
   notes:                 string | null
 }
 
+// -----------------------------------------------------------------------------
+// Booking Requests
+// -----------------------------------------------------------------------------
+
+export type BookingRequestStatus =
+  | 'pending'
+  | 'approved'
+  | 'declined'
+  | 'alternative_proposed'
+  | 'client_accepted_alternative'
+  | 'client_declined_alternative'
+  | 'cancelled'
+
+export type PreferredTime = 'morning' | 'afternoon' | 'evening' | 'flexible'
+
+/** Shape returned by portal_get_booking_requests() (list view) */
+export interface PortalBookingRequest {
+  id:               string
+  status:           BookingRequestStatus
+  requested_date:   string | null
+  preferred_time:   PreferredTime | null
+  notes:            string | null
+  job_type_name:    string | null
+  property_address: string | null
+  property_town:    string | null
+  proposed_date:    string | null
+  proposed_time:    PreferredTime | null
+  operator_notes:   string | null
+  created_at:       string
+}
+
+/** Shape returned by portal_get_booking_request_detail() */
+export interface PortalBookingRequestDetail extends PortalBookingRequest {
+  job_type_id:       string | null
+  property_id:       string | null
+  property_address2: string | null
+  property_postcode: string | null
+  updated_at:        string
+}
+
+/** Operator-side booking request row (from normal Supabase query) */
+export interface BookingRequest {
+  id:               string
+  organisation_id:  string
+  client_id:        string
+  property_id:      string | null
+  job_type_id:      string | null
+  requested_date:   string | null
+  preferred_time:   PreferredTime | null
+  notes:            string | null
+  status:           BookingRequestStatus
+  operator_notes:   string | null
+  proposed_date:    string | null
+  proposed_time:    PreferredTime | null
+  actioned_by:      string | null
+  actioned_at:      string | null
+  created_at:       string
+  updated_at:       string
+}
+
+export interface BookingRequestWithRelations extends BookingRequest {
+  clients?:    { first_name: string; last_name: string; email: string | null } | null
+  properties?: { address_line1: string; town: string | null } | null
+  job_types?:  { name: string } | null
+}
+
 /** Shape returned by portal_get_properties() */
 export interface PortalProperty {
   id:            string

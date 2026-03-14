@@ -29,6 +29,7 @@ export default function PortalNav({ slug, orgName, orgLogoUrl, orgBrandColor, cl
     { href: base,                    label: 'Upcoming' },
     { href: `${base}/history`,       label: 'History'  },
     { href: `${base}/properties`,    label: 'Properties' },
+    { href: `${base}/requests`,      label: 'Requests' },
   ]
 
   async function handleSignOut() {
