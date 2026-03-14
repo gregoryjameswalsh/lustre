@@ -77,9 +77,9 @@ export default async function BookingRequestDetailPage({
 
   const status      = req.status as BookingRequestStatus
   const isActionable = ACTIONABLE.includes(status)
-  const client      = req.clients as { id: string; first_name: string; last_name: string; email: string | null } | null
-  const jobType     = req.job_types as { name: string } | null
-  const property    = req.properties as { address_line1: string; address_line2: string | null; town: string | null; postcode: string | null } | null
+  const client      = req.clients as unknown as { id: string; first_name: string; last_name: string; email: string | null } | null
+  const jobType     = req.job_types as unknown as { name: string } | null
+  const property    = req.properties as unknown as { address_line1: string; address_line2: string | null; town: string | null; postcode: string | null } | null
 
   // Fetch portal slug for building the response email's portal URL
   const { data: portalSettings } = await supabase

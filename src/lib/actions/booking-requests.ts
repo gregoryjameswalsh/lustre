@@ -98,7 +98,7 @@ export async function approveBookingRequest(
     .eq('id', orgId)
     .single()
 
-  const client = req.clients as { first_name: string; last_name: string; email: string | null } | null
+  const client = req.clients as unknown as { first_name: string; last_name: string; email: string | null } | null
   const clientEmail = client?.email
 
   if (org && clientEmail) {
@@ -110,7 +110,7 @@ export async function approveBookingRequest(
       orgLogoUrl:      org.logo_url,
       response:        'approved',
       requestedDate:   req.requested_date,
-      jobTypeName:     (req.job_types as { name: string } | null)?.name ?? null,
+      jobTypeName:     (req.job_types as unknown as { name: string } | null)?.name ?? null,
       operatorNotes:   operatorNotes || null,
       proposedDate:    null,
       proposedTime:    null,
@@ -175,7 +175,7 @@ export async function declineBookingRequest(
     .eq('id', orgId)
     .single()
 
-  const client = req.clients as { first_name: string; last_name: string; email: string | null } | null
+  const client = req.clients as unknown as { first_name: string; last_name: string; email: string | null } | null
   if (org && client?.email) {
     await sendBookingRequestResponse({
       clientEmail:     client.email,
@@ -185,7 +185,7 @@ export async function declineBookingRequest(
       orgLogoUrl:      org.logo_url,
       response:        'declined',
       requestedDate:   req.requested_date,
-      jobTypeName:     (req.job_types as { name: string } | null)?.name ?? null,
+      jobTypeName:     (req.job_types as unknown as { name: string } | null)?.name ?? null,
       operatorNotes:   operatorNotes || null,
       proposedDate:    null,
       proposedTime:    null,
@@ -258,7 +258,7 @@ export async function proposeAlternativeDate(
     .eq('id', orgId)
     .single()
 
-  const client = req.clients as { first_name: string; last_name: string; email: string | null } | null
+  const client = req.clients as unknown as { first_name: string; last_name: string; email: string | null } | null
   if (org && client?.email) {
     const portalUrl = `${appUrl}/portal/${portalSlug}/dashboard/requests/${requestId}`
     await sendBookingRequestResponse({
@@ -269,7 +269,7 @@ export async function proposeAlternativeDate(
       orgLogoUrl:      org.logo_url,
       response:        'alternative_proposed',
       requestedDate:   req.requested_date,
-      jobTypeName:     (req.job_types as { name: string } | null)?.name ?? null,
+      jobTypeName:     (req.job_types as unknown as { name: string } | null)?.name ?? null,
       operatorNotes:   operatorNotes || null,
       proposedDate,
       proposedTime:    proposedTime || 'flexible',

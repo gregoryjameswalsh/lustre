@@ -128,8 +128,8 @@ export default async function BookingRequestsPage({
             <tbody className="divide-y divide-zinc-100">
               {rows.map(req => {
                 const cfg         = STATUS_CONFIG[req.status]
-                const client      = req.clients as { first_name: string; last_name: string } | null
-                const jobType     = req.job_types as { name: string } | null
+                const client      = req.clients as unknown as { first_name: string; last_name: string } | null
+                const jobType     = req.job_types as unknown as { name: string } | null
                 const needsAction = NEEDS_ACTION.includes(req.status)
                 return (
                   <tr key={req.id} className={`hover:bg-zinc-50 transition-colors ${needsAction ? 'bg-amber-50/30' : ''}`}>
