@@ -51,7 +51,7 @@ export default async function BookingRequestsPage({
 
   const { data: requests } = await query
 
-  const rows = (requests ?? []) as BookingRequestWithRelations[]
+  const rows = (requests ?? []) as unknown as BookingRequestWithRelations[]
 
   // Pending count for badge
   const { count: pendingCount } = await supabase
