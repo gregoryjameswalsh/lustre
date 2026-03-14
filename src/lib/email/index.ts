@@ -1320,3 +1320,771 @@ export async function sendTrialEmail(params: SendTrialEmailParams): Promise<{ er
     return { error: `Failed to send trial email (${key}).` }
   }
 }
+
+
+// =============================================================================
+// Client Portal — Email Templates
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// Portal invitation email (sent to client when operator invites them)
+// -----------------------------------------------------------------------------
+
+export interface SendPortalInvitationEmailParams {
+  clientEmail:    string
+  clientFirstName: string
+  orgName:        string
+  orgBrandColor?: string | null
+  orgLogoUrl?:    string | null
+  activationUrl:  string
+  expiresAt:      string   // ISO date string
+}
+
+function portalInvitationEmailHtml(params: SendPortalInvitationEmailParams): string {
+  const { clientFirstName, orgName, activationUrl, orgLogoUrl, orgBrandColor } = params
+  const brand = orgBrandColor ?? '#4a5c4e'
+
+  const headerContent = orgLogoUrl
+    ? `<img src="${orgLogoUrl}" alt="${orgName}" style="max-height:48px;max-width:180px;display:block;object-fit:contain;" />`
+    : `<p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:${brand};">${orgName}</p>`
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your client portal is ready</title>
+</head>
+<body style="margin:0;padding:0;background:#f9f8f5;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f8f5;padding:40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+
+          <tr>
+            <td style="padding-bottom:24px;">${headerContent}</td>
+          </tr>
+
+          <tr>
+            <td style="background:#ffffff;border-radius:12px;border:1px solid #e5e7eb;padding:32px;">
+
+              <p style="margin:0 0 16px;font-size:16px;color:#0c0c0b;">
+                Hi ${clientFirstName},
+              </p>
+              <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">
+                <strong>${orgName}</strong> has set up a client portal for you. You can use it to view your upcoming appointments and leave special instructions for your cleaner.
+              </p>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+                <tr>
+                  <td align="center">
+                    <a href="${activationUrl}"
+                       style="display:inline-block;background:${brand};color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:14px 32px;border-radius:100px;">
+                      Activate my account
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0;font-size:13px;color:#9ca3af;text-align:center;line-height:1.5;">
+                This link expires in 7 days. If you didn&apos;t expect this email, you can safely ignore it.
+              </p>
+
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding-top:24px;text-align:center;">
+              <p style="margin:0;color:#9ca3af;font-size:12px;">${orgName}</p>
+              <p style="margin:8px 0 0;color:#d1d5db;font-size:11px;">Powered by Lustre</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+}
+
+function portalInvitationEmailText(params: SendPortalInvitationEmailParams): string {
+  const { clientFirstName, orgName, activationUrl } = params
+  return [
+    `Hi ${clientFirstName},`,
+    '',
+    `${orgName} has set up a client portal for you.`,
+    '',
+    `You can use it to view your upcoming appointments and leave special instructions for your cleaner.`,
+    '',
+    `Activate your account here:`,
+    activationUrl,
+    '',
+    `This link expires in 7 days.`,
+    '',
+    `— ${orgName}`,
+  ].join('\n')
+}
+
+export async function sendPortalInvitationEmail(
+  params: SendPortalInvitationEmailParams
+): Promise<{ error?: string }> {
+  const { clientEmail, orgName } = params
+  const safeName = orgName.replace(/[\r\n]/g, ' ').trim()
+
+  try {
+    const { error } = await resend.emails.send({
+      from:    `${safeName} <hello@simplylustre.com>`,
+      to:      clientEmail,
+      subject: `Your client portal is ready — ${safeName}`,
+      html:    portalInvitationEmailHtml(params),
+      text:    portalInvitationEmailText(params),
+    })
+
+    if (error) {
+      console.error('Portal invitation email error:', error)
+      return { error: 'Failed to send portal invitation email.' }
+    }
+
+    return {}
+  } catch (err) {
+    console.error('Portal invitation email exception:', err)
+    return { error: 'Failed to send portal invitation email.' }
+  }
+}
+
+
+// -----------------------------------------------------------------------------
+// Operator notification: client submitted a job instruction
+// -----------------------------------------------------------------------------
+
+export interface SendClientInstructionNotificationParams {
+  operatorEmail:    string
+  orgName:          string
+  orgBrandColor?:   string | null
+  clientName:       string
+  jobTypeName:      string | null
+  scheduledDate:    string | null
+  propertyAddress:  string | null
+  instruction:      string
+  dashboardUrl:     string
+}
+
+function clientInstructionNotificationHtml(params: SendClientInstructionNotificationParams): string {
+  const { orgName, clientName, jobTypeName, scheduledDate, propertyAddress, instruction, dashboardUrl, orgBrandColor } = params
+  const brand = orgBrandColor ?? '#4a5c4e'
+  const dateStr = scheduledDate
+    ? new Date(scheduledDate).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+    : null
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client instruction received</title>
+</head>
+<body style="margin:0;padding:0;background:#f9f8f5;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f8f5;padding:40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+
+          <tr>
+            <td style="padding-bottom:24px;">
+              <p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:${brand};">
+                ${orgName}
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="background:#ffffff;border-radius:12px;border:1px solid #e5e7eb;padding:32px;">
+
+              <p style="margin:0 0 6px;">
+                <span style="display:inline-block;background:#eff6ff;color:#1d4ed8;font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:3px 10px;border-radius:100px;">
+                  Client instruction
+                </span>
+              </p>
+
+              <p style="margin:16px 0;font-size:15px;color:#374151;line-height:1.6;">
+                <strong>${clientName}</strong> has left a special instruction for their upcoming visit.
+              </p>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f8f5;border-radius:8px;margin-bottom:24px;">
+                <tr>
+                  <td style="padding:20px 24px;">
+                    ${jobTypeName ? `<p style="margin:0 0 4px;font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#9ca3af;">${jobTypeName}</p>` : ''}
+                    ${dateStr ? `<p style="margin:0 0 12px;font-size:13px;color:#6b7280;">${dateStr}${propertyAddress ? ` · ${propertyAddress}` : ''}</p>` : ''}
+                    <p style="margin:0;font-size:15px;color:#0c0c0b;line-height:1.6;font-style:italic;">&ldquo;${instruction}&rdquo;</p>
+                  </td>
+                </tr>
+              </table>
+
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <a href="${dashboardUrl}"
+                       style="display:inline-block;background:${brand};color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:14px 32px;border-radius:100px;">
+                      View job
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding-top:24px;text-align:center;">
+              <p style="margin:0;color:#d1d5db;font-size:11px;">Lustre · client portal notifications</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+}
+
+function clientInstructionNotificationText(params: SendClientInstructionNotificationParams): string {
+  const { orgName, clientName, jobTypeName, scheduledDate, instruction, dashboardUrl } = params
+  const dateStr = scheduledDate
+    ? new Date(scheduledDate).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+    : null
+  return [
+    `${orgName} — Client Instruction`,
+    '',
+    `${clientName} has left a special instruction for their upcoming visit.`,
+    jobTypeName ? `Service: ${jobTypeName}` : '',
+    dateStr ? `Date: ${dateStr}` : '',
+    '',
+    `"${instruction}"`,
+    '',
+    `View the job in your dashboard:`,
+    dashboardUrl,
+  ].filter(Boolean).join('\n')
+}
+
+export async function sendClientInstructionNotification(
+  params: SendClientInstructionNotificationParams
+): Promise<{ error?: string }> {
+  const { operatorEmail, orgName } = params
+  const safeName = orgName.replace(/[\r\n]/g, ' ').trim()
+
+  try {
+    const { error } = await resend.emails.send({
+      from:    `${safeName} <hello@simplylustre.com>`,
+      to:      operatorEmail,
+      subject: `Client instruction from ${params.clientName}`,
+      html:    clientInstructionNotificationHtml(params),
+      text:    clientInstructionNotificationText(params),
+    })
+
+    if (error) {
+      console.error('Client instruction notification error:', error)
+      return { error: 'Failed to send notification.' }
+    }
+
+    return {}
+  } catch (err) {
+    console.error('Client instruction notification exception:', err)
+    return { error: 'Failed to send notification.' }
+  }
+}
+
+
+// =============================================================================
+// Booking Request Emails
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// Operator notification — new booking request received
+// -----------------------------------------------------------------------------
+
+export interface SendBookingRequestReceivedParams {
+  operatorEmail:  string
+  orgName:        string
+  clientName:     string
+  requestedDate:  string | null
+  preferredTime:  string | null
+  jobTypeName:    string | null
+  propertyAddress: string | null
+  notes:          string | null
+  dashboardUrl:   string
+}
+
+function bookingRequestReceivedHtml(p: SendBookingRequestReceivedParams): string {
+  const dateStr = p.requestedDate
+    ? new Date(p.requestedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null
+
+  const timeLabel: Record<string, string> = {
+    morning: 'Morning (before noon)',
+    afternoon: 'Afternoon (noon–5 pm)',
+    evening: 'Evening (after 5 pm)',
+    flexible: 'Flexible',
+  }
+
+  const rows = [
+    dateStr           && `<tr><td style="padding:6px 0;font-size:13px;color:#6b7280;width:130px;">Requested date</td><td style="padding:6px 0;font-size:13px;color:#111827;">${dateStr}</td></tr>`,
+    p.preferredTime   && `<tr><td style="padding:6px 0;font-size:13px;color:#6b7280;">Preferred time</td><td style="padding:6px 0;font-size:13px;color:#111827;">${timeLabel[p.preferredTime] ?? p.preferredTime}</td></tr>`,
+    p.jobTypeName     && `<tr><td style="padding:6px 0;font-size:13px;color:#6b7280;">Service type</td><td style="padding:6px 0;font-size:13px;color:#111827;">${p.jobTypeName}</td></tr>`,
+    p.propertyAddress && `<tr><td style="padding:6px 0;font-size:13px;color:#6b7280;">Property</td><td style="padding:6px 0;font-size:13px;color:#111827;">${p.propertyAddress}</td></tr>`,
+    p.notes           && `<tr><td style="padding:6px 0;font-size:13px;color:#6b7280;vertical-align:top;">Notes</td><td style="padding:6px 0;font-size:13px;color:#111827;">${p.notes.replace(/\n/g, '<br>')}</td></tr>`,
+  ].filter(Boolean).join('\n')
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>New booking request</title></head>
+<body style="margin:0;padding:0;background:#f9f8f5;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f8f5;padding:40px 20px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+      <tr><td style="padding-bottom:20px;">
+        <p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:#4a5c4e;">Lustre</p>
+      </td></tr>
+      <tr><td style="background:#ffffff;border-radius:12px;border:1px solid #e5e7eb;padding:32px;">
+        <p style="margin:0 0 4px;font-size:16px;font-weight:600;color:#0c0c0b;">New booking request</p>
+        <p style="margin:0 0 24px;font-size:14px;color:#6b7280;">
+          <strong style="color:#111827;">${p.clientName}</strong> has submitted a booking request through the client portal.
+        </p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #f3f4f6;margin-bottom:24px;">
+          ${rows}
+        </table>
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr><td align="center">
+            <a href="${p.dashboardUrl}"
+               style="display:inline-block;background:#1a3329;color:#fff;font-size:13px;font-weight:600;
+                      text-decoration:none;padding:12px 28px;border-radius:8px;letter-spacing:0.04em;">
+              Review request
+            </a>
+          </td></tr>
+        </table>
+      </td></tr>
+      <tr><td style="padding:20px 0;text-align:center;">
+        <p style="margin:0;font-size:11px;color:#9ca3af;">
+          This notification was generated by Lustre on behalf of ${p.orgName}.
+        </p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`
+}
+
+function bookingRequestReceivedText(p: SendBookingRequestReceivedParams): string {
+  const dateStr = p.requestedDate
+    ? new Date(p.requestedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null
+  return [
+    `New booking request from ${p.clientName}`,
+    '',
+    dateStr           ? `Date: ${dateStr}` : '',
+    p.preferredTime   ? `Time: ${p.preferredTime}` : '',
+    p.jobTypeName     ? `Service: ${p.jobTypeName}` : '',
+    p.propertyAddress ? `Property: ${p.propertyAddress}` : '',
+    p.notes           ? `Notes: ${p.notes}` : '',
+    '',
+    `Review request: ${p.dashboardUrl}`,
+  ].filter(line => line !== null && line !== undefined).join('\n')
+}
+
+export async function sendBookingRequestReceived(
+  params: SendBookingRequestReceivedParams
+): Promise<{ error?: string }> {
+  const safeName = params.orgName.replace(/[\r\n]/g, ' ').trim()
+  try {
+    const { error } = await resend.emails.send({
+      from:    `Lustre <hello@simplylustre.com>`,
+      to:      params.operatorEmail,
+      subject: `New booking request from ${params.clientName}`,
+      html:    bookingRequestReceivedHtml(params),
+      text:    bookingRequestReceivedText(params),
+      replyTo: params.operatorEmail,
+    })
+    if (error) {
+      console.error('[email] booking_request_received error:', error)
+      return { error: 'Failed to send notification.' }
+    }
+    return {}
+  } catch (err) {
+    console.error('[email] booking_request_received exception:', err)
+    return { error: 'Failed to send notification.' }
+  }
+}
+
+
+// -----------------------------------------------------------------------------
+// Client notification — operator responded to their booking request
+// -----------------------------------------------------------------------------
+
+export interface SendBookingRequestResponseParams {
+  clientEmail:      string
+  clientFirstName:  string
+  orgName:          string
+  orgBrandColor?:   string | null
+  orgLogoUrl?:      string | null
+  response:         'approved' | 'declined' | 'alternative_proposed'
+  requestedDate:    string | null
+  jobTypeName:      string | null
+  operatorNotes:    string | null
+  proposedDate:     string | null
+  proposedTime:     string | null
+  portalUrl:        string   // link back to the request in the client portal
+}
+
+function bookingRequestResponseHtml(p: SendBookingRequestResponseParams): string {
+  const brand = p.orgBrandColor ?? '#4a5c4e'
+
+  const headerContent = p.orgLogoUrl
+    ? `<img src="${p.orgLogoUrl}" alt="${p.orgName}" style="max-height:48px;max-width:180px;display:block;object-fit:contain;" />`
+    : `<p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:${brand};">${p.orgName}</p>`
+
+  const formatDate = (d: string | null) => d
+    ? new Date(d).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    : null
+
+  const timeLabel: Record<string, string> = {
+    morning: 'Morning',
+    afternoon: 'Afternoon',
+    evening: 'Evening',
+    flexible: 'Flexible',
+  }
+
+  let statusBadge = ''
+  let bodyText    = ''
+  let actionBlock = ''
+
+  if (p.response === 'approved') {
+    statusBadge = `<span style="display:inline-block;background:#dcfce7;color:#166534;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;letter-spacing:0.05em;text-transform:uppercase;">Confirmed</span>`
+    bodyText = `Great news! <strong>${p.orgName}</strong> has confirmed your booking request${p.requestedDate ? ` for <strong>${formatDate(p.requestedDate)}</strong>` : ''}.`
+    if (p.operatorNotes) {
+      actionBlock = `<p style="margin:16px 0 0;font-size:14px;color:#374151;"><strong>Note from ${p.orgName}:</strong><br>${p.operatorNotes.replace(/\n/g, '<br>')}</p>`
+    }
+  } else if (p.response === 'declined') {
+    statusBadge = `<span style="display:inline-block;background:#fee2e2;color:#991b1b;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;letter-spacing:0.05em;text-transform:uppercase;">Declined</span>`
+    bodyText = `Unfortunately, <strong>${p.orgName}</strong> is unable to accommodate your booking request${p.requestedDate ? ` for <strong>${formatDate(p.requestedDate)}</strong>` : ''}.`
+    if (p.operatorNotes) {
+      actionBlock = `<p style="margin:16px 0 0;font-size:14px;color:#374151;"><strong>Reason:</strong> ${p.operatorNotes.replace(/\n/g, '<br>')}</p>`
+    }
+  } else {
+    statusBadge = `<span style="display:inline-block;background:#fef3c7;color:#92400e;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;letter-spacing:0.05em;text-transform:uppercase;">Alternative offered</span>`
+    const alt = [
+      formatDate(p.proposedDate),
+      p.proposedTime ? timeLabel[p.proposedTime] : null,
+    ].filter(Boolean).join(', ')
+    bodyText = `<strong>${p.orgName}</strong> has suggested an alternative date for your booking request.`
+    actionBlock = `
+      ${alt ? `<p style="margin:16px 0 8px;font-size:14px;color:#374151;"><strong>Alternative offered:</strong> ${alt}</p>` : ''}
+      ${p.operatorNotes ? `<p style="margin:0 0 16px;font-size:14px;color:#374151;"><strong>Message:</strong> ${p.operatorNotes.replace(/\n/g, '<br>')}</p>` : ''}
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;">
+        <tr><td align="center">
+          <a href="${p.portalUrl}" style="display:inline-block;background:${brand};color:#fff;font-size:13px;font-weight:600;text-decoration:none;padding:12px 28px;border-radius:8px;letter-spacing:0.04em;">
+            Accept or decline
+          </a>
+        </td></tr>
+      </table>`
+  }
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Booking request update</title></head>
+<body style="margin:0;padding:0;background:#f9f8f5;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f8f5;padding:40px 20px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+      <tr><td style="padding-bottom:24px;">${headerContent}</td></tr>
+      <tr><td style="background:#ffffff;border-radius:12px;border:1px solid #e5e7eb;padding:32px;">
+        <div style="margin-bottom:16px;">${statusBadge}</div>
+        <p style="margin:0 0 4px;font-size:16px;font-weight:600;color:#0c0c0b;">Booking request update</p>
+        <p style="margin:0 0 16px;font-size:14px;color:#374151;line-height:1.6;">${bodyText}</p>
+        ${actionBlock}
+      </td></tr>
+      <tr><td style="padding:20px 0;text-align:center;">
+        <p style="margin:0;font-size:11px;color:#9ca3af;">Powered by Lustre</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`
+}
+
+function bookingRequestResponseText(p: SendBookingRequestResponseParams): string {
+  const formatDate = (d: string | null) => d
+    ? new Date(d).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    : null
+
+  const lines: string[] = [
+    `Hi ${p.clientFirstName},`,
+    '',
+  ]
+
+  if (p.response === 'approved') {
+    lines.push(`Good news — ${p.orgName} has confirmed your booking request${p.requestedDate ? ` for ${formatDate(p.requestedDate)}` : ''}.`)
+    if (p.operatorNotes) lines.push('', `Note: ${p.operatorNotes}`)
+  } else if (p.response === 'declined') {
+    lines.push(`${p.orgName} is unable to accommodate your booking request${p.requestedDate ? ` for ${formatDate(p.requestedDate)}` : ''}.`)
+    if (p.operatorNotes) lines.push('', `Reason: ${p.operatorNotes}`)
+  } else {
+    lines.push(`${p.orgName} has suggested an alternative date for your booking request.`)
+    if (p.proposedDate) lines.push('', `Alternative: ${formatDate(p.proposedDate)}${p.proposedTime ? ` (${p.proposedTime})` : ''}`)
+    if (p.operatorNotes) lines.push(`Message: ${p.operatorNotes}`)
+    lines.push('', `Accept or decline: ${p.portalUrl}`)
+  }
+
+  return lines.join('\n')
+}
+
+export async function sendBookingRequestResponse(
+  params: SendBookingRequestResponseParams
+): Promise<{ error?: string }> {
+  const safeName = params.orgName.replace(/[\r\n]/g, ' ').trim()
+  const subjects: Record<string, string> = {
+    approved:             `Your booking request is confirmed — ${safeName}`,
+    declined:             `Booking request update — ${safeName}`,
+    alternative_proposed: `Alternative date offered — ${safeName}`,
+  }
+
+  try {
+    const { error } = await resend.emails.send({
+      from:    `${safeName} <hello@simplylustre.com>`,
+      to:      params.clientEmail,
+      subject: subjects[params.response] ?? `Booking request update — ${safeName}`,
+      html:    bookingRequestResponseHtml(params),
+      text:    bookingRequestResponseText(params),
+    })
+    if (error) {
+      console.error('[email] booking_request_response error:', error)
+      return { error: 'Failed to send notification.' }
+    }
+    return {}
+  } catch (err) {
+    console.error('[email] booking_request_response exception:', err)
+    return { error: 'Failed to send notification.' }
+  }
+}
+
+
+// -----------------------------------------------------------------------------
+// Operator digest — stale booking requests (>7 days, no response)
+// -----------------------------------------------------------------------------
+
+export interface StaleBookingRequest {
+  clientName:    string
+  requestedDate: string | null
+  jobTypeName:   string | null
+  dashboardUrl:  string
+}
+
+export interface SendStaleBookingRequestsDigestParams {
+  operatorEmail: string
+  orgName:       string
+  requests:      StaleBookingRequest[]
+}
+
+export async function sendStaleBookingRequestsDigest(
+  params: SendStaleBookingRequestsDigestParams
+): Promise<{ error?: string }> {
+  const { operatorEmail, orgName, requests } = params
+  if (requests.length === 0) return {}
+
+  const rows = requests.map(r => {
+    const dateStr = r.requestedDate
+      ? new Date(r.requestedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+      : 'Date TBC'
+    return `<tr>
+      <td style="padding:8px 0;font-size:13px;color:#111827;border-bottom:1px solid #f3f4f6;">${r.clientName}</td>
+      <td style="padding:8px 0;font-size:13px;color:#6b7280;border-bottom:1px solid #f3f4f6;">${r.jobTypeName ?? '—'}</td>
+      <td style="padding:8px 0;font-size:13px;color:#6b7280;border-bottom:1px solid #f3f4f6;">${dateStr}</td>
+      <td style="padding:8px 4px;border-bottom:1px solid #f3f4f6;"><a href="${r.dashboardUrl}" style="font-size:12px;color:#4a5c4e;text-decoration:none;">View →</a></td>
+    </tr>`
+  }).join('\n')
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Pending booking requests</title></head>
+<body style="margin:0;padding:0;background:#f9f8f5;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f8f5;padding:40px 20px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+      <tr><td style="padding-bottom:20px;">
+        <p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:#4a5c4e;">Lustre</p>
+      </td></tr>
+      <tr><td style="background:#fff;border-radius:12px;border:1px solid #e5e7eb;padding:32px;">
+        <p style="margin:0 0 4px;font-size:16px;font-weight:600;color:#0c0c0b;">Pending booking requests</p>
+        <p style="margin:0 0 24px;font-size:14px;color:#6b7280;">
+          You have ${requests.length} booking request${requests.length > 1 ? 's' : ''} that ${requests.length > 1 ? 'have' : 'has'} been waiting for more than 7 days.
+        </p>
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <th style="text-align:left;padding:0 0 8px;font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;">Client</th>
+            <th style="text-align:left;padding:0 0 8px;font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;">Service</th>
+            <th style="text-align:left;padding:0 0 8px;font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;">Date</th>
+            <th></th>
+          </tr>
+          ${rows}
+        </table>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`
+
+  const text = [
+    `Pending booking requests — ${orgName}`,
+    '',
+    `You have ${requests.length} booking request(s) awaiting a response (over 7 days old):`,
+    '',
+    ...requests.map(r => {
+      const dateStr = r.requestedDate ? new Date(r.requestedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'Date TBC'
+      return `• ${r.clientName} — ${r.jobTypeName ?? 'Service TBC'}, ${dateStr}: ${r.dashboardUrl}`
+    }),
+  ].join('\n')
+
+  try {
+    const { error } = await resend.emails.send({
+      from:    `Lustre <hello@simplylustre.com>`,
+      to:      operatorEmail,
+      subject: `Reminder: ${requests.length} pending booking request${requests.length > 1 ? 's' : ''} need your response`,
+      html,
+      text,
+    })
+    if (error) {
+      console.error('[email] stale_booking_requests_digest error:', error)
+      return { error: 'Failed to send digest.' }
+    }
+    return {}
+  } catch (err) {
+    console.error('[email] stale_booking_requests_digest exception:', err)
+    return { error: 'Failed to send digest.' }
+  }
+}
+
+
+// =============================================================================
+// Job Reminder Email (Portal Phase 3)
+// Sent to the portal client N days before their upcoming job.
+// =============================================================================
+
+export interface SendJobReminderEmailParams {
+  clientEmail:      string
+  clientFirstName:  string
+  orgName:          string
+  orgBrandColor?:   string | null
+  orgLogoUrl?:      string | null
+  jobTypeName:      string | null
+  scheduledDate:    string          // ISO date
+  scheduledTime:    string | null   // HH:MM
+  propertyAddress:  string | null
+  portalUrl:        string          // link to the portal dashboard
+  daysUntil:        number
+}
+
+function jobReminderEmailHtml(p: SendJobReminderEmailParams): string {
+  const brand = p.orgBrandColor ?? '#4a5c4e'
+
+  const headerContent = p.orgLogoUrl
+    ? `<img src="${p.orgLogoUrl}" alt="${p.orgName}" style="max-height:48px;max-width:180px;display:block;object-fit:contain;" />`
+    : `<p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:${brand};">${p.orgName}</p>`
+
+  const dateStr = new Date(p.scheduledDate).toLocaleDateString('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  })
+
+  function formatTime(t: string | null) {
+    if (!t) return null
+    const [h, m] = t.split(':')
+    const hour = parseInt(h)
+    return `${hour % 12 || 12}:${m}${hour >= 12 ? 'pm' : 'am'}`
+  }
+
+  const timeStr   = formatTime(p.scheduledTime)
+  const dayWord   = p.daysUntil === 1 ? 'tomorrow' : `in ${p.daysUntil} days`
+  const headline  = `Your ${p.jobTypeName ?? 'visit'} is ${dayWord}`
+
+  const details = [
+    `<tr><td style="padding:6px 0;font-size:13px;color:#6b7280;width:110px;">Date</td><td style="padding:6px 0;font-size:13px;color:#111827;">${dateStr}</td></tr>`,
+    timeStr ? `<tr><td style="padding:6px 0;font-size:13px;color:#6b7280;">Time</td><td style="padding:6px 0;font-size:13px;color:#111827;">${timeStr}</td></tr>` : '',
+    p.propertyAddress ? `<tr><td style="padding:6px 0;font-size:13px;color:#6b7280;">Location</td><td style="padding:6px 0;font-size:13px;color:#111827;">${p.propertyAddress}</td></tr>` : '',
+  ].filter(Boolean).join('\n')
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>${headline}</title></head>
+<body style="margin:0;padding:0;background:#f9f8f5;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f8f5;padding:40px 20px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+      <tr><td style="padding-bottom:24px;">${headerContent}</td></tr>
+      <tr><td style="background:#ffffff;border-radius:12px;border:1px solid #e5e7eb;padding:32px;">
+        <p style="margin:0 0 4px;font-size:16px;font-weight:600;color:#0c0c0b;">${headline}</p>
+        <p style="margin:0 0 24px;font-size:14px;color:#6b7280;">Hi ${p.clientFirstName}, here are the details for your upcoming appointment.</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #f3f4f6;margin-bottom:24px;">
+          ${details}
+        </table>
+        <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Need to leave a special instruction for this visit?</p>
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr><td>
+            <a href="${p.portalUrl}" style="display:inline-block;background:${brand};color:#fff;font-size:13px;font-weight:600;text-decoration:none;padding:10px 22px;border-radius:8px;letter-spacing:0.04em;">
+              View in your portal →
+            </a>
+          </td></tr>
+        </table>
+      </td></tr>
+      <tr><td style="padding:20px 0;text-align:center;">
+        <p style="margin:0;font-size:11px;color:#9ca3af;">Powered by Lustre</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`
+}
+
+function jobReminderEmailText(p: SendJobReminderEmailParams): string {
+  const dateStr = new Date(p.scheduledDate).toLocaleDateString('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  })
+  const dayWord = p.daysUntil === 1 ? 'tomorrow' : `in ${p.daysUntil} days`
+  return [
+    `Hi ${p.clientFirstName},`,
+    '',
+    `Just a reminder that your ${p.jobTypeName ?? 'visit'} is ${dayWord}.`,
+    '',
+    `Date: ${dateStr}`,
+    p.scheduledTime ? `Time: ${p.scheduledTime}` : '',
+    p.propertyAddress ? `Location: ${p.propertyAddress}` : '',
+    '',
+    `View your portal: ${p.portalUrl}`,
+  ].filter(line => line !== null && line !== undefined).join('\n')
+}
+
+export async function sendJobReminderEmail(
+  params: SendJobReminderEmailParams
+): Promise<{ error?: string }> {
+  const safeName = params.orgName.replace(/[\r\n]/g, ' ').trim()
+  const dayWord  = params.daysUntil === 1 ? 'tomorrow' : `in ${params.daysUntil} days`
+  try {
+    const { error } = await resend.emails.send({
+      from:    `${safeName} <hello@simplylustre.com>`,
+      to:      params.clientEmail,
+      subject: `Reminder: your ${params.jobTypeName ?? 'visit'} is ${dayWord}`,
+      html:    jobReminderEmailHtml(params),
+      text:    jobReminderEmailText(params),
+    })
+    if (error) {
+      console.error('[email] job_reminder error:', error)
+      return { error: 'Failed to send reminder.' }
+    }
+    return {}
+  } catch (err) {
+    console.error('[email] job_reminder exception:', err)
+    return { error: 'Failed to send reminder.' }
+  }
+}

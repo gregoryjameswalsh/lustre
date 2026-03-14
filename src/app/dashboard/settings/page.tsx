@@ -344,6 +344,19 @@ export default async function SettingsPage() {
               <Chevron />
             </Link>
 
+            <Link
+              href="/dashboard/settings/client-portal"
+              className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-5 py-5 transition-colors hover:bg-zinc-50"
+            >
+              <div>
+                <h2 className="text-sm font-medium text-zinc-900">Client Portal</h2>
+                <p className="mt-0.5 text-xs text-zinc-400">
+                  Give clients a branded self-service portal for appointments &amp; instructions
+                </p>
+              </div>
+              <Chevron />
+            </Link>
+
           </div>
         )}
 

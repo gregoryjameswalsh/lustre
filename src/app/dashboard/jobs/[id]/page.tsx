@@ -9,6 +9,7 @@ import { startJobAction, applyChecklistAction, type TemplateChoice } from '@/lib
 import ChecklistSection          from './_components/ChecklistSection'
 import PropertyPhotosReadOnly    from './_components/PropertyPhotosReadOnly'
 import TagPicker                 from '@/components/dashboard/TagPicker'
+import ClientInstructionPanel    from './_components/ClientInstructionPanel'
 import type { JobChecklistWithItems, Tag } from '@/lib/types'
 
 const statusFlow = ['scheduled', 'in_progress', 'completed', 'cancelled']
@@ -43,6 +44,9 @@ type JobDetail = {
   price: number | null
   notes: string | null
   internal_notes: string | null
+  client_instruction: string | null
+  client_instruction_at: string | null
+  client_instruction_seen: boolean
   created_at: string
   clients?: { id: string; first_name: string; last_name: string; email: string | null; phone: string | null } | null
   properties?: { id: string; address_line1: string; address_line2: string | null; town: string | null; postcode: string | null; access_instructions: string | null; alarm_instructions: string | null; parking_instructions: string | null; pets: string | null; specialist_surfaces: string | null; key_held: boolean | null } | null
@@ -710,8 +714,18 @@ export default function JobDetailPage() {
 
           </div>
 
-          {/* Right — notes */}
+          {/* Right — client instruction + notes */}
           <div className="space-y-6">
+
+            {/* Client instruction (from portal) */}
+            {job.client_instruction && (
+              <ClientInstructionPanel
+                jobId={jobId}
+                instruction={job.client_instruction}
+                submittedAt={job.client_instruction_at}
+                alreadySeen={job.client_instruction_seen}
+              />
+            )}
 
             {job.notes && (
               <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
@@ -735,7 +749,7 @@ export default function JobDetailPage() {
               </div>
             )}
 
-            {!job.notes && !job.internal_notes && (
+            {!job.notes && !job.internal_notes && !job.client_instruction && (
               <div className="bg-white border border-zinc-200 rounded-lg px-5 py-8 text-center">
                 <p className="text-xs text-zinc-300">No notes on this job</p>
               </div>

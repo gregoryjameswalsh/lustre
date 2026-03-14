@@ -532,6 +532,171 @@ export interface InvoiceWithRelations extends Invoice {
 }
 
 // -----------------------------------------------------------------------------
+// Client Portal
+// -----------------------------------------------------------------------------
+
+export type PortalStatus = 'not_invited' | 'invited' | 'active' | 'suspended'
+
+export interface ClientPortalSettings {
+  organisation_id:          string
+  portal_enabled:           boolean
+  portal_slug:              string | null
+  show_team_member_name:    boolean
+  show_job_pricing:         boolean
+  share_completed_notes:    boolean
+  instruction_cutoff_hours: number
+  welcome_message:          string | null
+  allow_invoice_access:     boolean
+  job_reminder_days:        number | null
+  created_at:               string
+  updated_at:               string
+}
+
+/** Shape returned by portal_get_invoices() */
+export interface PortalInvoice {
+  id:             string
+  invoice_number: string
+  status:         string
+  total:          number
+  amount_paid:    number
+  due_date:       string
+  issued_at:      string
+  view_token:     string
+}
+
+export interface ClientPortalInvitation {
+  id:              string
+  organisation_id: string
+  client_id:       string
+  email:           string
+  token:           string
+  expires_at:      string
+  used_at:         string | null
+  created_by:      string | null
+  created_at:      string
+}
+
+/** Shape returned by portal_get_client_context() RPC */
+export interface PortalClientContext {
+  client_id:               string
+  client_first_name:       string
+  client_last_name:        string
+  client_email:            string | null
+  org_id:                  string
+  org_name:                string
+  org_brand_color:         string | null
+  org_logo_url:            string | null
+  show_team_member_name:   boolean
+  show_job_pricing:        boolean
+  share_completed_notes:   boolean
+  instruction_cutoff_hours: number
+  welcome_message:         string | null
+  // Phase 3
+  allow_invoice_access:    boolean
+  calendar_token:          string | null
+}
+
+/** Shape returned by portal_get_upcoming_jobs() / portal_get_job_history() */
+export interface PortalJob {
+  id:                    string
+  status:                JobStatus
+  scheduled_date:        string | null
+  scheduled_time:        string | null
+  duration_hours:        number | null
+  completed_at:          string | null
+  job_type_name:         string | null
+  property_id:           string | null
+  property_address:      string | null
+  property_town:         string | null
+  property_postcode:     string | null
+  client_instruction:    string | null
+  client_instruction_at: string | null
+  instruction_cutoff_at: string | null
+  assigned_name:         string | null
+  price:                 number | null
+  notes:                 string | null
+}
+
+// -----------------------------------------------------------------------------
+// Booking Requests
+// -----------------------------------------------------------------------------
+
+export type BookingRequestStatus =
+  | 'pending'
+  | 'approved'
+  | 'declined'
+  | 'alternative_proposed'
+  | 'client_accepted_alternative'
+  | 'client_declined_alternative'
+  | 'cancelled'
+
+export type PreferredTime = 'morning' | 'afternoon' | 'evening' | 'flexible'
+
+/** Shape returned by portal_get_booking_requests() (list view) */
+export interface PortalBookingRequest {
+  id:               string
+  status:           BookingRequestStatus
+  requested_date:   string | null
+  preferred_time:   PreferredTime | null
+  notes:            string | null
+  job_type_name:    string | null
+  property_address: string | null
+  property_town:    string | null
+  proposed_date:    string | null
+  proposed_time:    PreferredTime | null
+  operator_notes:   string | null
+  created_at:       string
+}
+
+/** Shape returned by portal_get_booking_request_detail() */
+export interface PortalBookingRequestDetail extends PortalBookingRequest {
+  job_type_id:       string | null
+  property_id:       string | null
+  property_address2: string | null
+  property_postcode: string | null
+  updated_at:        string
+}
+
+/** Operator-side booking request row (from normal Supabase query) */
+export interface BookingRequest {
+  id:               string
+  organisation_id:  string
+  client_id:        string
+  property_id:      string | null
+  job_type_id:      string | null
+  requested_date:   string | null
+  preferred_time:   PreferredTime | null
+  notes:            string | null
+  status:           BookingRequestStatus
+  operator_notes:   string | null
+  proposed_date:    string | null
+  proposed_time:    PreferredTime | null
+  actioned_by:      string | null
+  actioned_at:      string | null
+  created_at:       string
+  updated_at:       string
+}
+
+export interface BookingRequestWithRelations extends BookingRequest {
+  clients?:    { first_name: string; last_name: string; email: string | null } | null
+  properties?: { address_line1: string; town: string | null } | null
+  job_types?:  { name: string } | null
+}
+
+/** Shape returned by portal_get_properties() */
+export interface PortalProperty {
+  id:            string
+  address_line1: string
+  address_line2: string | null
+  town:          string | null
+  county:        string | null
+  postcode:      string | null
+  property_type: string | null
+  bedrooms:      number | null
+  bathrooms:     number | null
+}
+
+// -----------------------------------------------------------------------------
 // Joined / relational types
 // -----------------------------------------------------------------------------
 
