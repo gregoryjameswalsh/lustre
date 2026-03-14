@@ -72,6 +72,20 @@ export type AuditAction =
   | 'update_brand_color'
   | 'update_brand_color_secondary'
   | 'update_tagline'
+  // Client Portal
+  | 'portal_invite_client'
+  | 'portal_resend_invitation'
+  | 'portal_revoke_access'
+  | 'portal_settings_updated'
+  | 'portal_client_instruction_submitted'
+  | 'portal_client_instruction_acknowledged'
+  // Booking Requests
+  | 'booking_request_submitted'
+  | 'booking_request_cancelled_by_client'
+  | 'booking_request_approved'
+  | 'booking_request_declined'
+  | 'booking_request_alternative_proposed'
+  | 'booking_request_client_responded'
 
 export async function logAuditEvent(
   supabase: SupabaseClient,

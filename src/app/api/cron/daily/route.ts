@@ -25,9 +25,12 @@ import {
   sendFollowUpDigest,
   sendTrialEmail,
   sendInvoiceOverdueReminder,
+  sendStaleBookingRequestsDigest,
+  sendJobReminderEmail,
   type ExpiredQuote,
   type DueFollowUp,
   type TrialEmailKey,
+  type StaleBookingRequest,
 } from '@/lib/email'
 
 // ---------------------------------------------------------------------------
@@ -254,6 +257,128 @@ async function runInvoiceDunning(
 }
 
 // ---------------------------------------------------------------------------
+// Job 5 — Stale booking request reminders (>7 days, no operator response)
+// ---------------------------------------------------------------------------
+
+async function runStaleBookingRequestReminders(
+  supabase: ReturnType<typeof createAnonClient>,
+  appUrl: string
+): Promise<number> {
+  type Row = {
+    request_id:        string
+    org_id:            string
+    org_name:          string
+    org_email:         string
+    client_first:      string
+    client_last:       string
+    requested_date:    string | null
+    job_type_name:     string | null
+    dashboard_url_key: string
+  }
+
+  const { data, error } = await supabase.rpc('cron_flag_stale_booking_requests')
+
+  if (error) {
+    console.error('[cron/daily] cron_flag_stale_booking_requests error:', error)
+    return 0
+  }
+  if (!data || data.length === 0) return 0
+
+  // Group by org
+  const byOrg = new Map<string, { orgEmail: string; orgName: string; requests: StaleBookingRequest[] }>()
+
+  for (const row of data as Row[]) {
+    if (!byOrg.has(row.org_id)) {
+      byOrg.set(row.org_id, { orgEmail: row.org_email, orgName: row.org_name, requests: [] })
+    }
+    byOrg.get(row.org_id)!.requests.push({
+      clientName:    `${row.client_first} ${row.client_last}`.trim(),
+      requestedDate: row.requested_date,
+      jobTypeName:   row.job_type_name,
+      dashboardUrl:  `${appUrl}/dashboard/booking-requests/${row.dashboard_url_key}`,
+    })
+  }
+
+  await Promise.all(
+    Array.from(byOrg.values()).map(({ orgEmail, orgName, requests }) =>
+      sendStaleBookingRequestsDigest({ operatorEmail: orgEmail, orgName, requests })
+    )
+  )
+
+  return data.length
+}
+
+// ---------------------------------------------------------------------------
+// Job 6 — Portal job reminder emails
+// ---------------------------------------------------------------------------
+
+async function runPortalJobReminders(
+  supabase: ReturnType<typeof createAnonClient>,
+  appUrl: string
+): Promise<{ sent: number; failed: number }> {
+  let sent   = 0
+  let failed = 0
+
+  type Row = {
+    job_id:           string
+    org_id:           string
+    org_name:         string
+    org_brand_color:  string | null
+    org_logo_url:     string | null
+    client_email:     string | null
+    client_first:     string
+    job_type_name:    string | null
+    scheduled_date:   string
+    scheduled_time:   string | null
+    property_address: string | null
+    portal_slug:      string
+  }
+
+  const { data, error } = await supabase.rpc('cron_get_portal_job_reminders')
+
+  if (error) {
+    console.error('[cron/daily] cron_get_portal_job_reminders error:', error)
+    return { sent, failed }
+  }
+  if (!data || data.length === 0) return { sent, failed }
+
+  await Promise.all(
+    (data as Row[]).map(async row => {
+      if (!row.client_email) return
+
+      // Calculate days until the job from today
+      const today    = new Date(); today.setHours(0, 0, 0, 0)
+      const jobDate  = new Date(row.scheduled_date); jobDate.setHours(0, 0, 0, 0)
+      const daysUntil = Math.round((jobDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+
+      const { error: emailError } = await sendJobReminderEmail({
+        clientEmail:     row.client_email,
+        clientFirstName: row.client_first,
+        orgName:         row.org_name,
+        orgBrandColor:   row.org_brand_color,
+        orgLogoUrl:      row.org_logo_url,
+        jobTypeName:     row.job_type_name,
+        scheduledDate:   row.scheduled_date,
+        scheduledTime:   row.scheduled_time,
+        propertyAddress: row.property_address,
+        portalUrl:       `${appUrl}/portal/${row.portal_slug}/dashboard`,
+        daysUntil:       Math.max(1, daysUntil),
+      })
+
+      if (emailError) {
+        console.error(`[cron/daily] job reminder failed for job ${row.job_id}:`, emailError)
+        failed++
+      } else {
+        sent++
+      }
+    })
+  )
+
+  return { sent, failed }
+}
+
+
+// ---------------------------------------------------------------------------
 // Route handler
 // ---------------------------------------------------------------------------
 
@@ -271,24 +396,31 @@ export async function GET(request: Request) {
   const supabase    = createAnonClient()
   const upgradeUrl  = `${appUrl}/billing`
 
-  const [expiredCount, followUpCount, trialEmails, dunning] = await Promise.all([
+  const [expiredCount, followUpCount, trialEmails, dunning, staleRequestCount, jobReminders] = await Promise.all([
     runExpireQuotes(supabase, appUrl),
     runFollowUpReminders(supabase, appUrl),
     runTrialEmails(supabase, upgradeUrl),
     runInvoiceDunning(supabase, appUrl),
+    runStaleBookingRequestReminders(supabase, appUrl),
+    runPortalJobReminders(supabase, appUrl),
   ])
 
   console.log(
     `[cron/daily] done — expired: ${expiredCount}, follow-ups: ${followUpCount}, ` +
     `trial emails sent: ${trialEmails.sent}, failed: ${trialEmails.failed}, ` +
-    `dunning sent: ${dunning.sent}, failed: ${dunning.failed}`
+    `dunning sent: ${dunning.sent}, failed: ${dunning.failed}, ` +
+    `stale booking requests: ${staleRequestCount}, ` +
+    `job reminders sent: ${jobReminders.sent}, failed: ${jobReminders.failed}`
   )
   return NextResponse.json({
-    expired:            expiredCount,
-    followUpsNotified:  followUpCount,
-    trialEmailsSent:    trialEmails.sent,
-    trialEmailsFailed:  trialEmails.failed,
-    dunningRemindersSent:   dunning.sent,
-    dunningRemindersFailed: dunning.failed,
+    expired:                  expiredCount,
+    followUpsNotified:        followUpCount,
+    trialEmailsSent:          trialEmails.sent,
+    trialEmailsFailed:        trialEmails.failed,
+    dunningRemindersSent:     dunning.sent,
+    dunningRemindersFailed:   dunning.failed,
+    staleBookingRequestsAlerted: staleRequestCount,
+    jobRemindersSent:         jobReminders.sent,
+    jobRemindersFailed:       jobReminders.failed,
   })
 }

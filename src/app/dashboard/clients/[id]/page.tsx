@@ -7,7 +7,8 @@ import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import ActivityTimeline from '@/components/dashboard/ActivityTimeline'
 import { getClientActivities, getOpenFollowUps } from '@/lib/queries/activities'
-import DataPrivacySection from './_components/DataPrivacySection'
+import DataPrivacySection  from './_components/DataPrivacySection'
+import PortalStatusCard    from './_components/PortalStatusCard'
 import PipelineCard from './_components/PipelineCard'
 import TagPicker from '@/components/dashboard/TagPicker'
 import type { Property, JobWithRelations, ConsentRecord, ClientInPipeline, PipelineStage } from '@/lib/types'
@@ -55,7 +56,7 @@ export default async function ClientProfilePage({
   const client = await getClientWithProperties(id)
   if (!client) notFound()
 
-  const [activitiesResult, followUpsResult, pipelineStages, { data: consentsData }, allTags, clientTags, permissions] = await Promise.all([
+  const [activitiesResult, followUpsResult, pipelineStages, { data: consentsData }, allTags, clientTags, permissions, { data: portalSettings }] = await Promise.all([
     getClientActivities(id),
     getOpenFollowUps(id),
     getStages(),
@@ -63,9 +64,17 @@ export default async function ClientProfilePage({
     getTags(),
     getEntityTags(id, 'client'),
     getCurrentPermissions(),
+    supabase.from('client_portal_settings').select('portal_enabled, portal_slug').eq('organisation_id', client.organisation_id).maybeSingle(),
   ])
 
   const canEditTags    = permissions.includes('clients:write')
+  // Fetch current user's role to determine admin status for portal actions
+  const { data: currentProfile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+  const isAdmin = currentProfile?.role === 'admin'
   const activities     = activitiesResult.data
   const followUps      = followUpsResult.data
   const activitiesNext = activitiesResult.nextCursor
@@ -236,6 +245,16 @@ export default async function ClientProfilePage({
                 </div>
               </div>
             </div>
+
+            {/* Client Portal */}
+            <PortalStatusCard
+              clientId={id}
+              clientEmail={client.email}
+              portalStatus={(client as { portal_status?: string }).portal_status as import('@/lib/types').PortalStatus ?? 'not_invited'}
+              isAdmin={isAdmin}
+              portalSlug={portalSettings?.portal_slug ?? null}
+              portalEnabled={portalSettings?.portal_enabled ?? false}
+            />
 
             {/* Data & Privacy */}
             <DataPrivacySection clientId={id} consents={consents} />
