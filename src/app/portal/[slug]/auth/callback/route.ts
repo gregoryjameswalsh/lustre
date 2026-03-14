@@ -4,8 +4,11 @@
 //
 // Supabase redirects here after a client clicks their magic link.
 // We exchange the code for a session and then either:
-//   a) Activate the account (if ?invite_token=xxx is present), or
-//   b) Redirect straight to the portal dashboard.
+//   a) Activate the account (if invite_token is present) → onboarding, or
+//   b) Redirect straight to the portal dashboard (returning client login).
+//
+// invite_token is read from the URL query string first, with a cookie fallback
+// in case Supabase drops custom query params during its own redirect.
 // =============================================================================
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -18,7 +21,13 @@ export async function GET(
   const { slug }  = await params
   const url       = new URL(request.url)
   const code      = url.searchParams.get('code')
-  const inviteToken = url.searchParams.get('invite_token')
+
+  // Belt-and-braces: read invite_token from URL query string, falling back to
+  // the cookie set by PortalActivateButton before it called signInWithOtp.
+  const inviteToken =
+    url.searchParams.get('invite_token') ??
+    request.cookies.get('portal_invite_token')?.value ??
+    null
 
   const portalBase = `/portal/${slug}`
 
@@ -62,6 +71,13 @@ export async function GET(
         new URL(`${portalBase}/invite/${inviteToken}?error=activation_failed`, request.url)
       )
     }
+
+    // First-time activation complete — send to onboarding so the client can
+    // set a password and get a proper welcome before landing on the dashboard.
+    const response = NextResponse.redirect(new URL(`${portalBase}/onboarding`, request.url))
+    // Clear the invite token cookie now that activation is done
+    response.cookies.delete('portal_invite_token')
+    return response
   }
 
   return NextResponse.redirect(new URL(`${portalBase}/dashboard`, request.url))

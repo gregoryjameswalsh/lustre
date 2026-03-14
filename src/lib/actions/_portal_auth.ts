@@ -24,7 +24,7 @@ export async function getPortalClientContext(
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect(`/portal/${orgSlug}/login`)
+  if (!user) redirect(`/portal/${orgSlug}`)
 
   const { data, error } = await supabase.rpc('portal_get_client_context', {
     p_org_slug: orgSlug,
@@ -32,7 +32,7 @@ export async function getPortalClientContext(
 
   if (error || !data) {
     // User is authenticated but not a portal client for this org
-    redirect(`/portal/${orgSlug}/login`)
+    redirect(`/portal/${orgSlug}`)
   }
 
   return { supabase, context: data as PortalClientContext }

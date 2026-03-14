@@ -32,8 +32,11 @@ export default function PortalActivateButton({ email, token, slug, brand }: Prop
     async function sendActivationLink() {
       const supabase = createClient()
 
-      // Embed the invite_token in the callback URL so the route handler can
-      // call portal_activate_client_account() after exchanging the code.
+      // Store the invite token in a cookie so the callback route can read it
+      // even if Supabase drops the query-string params during its redirect.
+      document.cookie = `portal_invite_token=${encodeURIComponent(token)}; path=/portal/${slug}/auth; max-age=3600; SameSite=Lax`
+
+      // Keep the token in the URL too — belt-and-braces approach.
       const callbackUrl =
         `${window.location.origin}/portal/${slug}/auth/callback?invite_token=${encodeURIComponent(token)}`
 
@@ -61,6 +64,8 @@ export default function PortalActivateButton({ email, token, slug, brand }: Prop
     setError(null)
     firedRef.current = false // allow re-send
     const supabase = createClient()
+
+    document.cookie = `portal_invite_token=${encodeURIComponent(token)}; path=/portal/${slug}/auth; max-age=3600; SameSite=Lax`
 
     const callbackUrl =
       `${window.location.origin}/portal/${slug}/auth/callback?invite_token=${encodeURIComponent(token)}`
