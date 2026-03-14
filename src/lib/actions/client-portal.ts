@@ -13,6 +13,7 @@
 // =============================================================================
 
 import { redirect }                          from 'next/navigation'
+import { revalidatePath }                    from 'next/cache'
 import { requireAdmin, getOrgAndUser }       from './_auth'
 import { logAuditEvent }                     from '@/lib/audit'
 import { sendPortalInvitationEmail }         from '@/lib/email'
@@ -321,6 +322,7 @@ export async function upsertPortalSettings(
     resourceType: 'client_portal_settings',
   })
 
+  revalidatePath('/dashboard/settings/client-portal')
   return { success: true }
 }
 
