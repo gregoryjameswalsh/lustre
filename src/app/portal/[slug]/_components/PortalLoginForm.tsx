@@ -14,6 +14,7 @@ interface Props {
   orgBrandColor?: string | null
   orgLogoUrl?:    string | null
   welcomeMessage?: string | null
+  authError?:     string
 }
 
 export default function PortalLoginForm({
@@ -22,6 +23,7 @@ export default function PortalLoginForm({
   orgBrandColor,
   orgLogoUrl,
   welcomeMessage,
+  authError,
 }: Props) {
   const [email,   setEmail]   = useState('')
   const [sent,    setSent]    = useState(false)
@@ -90,6 +92,15 @@ export default function PortalLoginForm({
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
 
+          {authError && (
+            <div className="mb-6 rounded-lg border border-amber-100 bg-amber-50 px-4 py-3">
+              <p className="text-xs text-amber-700 leading-relaxed">
+                Your login link has expired or was already used. Enter your email below to
+                receive a new one.
+              </p>
+            </div>
+          )}
+
           {sent ? (
             <div className="text-center">
               <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50">
@@ -143,7 +154,11 @@ export default function PortalLoginForm({
               </button>
 
               <p className="text-center text-xs text-zinc-400 leading-relaxed">
-                We&apos;ll send a secure, one-time link to your inbox. No password needed.
+                We&apos;ll send a secure, one-time login link to your inbox — no password needed.
+              </p>
+
+              <p className="text-center text-xs text-zinc-300 leading-relaxed">
+                First time here? Check your email for an invitation from your service provider.
               </p>
             </form>
           )}

@@ -125,10 +125,10 @@ export default async function PortalInvitePage({
 
         {queryError === 'activation_failed' && (
           <div className="mt-4 rounded-xl border border-red-100 bg-red-50 px-5 py-4 text-left">
-            <p className="text-sm font-medium text-red-800">Activation failed</p>
+            <p className="text-sm font-medium text-red-800">Link expired or already used</p>
             <p className="mt-1 text-xs text-red-700">
-              There was a problem activating your account. Please try again or contact{' '}
-              {invitation.org_name} for help.
+              The activation link may have expired. We&apos;ve sent a fresh one to your inbox —
+              make sure to open it in <strong>the same browser</strong> you&apos;re using now.
             </p>
           </div>
         )}
@@ -142,8 +142,9 @@ export default async function PortalInvitePage({
           />
         </div>
 
-        <p className="mt-4 text-xs text-zinc-300">
-          Sent to {invitation.email}
+        <p className="mt-6 text-xs text-zinc-400 leading-relaxed">
+          The link will be sent to <span className="text-zinc-600">{invitation.email}</span>.
+          Open it in the same browser or device you&apos;re using now.
         </p>
       </div>
     </PageShell>

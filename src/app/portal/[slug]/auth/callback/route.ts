@@ -23,7 +23,13 @@ export async function GET(
   const portalBase = `/portal/${slug}`
 
   if (!code) {
-    return NextResponse.redirect(new URL(`${portalBase}/login?error=no_code`, request.url))
+    // If we know which invite this was for, send them back to retry in the same browser
+    if (inviteToken) {
+      return NextResponse.redirect(
+        new URL(`${portalBase}/invite/${inviteToken}?error=activation_failed`, request.url)
+      )
+    }
+    return NextResponse.redirect(new URL(`${portalBase}?error=no_code`, request.url))
   }
 
   const supabase = await createClient()
@@ -32,7 +38,13 @@ export async function GET(
 
   if (exchangeError) {
     console.error('Portal auth callback — exchangeCodeForSession error:', exchangeError)
-    return NextResponse.redirect(new URL(`${portalBase}/login?error=auth_failed`, request.url))
+    // Send them back to the invite page so they can request a fresh link in the same browser
+    if (inviteToken) {
+      return NextResponse.redirect(
+        new URL(`${portalBase}/invite/${inviteToken}?error=activation_failed`, request.url)
+      )
+    }
+    return NextResponse.redirect(new URL(`${portalBase}?error=auth_failed`, request.url))
   }
 
   // If this is a first-time activation, link the auth user to the client record
