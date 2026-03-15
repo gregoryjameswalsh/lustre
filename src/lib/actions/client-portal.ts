@@ -17,7 +17,6 @@ import { revalidatePath }                    from 'next/cache'
 import { requireAdmin, getOrgAndUser }       from './_auth'
 import { logAuditEvent }                     from '@/lib/audit'
 import { sendPortalInvitationEmail }         from '@/lib/email'
-import { createAdminClient }                 from '@/lib/supabase/admin'
 import type { ClientPortalSettings }         from '@/lib/types'
 
 // ---------------------------------------------------------------------------
@@ -105,32 +104,8 @@ export async function inviteClientToPortal(
     .update({ portal_status: 'invited', portal_invited_at: new Date().toISOString() })
     .eq('id', clientId)
 
-  // Build the post-auth destination for the magic link.
-  // The portal /auth/activate route handles account activation after
-  // the session is established by /auth/callback.
-  const appUrl      = process.env.NEXT_PUBLIC_APP_URL!
-  const invitePageUrl = `${appUrl}/portal/${settings.portal_slug}/invite/${invitation.token}`
-  const callbackNext  = `/portal/${settings.portal_slug}/auth/activate?invite_token=${invitation.token}`
-  const callbackUrl   = `${appUrl}/auth/callback?next=${encodeURIComponent(callbackNext)}`
-
-  // Try to generate a single-use magic link so the client only needs to
-  // click ONE link in the invitation email (no intermediate page needed).
-  // Requires SUPABASE_SERVICE_ROLE_KEY.  Falls back to the invite page if
-  // the admin client is not configured.
-  let activationUrl = invitePageUrl
-  try {
-    const adminClient = createAdminClient()
-    const { data: linkData } = await adminClient.auth.admin.generateLink({
-      type:    'magiclink',
-      email:   client.email,
-      options: { redirectTo: callbackUrl },
-    })
-    if (linkData?.properties?.action_link) {
-      activationUrl = linkData.properties.action_link
-    }
-  } catch (e) {
-    console.warn('portal invite: admin.generateLink failed, falling back to invite page URL', e)
-  }
+  const appUrl        = process.env.NEXT_PUBLIC_APP_URL!
+  const activationUrl = `${appUrl}/portal/${settings.portal_slug}/invite/${invitation.token}`
 
   const { error: emailError } = await sendPortalInvitationEmail({
     clientEmail:     client.email,
@@ -139,8 +114,6 @@ export async function inviteClientToPortal(
     orgBrandColor:   org.brand_color,
     orgLogoUrl:      org.logo_url,
     activationUrl,
-    // Show the invite page as a fallback only when we sent the direct magic link
-    invitePageUrl:   activationUrl !== invitePageUrl ? invitePageUrl : undefined,
     expiresAt:       invitation.expires_at,
   })
 
@@ -505,20 +478,7 @@ export async function bulkInviteClientsToPortal(
       .update({ portal_status: 'invited', portal_invited_at: new Date().toISOString() })
       .eq('id', client.id)
 
-    // Send email — try to use a direct magic link for single-click activation
-    const bulkInvitePageUrl  = `${appUrl}/portal/${settings.portal_slug}/invite/${invitation.token}`
-    const bulkCallbackNext   = `/portal/${settings.portal_slug}/auth/activate?invite_token=${invitation.token}`
-    const bulkCallbackUrl    = `${appUrl}/auth/callback?next=${encodeURIComponent(bulkCallbackNext)}`
-    let   bulkActivationUrl  = bulkInvitePageUrl
-    try {
-      const adminClient = createAdminClient()
-      const { data: linkData } = await adminClient.auth.admin.generateLink({
-        type:    'magiclink',
-        email:   client.email,
-        options: { redirectTo: bulkCallbackUrl },
-      })
-      if (linkData?.properties?.action_link) bulkActivationUrl = linkData.properties.action_link
-    } catch { /* fall back to invite page */ }
+    const bulkActivationUrl = `${appUrl}/portal/${settings.portal_slug}/invite/${invitation.token}`
 
     const { error: emailError } = await sendPortalInvitationEmail({
       clientEmail:     client.email,
@@ -527,7 +487,6 @@ export async function bulkInviteClientsToPortal(
       orgBrandColor:   org.brand_color,
       orgLogoUrl:      org.logo_url,
       activationUrl:   bulkActivationUrl,
-      invitePageUrl:   bulkActivationUrl !== bulkInvitePageUrl ? bulkInvitePageUrl : undefined,
       expiresAt:       invitation.expires_at,
     })
 

@@ -113,26 +113,19 @@ export default async function PortalInvitePage({
     <PageShell header={headerContent}>
       <div className="text-center">
         <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: brand }}>
-          {queryError ? 'Request a new link' : 'You\'re invited'}
+          {queryError === 'activation_failed' ? 'Sending a new link' : 'You\'re invited'}
         </p>
         <h1 className="mt-3 text-xl font-light text-zinc-900">
           Welcome, {invitation.client_first_name}
         </h1>
 
-        {queryError === 'activation_failed' ? (
+        {queryError === 'activation_failed' && (
           <div className="mt-4 rounded-xl border border-amber-100 bg-amber-50 px-5 py-4 text-left">
-            <p className="text-sm font-medium text-amber-800">Your activation link expired</p>
+            <p className="text-sm font-medium text-amber-800">Your previous link expired</p>
             <p className="mt-1 text-xs text-amber-700 leading-relaxed">
-              Click below to receive a fresh link at{' '}
-              <strong>{invitation.email}</strong>.
+              We&apos;re sending a fresh one to <strong>{invitation.email}</strong>.
             </p>
           </div>
-        ) : (
-          <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
-            Check your email for an activation link from{' '}
-            <strong className="text-zinc-600">{invitation.org_name}</strong>. If it&apos;s
-            expired or you didn&apos;t receive it, get a new one below.
-          </p>
         )}
 
         <div className="mt-8">
@@ -141,7 +134,7 @@ export default async function PortalInvitePage({
             token={token}
             slug={slug}
             brand={brand}
-            autoSend={queryError === 'activation_failed'}
+            autoSend={true}
           />
         </div>
       </div>
