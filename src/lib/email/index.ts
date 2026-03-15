@@ -1341,8 +1341,12 @@ export interface SendPortalInvitationEmailParams {
 }
 
 function portalInvitationEmailHtml(params: SendPortalInvitationEmailParams): string {
-  const { clientFirstName, orgName, activationUrl, orgLogoUrl, orgBrandColor } = params
+  const { clientFirstName, orgName, activationUrl, expiresAt, orgLogoUrl, orgBrandColor } = params
   const brand = orgBrandColor ?? '#4a5c4e'
+
+  const expiry = new Date(expiresAt).toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  })
 
   const headerContent = orgLogoUrl
     ? `<img src="${orgLogoUrl}" alt="${orgName}" style="max-height:48px;max-width:180px;display:block;object-fit:contain;" />`
@@ -1375,19 +1379,19 @@ function portalInvitationEmailHtml(params: SendPortalInvitationEmailParams): str
                 <strong>${orgName}</strong> has set up a client portal for you. You can use it to view your upcoming appointments and leave special instructions for your cleaner.
               </p>
 
-              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
                 <tr>
                   <td align="center">
                     <a href="${activationUrl}"
                        style="display:inline-block;background:${brand};color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:14px 32px;border-radius:100px;">
-                      Activate my account
+                      Access your portal
                     </a>
                   </td>
                 </tr>
               </table>
 
               <p style="margin:0;font-size:13px;color:#9ca3af;text-align:center;line-height:1.5;">
-                This link expires in 7 days. If you didn&apos;t expect this email, you can safely ignore it.
+                This invitation is valid until ${expiry}. If you didn&apos;t expect this email, you can safely ignore it.
               </p>
 
             </td>
@@ -1409,7 +1413,10 @@ function portalInvitationEmailHtml(params: SendPortalInvitationEmailParams): str
 }
 
 function portalInvitationEmailText(params: SendPortalInvitationEmailParams): string {
-  const { clientFirstName, orgName, activationUrl } = params
+  const { clientFirstName, orgName, activationUrl, expiresAt } = params
+  const expiry = new Date(expiresAt).toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  })
   return [
     `Hi ${clientFirstName},`,
     '',
@@ -1417,10 +1424,8 @@ function portalInvitationEmailText(params: SendPortalInvitationEmailParams): str
     '',
     `You can use it to view your upcoming appointments and leave special instructions for your cleaner.`,
     '',
-    `Activate your account here:`,
+    `Click the link below to access your portal (invitation valid until ${expiry}):`,
     activationUrl,
-    '',
-    `This link expires in 7 days.`,
     '',
     `— ${orgName}`,
   ].join('\n')

@@ -104,8 +104,8 @@ export async function inviteClientToPortal(
     .update({ portal_status: 'invited', portal_invited_at: new Date().toISOString() })
     .eq('id', clientId)
 
-  // Send invitation email
-  const activationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/portal/${settings.portal_slug}/invite/${invitation.token}`
+  const appUrl        = process.env.NEXT_PUBLIC_APP_URL!
+  const activationUrl = `${appUrl}/portal/${settings.portal_slug}/invite/${invitation.token}`
 
   const { error: emailError } = await sendPortalInvitationEmail({
     clientEmail:     client.email,
@@ -478,15 +478,15 @@ export async function bulkInviteClientsToPortal(
       .update({ portal_status: 'invited', portal_invited_at: new Date().toISOString() })
       .eq('id', client.id)
 
-    // Send email
-    const activationUrl = `${appUrl}/portal/${settings.portal_slug}/invite/${invitation.token}`
+    const bulkActivationUrl = `${appUrl}/portal/${settings.portal_slug}/invite/${invitation.token}`
+
     const { error: emailError } = await sendPortalInvitationEmail({
       clientEmail:     client.email,
       clientFirstName: client.first_name,
       orgName:         org.name,
       orgBrandColor:   org.brand_color,
       orgLogoUrl:      org.logo_url,
-      activationUrl,
+      activationUrl:   bulkActivationUrl,
       expiresAt:       invitation.expires_at,
     })
 

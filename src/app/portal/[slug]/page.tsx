@@ -11,10 +11,13 @@ import PortalLoginForm               from './_components/PortalLoginForm'
 
 export default async function PortalHomePage({
   params,
+  searchParams,
 }: {
-  params: Promise<{ slug: string }>
+  params:       Promise<{ slug: string }>
+  searchParams: Promise<{ error?: string }>
 }) {
-  const { slug } = await params
+  const { slug }          = await params
+  const { error: authError } = await searchParams
 
   // If the user already has a valid portal session, send them straight to dashboard
   const context = await tryGetPortalClientContext(slug)
@@ -29,6 +32,7 @@ export default async function PortalHomePage({
       orgBrandColor={undefined}
       orgLogoUrl={undefined}
       welcomeMessage={undefined}
+      authError={authError}
     />
   )
 }
