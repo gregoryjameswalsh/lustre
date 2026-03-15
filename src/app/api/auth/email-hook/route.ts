@@ -19,7 +19,7 @@
 //
 // Supabase dashboard setup:
 //   Authentication → Hooks → Send Email
-//   URL: https://app.thewalshstandard.com/api/auth/email-hook
+//   URL: https://app.simplylustre.com/api/auth/email-hook
 //   Secret: <copy and set as PORTAL_EMAIL_HOOK_SECRET env var>
 // =============================================================================
 
