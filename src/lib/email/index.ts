@@ -2093,3 +2093,228 @@ export async function sendJobReminderEmail(
     return { error: 'Failed to send reminder.' }
   }
 }
+
+
+// =============================================================================
+// Portal Magic Link Email (sent via Supabase Send Email hook)
+// =============================================================================
+
+export interface SendPortalMagicLinkEmailParams {
+  to:             string
+  confirmationUrl: string
+  orgName:        string
+  orgBrandColor?: string | null
+  orgLogoUrl?:    string | null
+}
+
+function portalMagicLinkEmailHtml(params: SendPortalMagicLinkEmailParams): string {
+  const { orgName, confirmationUrl, orgLogoUrl, orgBrandColor } = params
+  const brand = orgBrandColor ?? '#4a5c4e'
+
+  const headerContent = orgLogoUrl
+    ? `<img src="${orgLogoUrl}" alt="${orgName}" style="max-height:48px;max-width:180px;display:block;object-fit:contain;" />`
+    : `<p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:${brand};">${orgName}</p>`
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in to your portal</title>
+</head>
+<body style="margin:0;padding:0;background:#f9f8f5;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f8f5;padding:40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+
+          <tr>
+            <td style="padding-bottom:24px;">${headerContent}</td>
+          </tr>
+
+          <tr>
+            <td style="background:#ffffff;border-radius:12px;border:1px solid #e5e7eb;padding:32px;">
+              <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.6;">
+                Click the button below to sign in to your <strong>${orgName}</strong> client portal.
+                This link expires in 1&nbsp;hour and can only be used once.
+              </p>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+                <tr>
+                  <td align="center">
+                    <a href="${confirmationUrl}"
+                       style="display:inline-block;background:${brand};color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:14px 32px;border-radius:100px;">
+                      Sign in to portal
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;line-height:1.5;">
+                If you didn&apos;t request this, you can safely ignore this email.
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding-top:24px;text-align:center;">
+              <p style="margin:0;color:#9ca3af;font-size:12px;">${orgName}</p>
+              <p style="margin:8px 0 0;color:#d1d5db;font-size:11px;">Powered by Lustre</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+}
+
+function portalMagicLinkEmailText(params: SendPortalMagicLinkEmailParams): string {
+  const { orgName, confirmationUrl } = params
+  return [
+    `Sign in to your ${orgName} portal`,
+    '',
+    `Click the link below to sign in (expires in 1 hour, single use):`,
+    confirmationUrl,
+    '',
+    `If you didn't request this, you can safely ignore this email.`,
+    '',
+    `— ${orgName}`,
+  ].join('\n')
+}
+
+export async function sendPortalMagicLinkEmail(
+  params: SendPortalMagicLinkEmailParams
+): Promise<{ error?: string }> {
+  const { to, orgName } = params
+  const safeName = orgName.replace(/[\r\n]/g, ' ').trim()
+  try {
+    const { error } = await resend.emails.send({
+      from:    `${safeName} <hello@simplylustre.com>`,
+      to,
+      subject: `Sign in to your ${safeName} portal`,
+      html:    portalMagicLinkEmailHtml(params),
+      text:    portalMagicLinkEmailText(params),
+    })
+    if (error) {
+      console.error('[email] portal_magic_link error:', error)
+      return { error: 'Failed to send magic link email.' }
+    }
+    return {}
+  } catch (err) {
+    console.error('[email] portal_magic_link exception:', err)
+    return { error: 'Failed to send magic link email.' }
+  }
+}
+
+
+// =============================================================================
+// Generic Auth Email — Lustre-branded (operator password reset etc.)
+// =============================================================================
+
+export interface SendAuthEmailParams {
+  to:              string
+  actionType:      'recovery' | 'signup' | string
+  confirmationUrl: string
+}
+
+function authEmailHtml(params: SendAuthEmailParams): string {
+  const { actionType, confirmationUrl } = params
+  const isRecovery = actionType === 'recovery'
+  const heading    = isRecovery ? 'Reset your password' : 'Confirm your email'
+  const body       = isRecovery
+    ? 'Click the button below to reset your Lustre password. This link expires in 1&nbsp;hour.'
+    : 'Click the button below to confirm your email address.'
+  const cta = isRecovery ? 'Reset password' : 'Confirm email'
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${heading}</title>
+</head>
+<body style="margin:0;padding:0;background:#f9f8f5;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f8f5;padding:40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+
+          <tr>
+            <td style="padding-bottom:24px;">
+              <p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:#4a5c4e;">Lustre</p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="background:#ffffff;border-radius:12px;border:1px solid #e5e7eb;padding:32px;">
+              <p style="margin:0 0 8px;font-size:16px;font-weight:500;color:#0c0c0b;">${heading}</p>
+              <p style="margin:0 0 24px;font-size:14px;color:#6b7280;line-height:1.6;">${body}</p>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+                <tr>
+                  <td align="center">
+                    <a href="${confirmationUrl}"
+                       style="display:inline-block;background:#0c0c0b;color:#f9f8f5;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;padding:14px 32px;border-radius:100px;">
+                      ${cta}
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">
+                If you didn&apos;t request this, you can safely ignore this email.
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding-top:24px;text-align:center;">
+              <p style="margin:0;color:#d1d5db;font-size:11px;">Powered by Lustre</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+}
+
+function authEmailText(params: SendAuthEmailParams): string {
+  const { actionType, confirmationUrl } = params
+  const isRecovery = actionType === 'recovery'
+  const heading = isRecovery ? 'Reset your Lustre password' : 'Confirm your Lustre email'
+  const body    = isRecovery
+    ? 'Click the link below to reset your password (expires in 1 hour):'
+    : 'Click the link below to confirm your email address:'
+  return [heading, '', body, confirmationUrl, '', `If you didn't request this, ignore this email.`].join('\n')
+}
+
+export async function sendAuthEmail(
+  params: SendAuthEmailParams
+): Promise<{ error?: string }> {
+  const { to, actionType } = params
+  const isRecovery = actionType === 'recovery'
+  const subject    = isRecovery ? 'Reset your Lustre password' : 'Confirm your Lustre email'
+  try {
+    const { error } = await resend.emails.send({
+      from:    'Lustre <hello@simplylustre.com>',
+      to,
+      subject,
+      html:    authEmailHtml(params),
+      text:    authEmailText(params),
+    })
+    if (error) {
+      console.error('[email] auth_email error:', error)
+      return { error: 'Failed to send auth email.' }
+    }
+    return {}
+  } catch (err) {
+    console.error('[email] auth_email exception:', err)
+    return { error: 'Failed to send auth email.' }
+  }
+}
