@@ -45,8 +45,9 @@ export default function PortalLoginForm({
     setLoading(true)
     setError(null)
 
-    const supabase    = createClient()
-    const callbackUrl = `${window.location.origin}/portal/${slug}/auth/callback`
+    const supabase      = createClient()
+    const activatePath  = `/portal/${slug}/auth/activate`
+    const callbackUrl   = `${window.location.origin}/auth/callback?next=${encodeURIComponent(activatePath)}`
 
     const { error: otpError } = await supabase.auth.signInWithOtp({
       email: email.trim().toLowerCase(),

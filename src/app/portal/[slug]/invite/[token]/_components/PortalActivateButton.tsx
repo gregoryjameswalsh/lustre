@@ -12,33 +12,37 @@ import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 interface Props {
-  email: string
-  token: string
-  slug:  string
-  brand: string
+  email:    string
+  token:    string
+  slug:     string
+  brand:    string
+  autoSend?: boolean
 }
 
-export default function PortalActivateButton({ email, token, slug, brand }: Props) {
+export default function PortalActivateButton({ email, token, slug, brand, autoSend = false }: Props) {
   const [sent,    setSent]    = useState(false)
+  const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState<string | null>(null)
   const firedRef = useRef(false)
 
-  // Auto-send the activation link as soon as the page loads so the client
-  // only needs to click the link in their inbox — no extra button click needed.
+  // Auto-send only when the parent explicitly requests it (e.g. after an
+  // activation failure redirect) — otherwise show a manual button so we
+  // don't send an extra email when the client already has one in their inbox.
   useEffect(() => {
+    if (!autoSend) return
     if (firedRef.current) return
     firedRef.current = true
 
     async function sendActivationLink() {
       const supabase = createClient()
 
-      // Store the invite token in a cookie so the callback route can read it
-      // even if Supabase drops the query-string params during its redirect.
-      document.cookie = `portal_invite_token=${encodeURIComponent(token)}; path=/portal/${slug}/auth; max-age=3600; SameSite=Lax`
+      // Store the invite token in a cookie as a belt-and-braces backup.
+      document.cookie = `portal_invite_token=${encodeURIComponent(token)}; path=/; max-age=3600; SameSite=Lax`
 
-      // Keep the token in the URL too — belt-and-braces approach.
-      const callbackUrl =
-        `${window.location.origin}/portal/${slug}/auth/callback?invite_token=${encodeURIComponent(token)}`
+      // Route through the whitelisted /auth/callback, passing the portal
+      // activate URL as ?next= so the session exchange happens there first.
+      const activatePath = `/portal/${slug}/auth/activate?invite_token=${encodeURIComponent(token)}`
+      const callbackUrl  = `${window.location.origin}/auth/callback?next=${encodeURIComponent(activatePath)}`
 
       const { error: otpError } = await supabase.auth.signInWithOtp({
         email,
@@ -62,13 +66,14 @@ export default function PortalActivateButton({ email, token, slug, brand }: Prop
 
   async function handleResend() {
     setError(null)
+    setLoading(true)
     firedRef.current = false // allow re-send
     const supabase = createClient()
 
-    document.cookie = `portal_invite_token=${encodeURIComponent(token)}; path=/portal/${slug}/auth; max-age=3600; SameSite=Lax`
+    document.cookie = `portal_invite_token=${encodeURIComponent(token)}; path=/; max-age=3600; SameSite=Lax`
 
-    const callbackUrl =
-      `${window.location.origin}/portal/${slug}/auth/callback?invite_token=${encodeURIComponent(token)}`
+    const activatePath = `/portal/${slug}/auth/activate?invite_token=${encodeURIComponent(token)}`
+    const callbackUrl  = `${window.location.origin}/auth/callback?next=${encodeURIComponent(activatePath)}`
 
     const { error: otpError } = await supabase.auth.signInWithOtp({
       email,
@@ -78,8 +83,9 @@ export default function PortalActivateButton({ email, token, slug, brand }: Prop
       },
     })
 
+    setLoading(false)
     if (otpError) {
-      setError('Failed to resend activation email. Please try again.')
+      setError('Failed to send activation email. Please try again.')
       return
     }
 
@@ -126,12 +132,28 @@ export default function PortalActivateButton({ email, token, slug, brand }: Prop
     )
   }
 
-  // Loading state while the auto-send is in flight
+  // Manual button (autoSend=false) or loading spinner (autoSend=true in flight)
   return (
     <div className="space-y-3">
-      <div className="rounded-xl border border-zinc-100 bg-zinc-50 px-5 py-4 text-center">
-        <p className="text-sm text-zinc-500">Sending activation link…</p>
-      </div>
+      {autoSend ? (
+        <div className="rounded-xl border border-zinc-100 bg-zinc-50 px-5 py-4 text-center">
+          <p className="text-sm text-zinc-500">Sending activation link…</p>
+        </div>
+      ) : (
+        <>
+          <button
+            onClick={handleResend}
+            disabled={loading}
+            style={{ backgroundColor: brand }}
+            className="w-full rounded-full px-6 py-3 text-xs font-semibold uppercase tracking-widest text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          >
+            {loading ? 'Sending…' : 'Send activation link'}
+          </button>
+          <p className="text-xs text-zinc-400 text-center">
+            We&apos;ll send a one-time link to <strong>{email}</strong>
+          </p>
+        </>
+      )}
     </div>
   )
 }

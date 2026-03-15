@@ -113,24 +113,26 @@ export default async function PortalInvitePage({
     <PageShell header={headerContent}>
       <div className="text-center">
         <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: brand }}>
-          You&apos;re invited
+          {queryError ? 'Request a new link' : 'You\'re invited'}
         </p>
         <h1 className="mt-3 text-xl font-light text-zinc-900">
           Welcome, {invitation.client_first_name}
         </h1>
-        <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
-          <strong className="text-zinc-600">{invitation.org_name}</strong> has set up a
-          client portal for you to view your appointments and leave special instructions.
-        </p>
 
-        {queryError === 'activation_failed' && (
-          <div className="mt-4 rounded-xl border border-red-100 bg-red-50 px-5 py-4 text-left">
-            <p className="text-sm font-medium text-red-800">Link expired or already used</p>
-            <p className="mt-1 text-xs text-red-700">
-              The activation link may have expired. We&apos;ve sent a fresh one to your inbox —
-              make sure to open it in <strong>the same browser</strong> you&apos;re using now.
+        {queryError === 'activation_failed' ? (
+          <div className="mt-4 rounded-xl border border-amber-100 bg-amber-50 px-5 py-4 text-left">
+            <p className="text-sm font-medium text-amber-800">Your activation link expired</p>
+            <p className="mt-1 text-xs text-amber-700 leading-relaxed">
+              Click below to receive a fresh link at{' '}
+              <strong>{invitation.email}</strong>.
             </p>
           </div>
+        ) : (
+          <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
+            Check your email for an activation link from{' '}
+            <strong className="text-zinc-600">{invitation.org_name}</strong>. If it&apos;s
+            expired or you didn&apos;t receive it, get a new one below.
+          </p>
         )}
 
         <div className="mt-8">
@@ -139,13 +141,9 @@ export default async function PortalInvitePage({
             token={token}
             slug={slug}
             brand={brand}
+            autoSend={queryError === 'activation_failed'}
           />
         </div>
-
-        <p className="mt-6 text-xs text-zinc-400 leading-relaxed">
-          The link will be sent to <span className="text-zinc-600">{invitation.email}</span>.
-          Open it in the same browser or device you&apos;re using now.
-        </p>
       </div>
     </PageShell>
   )
